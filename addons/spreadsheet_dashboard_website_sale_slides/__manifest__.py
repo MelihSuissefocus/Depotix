@@ -7,9 +7,7 @@
     'description': 'Spreadsheet',
     'depends': ['spreadsheet_dashboard', 'website_sale_slides'],
     'data': [
-        "data/dashboards.xml",
-    ],
+        "data/dashboards.xml"],
     'installable': True,
     'auto_install': ['website_sale_slides'],
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

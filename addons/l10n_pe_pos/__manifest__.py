@@ -10,19 +10,14 @@ Install this if you are using the Point of Sale app in Peru.
     """,
     "depends": [
         "l10n_pe",
-        "point_of_sale",
-    ],
+        "point_of_sale"],
     "countries": [
-        "pe",
-    ],
+        "pe"],
     "data": [
         "data/res_partner_data.xml",
-        "views/templates.xml",
-    ],
+        "views/templates.xml"],
     "assets": {
-        "point_of_sale._assets_pos": ["l10n_pe_pos/static/src/**/*"],
-    },
+        "point_of_sale._assets_pos": ["l10n_pe_pos/static/src/**/*"]},
     "installable": True,
     "auto_install": True,
-    "license": "LGPL-3",
-}
+    "license": "LGPL-3"}

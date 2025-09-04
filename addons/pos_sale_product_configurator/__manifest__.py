@@ -15,8 +15,6 @@ This module adds features depending on both modules.
     'auto_install': True,
     'assets': {
         'point_of_sale._assets_pos': [
-            'pos_sale_product_configurator/static/src/**/*',
-        ]
+            'pos_sale_product_configurator/static/src/**/*']
     },
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

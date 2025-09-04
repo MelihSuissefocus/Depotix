@@ -13,15 +13,11 @@
         'views/payment_provider_views.xml',
         'views/payment_token_views.xml',
 
-        'data/payment_provider_data.xml',
-    ],
+        'data/payment_provider_data.xml'],
     'post_init_hook': 'post_init_hook',
     'uninstall_hook': 'uninstall_hook',
     'assets': {
         'web.assets_frontend': [
             'payment_authorize/static/src/scss/payment_authorize.scss',
-            'payment_authorize/static/src/js/payment_form.js',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'payment_authorize/static/src/js/payment_form.js']},
+    'license': 'LGPL-3'}

@@ -8,14 +8,10 @@
     'category': 'Accounting/Localizations/Account Charts',
     'description': ' This is the base module to manage chart of accounting and localization for Hong Kong ',
     'depends': [
-        'account_qr_code_emv',
-    ],
+        'account_qr_code_emv'],
     'data': [
         'data/account_chart_template_data.xml',
-        'views/res_bank_views.xml',
-    ],
+        'views/res_bank_views.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

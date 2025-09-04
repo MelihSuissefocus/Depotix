@@ -15,13 +15,9 @@ Delivery price pre-configured is an example, you need to adapt the pricing's rul
     'data': [
         'data/data.xml',
         'views/views.xml',
-        'wizard/choose_delivery_carrier_views.xml',
-    ],
+        'wizard/choose_delivery_carrier_views.xml'],
     'assets': {
         'web.assets_backend': [
             'delivery_mondialrelay/static/src/components/**/*.js',
-            'delivery_mondialrelay/static/src/scss/mondialrelay.scss',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'delivery_mondialrelay/static/src/scss/mondialrelay.scss']},
+    'license': 'LGPL-3'}

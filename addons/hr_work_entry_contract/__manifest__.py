@@ -9,8 +9,7 @@
     'installable': True,
     'depends': [
         'hr_work_entry',
-        'hr_contract',
-    ],
+        'hr_contract'],
     'data': [
         'security/hr_work_entry_security.xml',
         'security/ir.model.access.csv',
@@ -18,15 +17,10 @@
         'data/ir_cron_data.xml',
         'views/hr_work_entry_views.xml',
         'views/hr_contract_views.xml',
-        'wizard/hr_work_entry_regeneration_wizard_views.xml',
-    ],
+        'wizard/hr_work_entry_regeneration_wizard_views.xml'],
     'demo': [
-        'data/hr_work_entry_demo.xml',
-    ],
+        'data/hr_work_entry_demo.xml'],
     'assets': {
         'web.assets_backend': [
-            'hr_work_entry_contract/static/src/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'hr_work_entry_contract/static/src/**/*']},
+    'license': 'LGPL-3'}

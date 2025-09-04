@@ -29,11 +29,9 @@
         'report/purchase_order_templates.xml',
         'report/purchase_quotation_templates.xml',
         'views/product_packaging_views.xml',
-        'views/analytic_account_views.xml',
-    ],
+        'views/analytic_account_views.xml'],
     'demo': [
-        'data/purchase_demo.xml',
-    ],
+        'data/purchase_demo.xml'],
     'installable': True,
     'application': True,
     'assets': {
@@ -43,12 +41,8 @@
             'purchase/static/src/views/*.js',
             'purchase/static/src/js/tours/purchase.js',
             'purchase/static/src/js/tours/purchase_steps.js',
-            'purchase/static/src/**/*.xml',
-        ],
+            'purchase/static/src/**/*.xml'],
         'web.assets_frontend': [
             'purchase/static/src/js/purchase_datetimepicker.js',
-            'purchase/static/src/js/purchase_portal_sidebar.js',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'purchase/static/src/js/purchase_portal_sidebar.js']},
+    'license': 'LGPL-3'}

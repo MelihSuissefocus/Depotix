@@ -13,11 +13,8 @@ tests independently to functional aspects of other models. """,
         'mail',
         'sms',
         'sms_twilio',
-        'test_performance',
-    ],
+        'test_performance'],
     'data': [
-        'security/ir.model.access.csv',
-    ],
+        'security/ir.model.access.csv'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

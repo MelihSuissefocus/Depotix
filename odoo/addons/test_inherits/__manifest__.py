@@ -9,8 +9,6 @@
     'depends': ['base'],
     'data': [
         'ir.model.access.csv',
-        'demo_data.xml',
-    ],
+        'demo_data.xml'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

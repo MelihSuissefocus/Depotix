@@ -34,14 +34,11 @@ actions(Check in/Check out) performed by them.
     'application': True,
     'assets': {
         'web.assets_backend': [
-            'hr_attendance/static/src/**/*',
-        ],
+            'hr_attendance/static/src/**/*'],
         'web.qunit_suite_tests': [
-            'hr_attendance/static/tests/hr_attendance_mock_server.js',
-        ],
+            'hr_attendance/static/tests/hr_attendance_mock_server.js'],
         'web.qunit_mobile_suite_tests': [
-            'hr_attendance/static/tests/hr_attendance_mock_server.js',
-        ],
+            'hr_attendance/static/tests/hr_attendance_mock_server.js'],
         'hr_attendance.assets_public_attendance': [
             # Front-end libraries
             ('include', 'web._assets_helpers'),
@@ -81,8 +78,6 @@ actions(Check in/Check out) performed by them.
             # Kanban view mock
             "web/static/src/views/kanban/kanban_controller.scss",
             "web/static/src/search/search_panel/search_panel.scss",
-            "web/static/src/search/control_panel/control_panel.scss",
-        ]
+            "web/static/src/search/control_panel/control_panel.scss"]
     },
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

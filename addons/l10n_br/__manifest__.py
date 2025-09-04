@@ -53,8 +53,7 @@ Create electronic sales invoices with Avatax.
         'account',
         'base_vat',
         'l10n_latam_base',
-        'l10n_latam_invoice_document',
-    ],
+        'l10n_latam_invoice_document'],
     'data': [
         'data/account_tax_report_data.xml',
         'data/l10n_latam.identification.type.csv',
@@ -63,10 +62,7 @@ Create electronic sales invoices with Avatax.
         'views/account_fiscal_position_views.xml',
         'views/res_company_views.xml',
         'views/res_partner_views.xml',
-        'views/account_journal_views.xml',
-    ],
+        'views/account_journal_views.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

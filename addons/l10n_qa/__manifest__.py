@@ -11,10 +11,7 @@ Activates:
     'category': 'Accounting/Localizations/Account Charts',
     'version': '1.0',
     'depends': [
-        'account',
-    ],
+        'account'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

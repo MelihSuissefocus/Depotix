@@ -9,16 +9,12 @@
     'description': """Be able to see Identification Type and AFIP Responsibility in ecommerce checkout form.""",
     'depends': [
         'website_sale',
-        'l10n_ar',
-    ],
+        'l10n_ar'],
     'data': [
         'data/ir_model_fields.xml',
-        'views/templates.xml',
-    ],
+        'views/templates.xml'],
     'demo': [
-        'demo/website_demo.xml',
-    ],
+        'demo/website_demo.xml'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

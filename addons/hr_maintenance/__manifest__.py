@@ -12,9 +12,7 @@ Bridge between HR and Maintenance.""",
     'data': [
         'security/equipment.xml',
         'views/maintenance_views.xml',
-        'views/hr_views.xml',
-    ],
+        'views/hr_views.xml'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

@@ -13,9 +13,7 @@ Activates:
     "category": "Accounting/Localizations/Account Charts",
     "version": "1.0",
     "depends": [
-        "account",
-    ],
+        "account"],
     "data": ["data/res.country.state.csv"],
     "demo": ["demo/demo_company.xml"],
-    "license": "LGPL-3",
-}
+    "license": "LGPL-3"}

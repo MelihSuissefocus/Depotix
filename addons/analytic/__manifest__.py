@@ -29,12 +29,8 @@ that have no counterpart in the general financial accounts.
     'assets': {
         'web.assets_backend': [
             'analytic/static/src/components/**/*',
-            'analytic/static/src/services/**/*',
-        ],
+            'analytic/static/src/services/**/*'],
         'web.qunit_suite_tests': [
-            'analytic/static/tests/*.js',
-        ],
-    },
+            'analytic/static/tests/*.js']},
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

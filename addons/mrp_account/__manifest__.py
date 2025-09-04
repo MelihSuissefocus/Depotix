@@ -28,10 +28,8 @@ If the automated inventory valuation is active, the necessary accounting entries
         "report/report_mrp_templates.xml"
     ],
     'demo': [
-        'data/mrp_account_demo.xml',
-    ],
+        'data/mrp_account_demo.xml'],
     'installable': True,
     'auto_install': True,
     'post_init_hook': '_configure_journals',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

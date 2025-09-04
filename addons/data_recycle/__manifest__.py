@@ -14,15 +14,11 @@
         'views/data_recycle_record_views.xml',
         'views/data_cleaning_menu.xml',
         'views/data_recycle_templates.xml',
-        'security/ir.model.access.csv',
-    ],
+        'security/ir.model.access.csv'],
     'installable': True,
     'application': True,
     'assets': {
         'web.assets_backend': [
             'data_recycle/static/src/views/*.js',
-            'data_recycle/static/src/views/*.xml',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'data_recycle/static/src/views/*.xml']},
+    'license': 'LGPL-3'}

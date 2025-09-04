@@ -20,15 +20,10 @@ trigger an automatic reminder email.
         'security/ir.model.access.csv',
         'data/base_automation_data.xml',
         'views/ir_actions_server_views.xml',
-        'views/base_automation_views.xml',
-    ],
+        'views/base_automation_views.xml'],
     'assets': {
         'web.assets_backend': [
-            'base_automation/static/src/**/*',
-        ],
+            'base_automation/static/src/**/*'],
         'web.qunit_suite_tests': [
-            'base_automation/static/tests/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'base_automation/static/tests/**/*']},
+    'license': 'LGPL-3'}

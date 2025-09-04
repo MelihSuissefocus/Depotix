@@ -18,12 +18,8 @@ co-author is Chick.Farm (visit for more information https://www.myacc.cloud)
     'category': 'Accounting/Localizations/Account Charts',
     'depends': [
         'account',
-        'base_vat',
-    ],
+        'base_vat'],
     'data': [
-        'data/vat_tax_report.xml',
-    ],
+        'data/vat_tax_report.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-}
+        'demo/demo_company.xml']}

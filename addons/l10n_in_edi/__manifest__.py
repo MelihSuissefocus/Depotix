@@ -8,8 +8,7 @@
     "depends": [
         "account_edi",
         "l10n_in",
-        "iap",
-    ],
+        "iap"],
     "description": """
 Indian - E-invoicing
 ====================
@@ -27,11 +26,8 @@ For the creation of API username and password please ref this document: <https:/
         "data/account_edi_data.xml",
         "views/res_config_settings_views.xml",
         "views/edi_pdf_report.xml",
-        "views/account_move_views.xml",
-    ],
+        "views/account_move_views.xml"],
     "demo": [
-        "demo/demo_company.xml",
-    ],
+        "demo/demo_company.xml"],
     "installable": True,
-    "license": "LGPL-3",
-}
+    "license": "LGPL-3"}

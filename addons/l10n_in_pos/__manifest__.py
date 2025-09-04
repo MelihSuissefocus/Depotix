@@ -12,13 +12,9 @@
         'point_of_sale'
     ],
     'demo': [
-        'data/product_demo.xml',
-    ],
+        'data/product_demo.xml'],
     'auto_install': True,
     'assets': {
         'point_of_sale._assets_pos': [
-            'l10n_in_pos/static/src/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'l10n_in_pos/static/src/**/*']},
+    'license': 'LGPL-3'}

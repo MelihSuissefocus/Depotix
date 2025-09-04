@@ -17,15 +17,11 @@ This is the latest UK Odoo localisation necessary to run Odoo accounting for UK 
     'depends': [
         'account',
         'base_iban',
-        'base_vat',
-    ],
+        'base_vat'],
     'data': [
         'data/l10n_uk_chart_data.xml',
-        'data/account_tax_report_data.xml',
-    ],
+        'data/account_tax_report_data.xml'],
     'demo': [
         'demo/l10n_uk_demo.xml',
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

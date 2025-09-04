@@ -18,14 +18,10 @@ on leaves. Project and task can be configured company-wide.
         'views/res_config_settings_views.xml',
         'views/hr_holidays_views.xml',
         'views/project_task_views.xml',
-        'security/ir.model.access.csv',
-
-    ],
+        'security/ir.model.access.csv'],
     'demo': [
-        'data/holiday_timesheets_demo.xml',
-    ],
+        'data/holiday_timesheets_demo.xml'],
     'installable': True,
     'auto_install': True,
     'post_init_hook': 'post_init',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

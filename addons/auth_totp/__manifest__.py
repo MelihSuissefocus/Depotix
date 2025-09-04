@@ -23,15 +23,10 @@ can setup API keys to replace their main password.
         'data/ir_action_data.xml',
         'views/res_users_views.xml',
         'views/templates.xml',
-        'wizard/auth_totp_wizard_views.xml',
-    ],
+        'wizard/auth_totp_wizard_views.xml'],
     'assets': {
         'web.assets_tests': [
-            'auth_totp/static/tests/**/*',
-        ],
+            'auth_totp/static/tests/**/*'],
         'web.assets_backend': [
-            'auth_totp/static/src/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'auth_totp/static/src/**/*']},
+    'license': 'LGPL-3'}

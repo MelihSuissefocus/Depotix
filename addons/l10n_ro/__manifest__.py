@@ -9,8 +9,7 @@
     'version': '1.0',
     'depends': [
         'account',
-        'base_vat',
-    ],
+        'base_vat'],
     'description': """
 This is the module to manage the Accounting Chart, VAT structure, Fiscal Position and Tax Mapping.
 It also adds the Registration Number for Romania in Odoo.
@@ -21,10 +20,7 @@ Romanian accounting chart and localization.
     'data': [
         'views/res_partner_view.xml',
         'data/account_tax_report_data.xml',
-        'data/res.bank.csv',
-    ],
+        'data/res.bank.csv'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

@@ -16,15 +16,11 @@ This module add completed courses to resume for employees.
     'data': [
         'views/hr_employee_views.xml',
         'views/hr_templates.xml',
-        'data/hr_resume_data.xml',
-    ],
+        'data/hr_resume_data.xml'],
     'auto_install': True,
     'assets': {
         'web.assets_backend': [
             'hr_skills_slides/static/src/scss/**/*',
             'hr_skills_slides/static/src/fields/**/*',
-            'hr_skills_slides/static/src/xml/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'hr_skills_slides/static/src/xml/**/*']},
+    'license': 'LGPL-3'}

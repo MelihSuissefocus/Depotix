@@ -76,13 +76,9 @@ en Odoo):
     'website': 'https://www.odoo.com/documentation/17.0/applications/finance/fiscal_localizations.html',
     'depends': [
         'account',
-        'base_iban',
-    ],
+        'base_iban'],
     'data': [
-        'data/account_tax_report_data.xml',
-    ],
+        'data/account_tax_report_data.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

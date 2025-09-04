@@ -30,12 +30,9 @@
         'views/res_config_settings_views.xml',
         'wizard/account_move_send_views.xml',
         'wizard/l10n_hu_edi_cancellation.xml',
-        'wizard/l10n_hu_edi_tax_audit_export.xml',
-    ],
+        'wizard/l10n_hu_edi_tax_audit_export.xml'],
     'demo': [
-        'demo/demo_partner.xml',
-    ],
+        'demo/demo_partner.xml'],
     'post_init_hook': 'post_init',
     'auto_install': ['l10n_hu'],
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

@@ -16,19 +16,14 @@ This module allows to manage onboardings and their progress
         'views/onboarding_templates.xml',
         'views/onboarding_views.xml',
         'views/onboarding_menus.xml',
-        'security/ir.model.access.csv',
-    ],
+        'security/ir.model.access.csv'],
     'assets': {
         'web.assets_backend': [
             'onboarding/static/src/**/*',
-            ("remove", "onboarding/static/src/scss/onboarding.variables.dark.scss"),
-        ],
+            ("remove", "onboarding/static/src/scss/onboarding.variables.dark.scss")],
         "web.dark_mode_variables": [
-            ('before', 'onboarding/static/src/scss/onboarding.variables.scss', 'onboarding/static/src/scss/onboarding.variables.dark.scss'),
-        ],
+            ('before', 'onboarding/static/src/scss/onboarding.variables.scss', 'onboarding/static/src/scss/onboarding.variables.dark.scss')],
         'web._assets_primary_variables': [
-            'onboarding/static/src/scss/onboarding.variables.scss',
-        ]
+            'onboarding/static/src/scss/onboarding.variables.scss']
     },
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

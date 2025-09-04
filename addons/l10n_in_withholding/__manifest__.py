@@ -13,8 +13,6 @@
         'views/account_move_views.xml',
         'views/account_payment_views.xml',
         'views/account_tax_views.xml',
-        'views/res_config_settings_views.xml',
-    ],
+        'views/res_config_settings_views.xml'],
     'post_init_hook': '_l10n_in_withholding_post_init',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

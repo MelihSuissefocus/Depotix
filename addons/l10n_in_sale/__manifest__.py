@@ -9,16 +9,12 @@
     'category': 'Accounting/Localizations/Sale',
     'depends': [
         'l10n_in',
-        'sale',
-    ],
+        'sale'],
     'data': [
         'views/report_sale_order.xml',
-        'views/sale_views.xml',
-    ],
+        'views/sale_views.xml'],
     'demo': [
-        'data/product_demo.xml',
-    ],
+        'data/product_demo.xml'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

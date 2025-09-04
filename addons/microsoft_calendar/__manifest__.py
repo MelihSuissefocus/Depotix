@@ -13,22 +13,16 @@
         'wizard/reset_account_views.xml',
         'views/res_config_settings_views.xml',
         'views/res_users_views.xml',
-        'views/microsoft_calendar_views.xml',
-        ],
+        'views/microsoft_calendar_views.xml'],
     'installable': True,
     'post_init_hook': 'init_initiating_microsoft_uuid',
     'assets': {
         'web.assets_backend': [
             'microsoft_calendar/static/src/scss/microsoft_calendar.scss',
-            'microsoft_calendar/static/src/views/**/*',
-        ],
+            'microsoft_calendar/static/src/views/**/*'],
         'web.qunit_suite_tests': [
             'microsoft_calendar/static/tests/microsoft_calendar_mock_server.js',
-            'microsoft_calendar/static/tests/microsoft_calendar_tests.js',
-        ],
+            'microsoft_calendar/static/tests/microsoft_calendar_tests.js'],
         'web.qunit_mobile_suite_tests': [
-            'microsoft_calendar/static/tests/microsoft_calendar_mock_server.js',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'microsoft_calendar/static/tests/microsoft_calendar_mock_server.js']},
+    'license': 'LGPL-3'}

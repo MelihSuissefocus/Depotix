@@ -14,11 +14,8 @@ test_mail. """,
         'mass_mailing_sms',
         'sms_twilio',
         'test_mail',
-        'test_mail_sms',
-    ],
+        'test_mail_sms'],
     'data': [
-        'security/ir.model.access.csv',
-    ],
+        'security/ir.model.access.csv'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

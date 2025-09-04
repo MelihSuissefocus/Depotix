@@ -10,5 +10,4 @@
     'depends': ['mail_bot', 'im_livechat'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

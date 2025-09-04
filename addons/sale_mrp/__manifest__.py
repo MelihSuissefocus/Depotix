@@ -22,5 +22,4 @@ from sales order. It adds sales name and sales Reference on production order.
     ],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

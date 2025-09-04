@@ -11,14 +11,10 @@ This is the base module to manage the accounting chart for Estonia in Odoo.
     """,
     'author': 'Odoo SA',
     'depends': [
-        'account',
-    ],
+        'account'],
     'data': [
         'data/account_tax_report_data.xml',
-        'views/account_tax_form.xml',
-    ],
+        'views/account_tax_form.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

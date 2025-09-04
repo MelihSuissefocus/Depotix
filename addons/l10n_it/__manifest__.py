@@ -6,8 +6,7 @@
     'depends': [
         'account',
         'base_iban',
-        'base_vat',
-    ],
+        'base_vat'],
     'author': 'OpenERP Italian Community',
     'description': """
 Piano dei conti italiano di un'impresa generica.
@@ -32,7 +31,5 @@ Italian accounting chart and localization.
         'views/account_tax_views.xml'
     ],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

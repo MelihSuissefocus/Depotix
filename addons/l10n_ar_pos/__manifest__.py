@@ -10,18 +10,14 @@ Install this if you are using the Point of Sale app in Argentina.
     """,
     'depends': [
         'l10n_ar',
-        'point_of_sale',
-    ],
+        'point_of_sale'],
     'countries': ['ar'],
     'data': [
-        'views/templates.xml',
-    ],
+        'views/templates.xml'],
     'assets': {
         'point_of_sale._assets_pos': [
             'l10n_ar_pos/static/src/**/*'
-        ],
-    },
+        ]},
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

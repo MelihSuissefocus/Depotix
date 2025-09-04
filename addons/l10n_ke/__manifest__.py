@@ -10,17 +10,13 @@
 This provides a base chart of accounts and taxes template for use in Odoo.
     """,
     'depends': [
-        'account',
-    ],
+        'account'],
     'data': [
         'views/account_tax_views.xml',
         'views/l10n_ke_item_code_views.xml',
         'data/l10n_ke.item.code.csv',
         'data/account_tax_report_data.xml',
-        'security/ir.model.access.csv',
-    ],
+        'security/ir.model.access.csv'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

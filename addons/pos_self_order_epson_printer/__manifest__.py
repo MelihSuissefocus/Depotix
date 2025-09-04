@@ -16,8 +16,5 @@
         'pos_self_order.assets': [
             'pos_epson_printer/static/src/app/epson_printer.js',
             'pos_epson_printer/static/src/app/components/epos_templates.xml',
-            'pos_self_order_epson_printer/static/src/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'pos_self_order_epson_printer/static/src/**/*']},
+    'license': 'LGPL-3'}

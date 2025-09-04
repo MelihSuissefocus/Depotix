@@ -15,11 +15,7 @@ This module correct some behaviors when both module are installed.
     'auto_install': True,
     'assets': {
         'point_of_sale._assets_pos': [
-            'pos_restaurant_loyalty/static/src/**/*',
-        ],
+            'pos_restaurant_loyalty/static/src/**/*'],
         'web.assets_tests': [
-            'pos_restaurant_loyalty/static/tests/tours/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'pos_restaurant_loyalty/static/tests/tours/**/*']},
+    'license': 'LGPL-3'}

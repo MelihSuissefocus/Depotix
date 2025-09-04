@@ -6,8 +6,6 @@
     'description': """A module to test populate.""",
     'depends': ['base'],
     'data': [
-        'ir.model.access.csv',
-    ],
+        'ir.model.access.csv'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

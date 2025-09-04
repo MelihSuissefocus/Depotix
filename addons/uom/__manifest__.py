@@ -14,8 +14,6 @@ This is the base module for managing Units of measure.
         'data/uom_data.xml',
         'security/uom_security.xml',
         'security/ir.model.access.csv',
-        'views/uom_uom_views.xml',
-    ],
+        'views/uom_uom_views.xml'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

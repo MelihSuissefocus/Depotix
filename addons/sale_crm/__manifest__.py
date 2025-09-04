@@ -28,5 +28,4 @@ modules.
     ],
     'auto_install': True,
     'uninstall_hook': 'uninstall_hook',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

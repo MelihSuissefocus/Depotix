@@ -39,15 +39,11 @@ Wizards provided by this module:
     'depends': [
         'account',
         'base_iban',
-        'base_vat',
-    ],
+        'base_vat'],
     'data': [
         'data/account_tax_report_data.xml',
         'data/l10n_be_sequence_data.xml',
-        'data/menuitem_data.xml',
-    ],
+        'data/menuitem_data.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

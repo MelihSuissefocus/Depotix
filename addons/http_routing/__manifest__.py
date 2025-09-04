@@ -11,9 +11,7 @@ base modules simple.
 """,
     'data': [
         'views/http_routing_template.xml',
-        'views/res_lang_views.xml',
-    ],
+        'views/res_lang_views.xml'],
     'post_init_hook': '_post_init_hook',
     'depends': ['web'],
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

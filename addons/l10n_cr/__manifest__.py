@@ -21,13 +21,9 @@ Everything is in English with Spanish translation. Further translations are welc
 please go to http://translations.launchpad.net/openerp-costa-rica.
     """,
     'depends': [
-        'account',
-    ],
+        'account'],
     'data': [
-        'data/l10n_cr_res_partner_title.xml',
-    ],
+        'data/l10n_cr_res_partner_title.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

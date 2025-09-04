@@ -9,8 +9,7 @@ The user has to create an account on twilio.com and top
 up their account to start sending SMS messages.
 """,
     'depends': [
-        'sms',
-    ],
+        'sms'],
     'data': [
         'views/res_config_settings_views.xml',
         'views/sms_sms_views.xml',
@@ -18,5 +17,4 @@ up their account to start sending SMS messages.
         'security/ir.model.access.csv'
     ],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

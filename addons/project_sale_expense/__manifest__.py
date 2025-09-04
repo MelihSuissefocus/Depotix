@@ -8,5 +8,4 @@
     'license': 'LGPL-3',
     'category': 'Hidden',
     'depends': ['sale_project', 'sale_expense', 'project_hr_expense'],
-    'auto_install': True,
-}
+    'auto_install': True}

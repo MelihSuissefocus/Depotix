@@ -10,8 +10,7 @@
     'depends': [
         'portal',
         'mass_mailing',
-        'sms',
-    ],
+        'sms'],
     'data': [
         'data/utm.xml',
         'security/ir.model.access.csv',
@@ -24,23 +23,17 @@
         'views/utm_campaign_views.xml',
         'views/mailing_sms_menus.xml',
         'wizard/sms_composer_views.xml',
-        'wizard/mailing_sms_test_views.xml',
-    ],
+        'wizard/mailing_sms_test_views.xml'],
     'demo': [
         'demo/utm.xml',
         'demo/mailing_list_contact.xml',
         'demo/mailing_subscription.xml',
         'demo/mailing_mailing.xml',
-        'demo/mailing_trace.xml',
-    ],
+        'demo/mailing_trace.xml'],
     'assets': {
         'web.assets_backend': [
-            'mass_mailing_sms/static/src/**',
-        ],
+            'mass_mailing_sms/static/src/**'],
         'web.assets_tests': [
-            'mass_mailing_sms/static/tests/tours/**/*',
-        ],
-    },
+            'mass_mailing_sms/static/tests/tours/**/*']},
     'application': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

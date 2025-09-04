@@ -13,12 +13,9 @@ This module improves the Jordan E-invoicing (JoFotara) by the following:
     'data': [
         'views/account_move_views.xml',
         'views/res_config_settings_views.xml',
-        'wizard/account_move_send_views.xml',
-    ],
+        'wizard/account_move_send_views.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
+        'demo/demo_company.xml'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

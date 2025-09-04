@@ -25,11 +25,9 @@ When creating invoices from picking, the system is able to add and compute the s
         'views/stock_package_type_views.xml',
         'views/stock_picking_type_views.xml',
         'views/stock_rule_views.xml',
-        'views/stock_move_line_views.xml',
-    ],
+        'views/stock_move_line_views.xml'],
     'demo': ['data/delivery_demo.xml'],
     'installable': True,
     'auto_install': True,
     'license': 'LGPL-3',
-    'post_init_hook': '_auto_install_sale_app',
-}
+    'post_init_hook': '_auto_install_sale_app'}

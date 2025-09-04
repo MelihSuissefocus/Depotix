@@ -17,17 +17,12 @@ The actual till still requires one user but an unlimited number of employees can
         'views/pos_config.xml',
         'views/pos_order_view.xml',
         'views/pos_order_report_view.xml',
-        'views/res_config_settings_views.xml',
-    ],
+        'views/res_config_settings_views.xml'],
     'installable': True,
     'auto_install': True,
     'assets': {
         'point_of_sale._assets_pos': [
-            'pos_hr/static/src/**/*',
-        ],
+            'pos_hr/static/src/**/*'],
         'web.assets_tests': [
-            'pos_hr/static/tests/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'pos_hr/static/tests/**/*']},
+    'license': 'LGPL-3'}

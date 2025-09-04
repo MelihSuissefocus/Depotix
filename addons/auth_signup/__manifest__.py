@@ -13,8 +13,7 @@ Allow users to sign up and reset their password
     'depends': [
         'base_setup',
         'mail',
-        'web',
-    ],
+        'web'],
     'data': [
         'data/ir_config_parameter_data.xml',
         'data/ir_cron_data.xml',
@@ -23,13 +22,9 @@ Allow users to sign up and reset their password
         'views/res_users_views.xml',
         'views/auth_signup_login_templates.xml',
         'views/auth_signup_templates_email.xml',
-        'views/webclient_templates.xml',
-        ],
+        'views/webclient_templates.xml'],
     'bootstrap': True,
     'assets': {
         'web.assets_frontend': [
-            'auth_signup/static/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'auth_signup/static/**/*']},
+    'license': 'LGPL-3'}

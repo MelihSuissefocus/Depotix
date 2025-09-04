@@ -18,18 +18,13 @@ from purchase order.
         'views/purchase_order_views.xml',
         'views/mrp_production_views.xml',
         'views/stock_orderpoint_views.xml',
-        'security/ir.model.access.csv',
-    ],
+        'security/ir.model.access.csv'],
     'demo': [
-        'data/purchase_mrp_demo.xml',
-    ],
+        'data/purchase_mrp_demo.xml'],
     'depends': ['mrp', 'purchase_stock'],
     'installable': True,
     'auto_install': True,
     'assets': {
         'web.assets_backend': [
-            'mrp/static/src/**/*.js',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'mrp/static/src/**/*.js']},
+    'license': 'LGPL-3'}

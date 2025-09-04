@@ -32,10 +32,8 @@
         "views/res_partner.xml",
         "views/account_move.xml",
         "views/efaktur_document.xml",
-        "views/uom_uom.xml",
-    ],
+        "views/uom_uom.xml"],
     'installable': True,
     'auto_install': True,
     'post_init_hook': '_post_init_hook',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

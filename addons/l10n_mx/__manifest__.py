@@ -27,8 +27,7 @@ With this module you will have:
 .. _SAT: http://www.sat.gob.mx/
     """,
     'depends': [
-        'account',
-    ],
+        'account'],
     'data': [
         'data/account.account.tag.csv',
         'data/account_report_diot.xml',
@@ -38,10 +37,7 @@ With this module you will have:
         'views/res_config_settings_views.xml',
         'views/account_views.xml',
         'views/account_tax_view.xml',
-        "data/l10n_mx_uom.xml",
-    ],
+        "data/l10n_mx_uom.xml"],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

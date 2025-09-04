@@ -5,15 +5,10 @@
     'auto_install': True,
     'data': [
         'security/security.xml',
-        'views/templates.xml',
-    ],
+        'views/templates.xml'],
     'assets': {
         'web.assets_frontend': [
-            'auth_totp_portal/static/src/**/*',
-        ],
+            'auth_totp_portal/static/src/**/*'],
         'web.assets_tests': [
-            'auth_totp_portal/static/tests/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'auth_totp_portal/static/tests/**/*']},
+    'license': 'LGPL-3'}

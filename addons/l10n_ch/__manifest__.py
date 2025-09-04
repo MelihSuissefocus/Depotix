@@ -24,8 +24,7 @@ The generation of the QR-bill is automatic if you meet the previous criteria. Th
     'depends': [
         'account',
         'base_iban',
-        'l10n_din5008',
-    ],
+        'l10n_din5008'],
     'data': [
         'security/ir.model.access.csv',
         'data/account_tax_report_data.xml',
@@ -34,19 +33,14 @@ The generation of the QR-bill is automatic if you meet the previous criteria. Th
         'views/account_invoice.xml',
         'views/setup_wizard_views.xml',
         'views/qr_invoice_wizard_view.xml',
-        'views/account_payment_view.xml',
-    ],
+        'views/account_payment_view.xml'],
     'demo': [
         'demo/account_cash_rounding.xml',
         'demo/demo_company.xml',
-        'demo/res_partner_demo.xml',
-    ],
+        'demo/res_partner_demo.xml'],
     'post_init_hook': 'post_init',
     'assets': {
         'web.report_assets_common': [
-            'l10n_ch/static/src/scss/**/*',
-        ],
-    }
+            'l10n_ch/static/src/scss/**/*']}
 ,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

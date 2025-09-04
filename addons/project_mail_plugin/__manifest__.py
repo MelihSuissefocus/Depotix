@@ -14,9 +14,7 @@
     'website': 'https://www.odoo.com/app/project',
     'depends': [
         'project',
-        'mail_plugin',
-    ],
+        'mail_plugin'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

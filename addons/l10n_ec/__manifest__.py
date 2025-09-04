@@ -44,8 +44,7 @@ Master Data:
         'account_debit_note',
         'l10n_latam_invoice_document',
         'l10n_latam_base',
-        'account',
-    ],
+        'account'],
     'data': [
         'security/ir.model.access.csv',
         'data/account_tax_report_data.xml',
@@ -59,10 +58,7 @@ Master Data:
         'views/l10n_latam_document_type_view.xml',
         'views/l10n_ec_sri_payment.xml',
         'views/account_journal_view.xml',
-        "views/res_partner_view.xml",
-    ],
+        "views/res_partner_view.xml"],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'installable': True,
-}
+        'demo/demo_company.xml'],
+    'installable': True}

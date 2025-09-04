@@ -16,17 +16,13 @@ It also includes the invoice OCR payment reference handling.
     """,
     'depends': [
         'account',
-        'base_vat',
-    ],
+        'base_vat'],
     'data': [
         'data/account.account.tag.csv',
         'data/account_tax_report_data.xml',
         "data/res_country_data.xml",
         'views/partner_view.xml',
-        'views/account_journal_view.xml',
-    ],
+        'views/account_journal_view.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

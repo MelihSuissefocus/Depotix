@@ -9,8 +9,7 @@
 This module allows a customer to give rating.
 """,
     'depends': [
-        'mail',
-    ],
+        'mail'],
     'data': [
         'views/rating_rating_views.xml',
         'views/rating_templates.xml',
@@ -21,14 +20,9 @@ This module allows a customer to give rating.
     'assets': {
         'web.assets_backend': [
             'rating/static/src/**/*',
-            ('remove', 'rating/static/src/scss/rating_templates.scss'),
-        ],
+            ('remove', 'rating/static/src/scss/rating_templates.scss')],
         'web.assets_frontend': [
-            'rating/static/src/scss/rating_templates.scss',
-        ],
+            'rating/static/src/scss/rating_templates.scss'],
         'web.tests_assets': [
-            'rating/static/tests/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'rating/static/tests/**/*']},
+    'license': 'LGPL-3'}

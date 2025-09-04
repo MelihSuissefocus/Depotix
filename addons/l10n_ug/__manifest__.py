@@ -16,12 +16,9 @@ This is the basic Ugandian localisation necessary to run Odoo in UG:
     - Tax report
     """,
     "depends": [
-        "account",
-    ],
+        "account"],
     "data": [
-        "data/account_tax_report_data.xml",
-    ],
+        "data/account_tax_report_data.xml"],
     "demo": [
-        "demo/demo_company.xml",
-    ]
+        "demo/demo_company.xml"]
 }

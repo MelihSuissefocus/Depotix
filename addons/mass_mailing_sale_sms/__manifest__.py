@@ -9,5 +9,4 @@
     'description': """Mass mailing sms on sale orders""",
     'depends': ['mass_mailing_sale', 'mass_mailing_sms'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

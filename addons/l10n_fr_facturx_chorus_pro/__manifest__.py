@@ -15,7 +15,5 @@ Add support to fill three optional fields used when using Chorus Pro, especially
         'l10n_fr'
     ],
     'data': [
-        'views/account_move_views.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'views/account_move_views.xml'],
+    'license': 'LGPL-3'}

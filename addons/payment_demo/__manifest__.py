@@ -20,8 +20,5 @@
     'uninstall_hook': 'uninstall_hook',
     'assets': {
         'web.assets_frontend': [
-            'payment_demo/static/src/js/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'payment_demo/static/src/js/**/*']},
+    'license': 'LGPL-3'}

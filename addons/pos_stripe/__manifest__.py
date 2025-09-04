@@ -8,14 +8,10 @@
     'summary': 'Integrate your POS with a Stripe payment terminal',
     'data': [
         'views/pos_payment_method_views.xml',
-        'views/assets_stripe.xml',
-    ],
+        'views/assets_stripe.xml'],
     'depends': ['point_of_sale', 'payment_stripe'],
     'installable': True,
     'assets': {
         'point_of_sale._assets_pos': [
-            'pos_stripe/static/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'pos_stripe/static/**/*']},
+    'license': 'LGPL-3'}

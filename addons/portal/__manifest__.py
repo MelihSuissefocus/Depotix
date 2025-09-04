@@ -24,18 +24,14 @@ a dependency towards website editing and customization capabilities.""",
         'views/portal_templates.xml',
         'views/res_config_settings_views.xml',
         'wizard/portal_share_views.xml',
-        'wizard/portal_wizard_views.xml',
-    ],
+        'wizard/portal_wizard_views.xml'],
     'assets': {
         'web._assets_primary_variables': [
-            'portal/static/src/scss/primary_variables.scss',
-        ],
+            'portal/static/src/scss/primary_variables.scss'],
         'web._assets_frontend_helpers': [
-            ('prepend', 'portal/static/src/scss/bootstrap_overridden.scss'),
-        ],
+            ('prepend', 'portal/static/src/scss/bootstrap_overridden.scss')],
         'web.assets_backend': [
-            'portal/static/src/views/**/*',
-        ],
+            'portal/static/src/views/**/*'],
         'web.assets_frontend': [
             'portal/static/src/scss/portal.scss',
             'portal/static/src/js/portal.js',
@@ -46,11 +42,7 @@ a dependency towards website editing and customization capabilities.""",
             'portal/static/src/js/portal_sidebar.js',
             'portal/static/src/xml/portal_security.xml',
             'portal/static/src/js/components/**/*',
-            'portal/static/src/signature_form/**/*',
-        ],
+            'portal/static/src/signature_form/**/*'],
         'web.assets_tests': [
-            'portal/static/tests/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'portal/static/tests/**/*']},
+    'license': 'LGPL-3'}

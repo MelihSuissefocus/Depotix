@@ -8,9 +8,7 @@
     'category': 'Accounting/Localizations',
     'depends': [
         'l10n_ec',
-        'stock',
-    ],
+        'stock'],
     'auto_install': True,
     'post_init_hook': 'post_init_hook',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

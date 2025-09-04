@@ -12,14 +12,10 @@
         'views/payment_flutterwave_templates.xml',
         'views/payment_provider_views.xml',
 
-        'data/payment_provider_data.xml',
-    ],
+        'data/payment_provider_data.xml'],
     'assets': {
         'web.assets_frontend': [
-            'payment_flutterwave/static/src/js/payment_form.js',
-        ],
-    },
+            'payment_flutterwave/static/src/js/payment_form.js']},
     'post_init_hook': 'post_init_hook',
     'uninstall_hook': 'uninstall_hook',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

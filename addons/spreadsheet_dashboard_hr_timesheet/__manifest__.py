@@ -7,9 +7,7 @@
     'description': 'Spreadsheet',
     'depends': ['spreadsheet_dashboard', 'hr_timesheet'],
     'data': [
-        "data/dashboards.xml",
-    ],
+        "data/dashboards.xml"],
     'installable': True,
     'auto_install': ['hr_timesheet'],
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

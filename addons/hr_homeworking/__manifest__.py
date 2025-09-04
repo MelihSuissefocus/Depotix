@@ -11,19 +11,13 @@
         'security/ir.model.access.csv',
         'views/hr_employee_views.xml',
         'views/res_users.xml',
-        'wizard/homework_location_wizard.xml',
-    ],
+        'wizard/homework_location_wizard.xml'],
     'demo': [
-        'data/hr_homeworking_demo.xml',
-    ],
+        'data/hr_homeworking_demo.xml'],
     'installable': True,
     'assets': {
         'web.assets_backend': [
-            'hr_homeworking/static/src/**/*',
-        ],
+            'hr_homeworking/static/src/**/*'],
         'web.qunit_suite_tests': [
-            'hr_homeworking/static/tests/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'hr_homeworking/static/tests/**/*']},
+    'license': 'LGPL-3'}

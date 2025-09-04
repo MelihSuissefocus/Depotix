@@ -20,8 +20,6 @@
         'mail',
         'mail_bot',
         'project_todo',
-        'website_livechat',
-    ],
+        'website_livechat'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

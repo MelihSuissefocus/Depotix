@@ -15,19 +15,16 @@ models which only purpose is to run tests.""",
     'depends': [
         'web_unsplash',
         'website',
-        'theme_default',
-    ],
+        'theme_default'],
     'demo': [
-        'data/test_website_demo.xml',
-    ],
+        'data/test_website_demo.xml'],
     'data': [
         'security/test_website_security.xml',
         'security/ir.model.access.csv',
         'views/templates.xml',
         'views/test_model_multi_website_views.xml',
         'views/test_model_views.xml',
-        'data/test_website_data.xml',
-    ],
+        'data/test_website_data.xml'],
     'installable': True,
     'assets': {
         'test_website.test_bundle': [
@@ -36,14 +33,9 @@ models which only purpose is to run tests.""",
             'http://test.external.link/style1.css',
             '/web/static/src/module_loader.js',
             'http://test.external.link/javascript2.js',
-            'http://test.external.link/style2.css',
-        ],
+            'http://test.external.link/style2.css'],
         'web.assets_frontend': [
-            'test_website/static/src/js/test_error.js',
-        ],
+            'test_website/static/src/js/test_error.js'],
         'web.assets_tests': [
-            'test_website/static/tests/tours/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'test_website/static/tests/tours/*']},
+    'license': 'LGPL-3'}

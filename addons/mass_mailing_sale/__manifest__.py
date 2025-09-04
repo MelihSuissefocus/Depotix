@@ -9,11 +9,8 @@
     'description': """UTM and mass mailing on sale orders""",
     'depends': ['sale', 'mass_mailing'],
     'data': [
-        'views/mailing_mailing_views.xml',
-    ],
+        'views/mailing_mailing_views.xml'],
     'demo': [
-        'demo/mailing_mailing.xml',
-    ],
+        'demo/mailing_mailing.xml'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

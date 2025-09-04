@@ -9,8 +9,6 @@
     'depends': ['payment_razorpay'],
     'data': [
         'views/payment_provider_views.xml',
-        'views/razorpay_templates.xml',
-    ],
+        'views/razorpay_templates.xml'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

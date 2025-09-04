@@ -14,9 +14,7 @@
         'security/ir.model.access.csv',
         'data/purchase_requisition_stock_data.xml',
         'views/purchase_views.xml',
-        'views/purchase_requisition_views.xml',
-    ],
+        'views/purchase_requisition_views.xml'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

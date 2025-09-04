@@ -10,8 +10,6 @@
     'description': """This module contains tests related to base import.""",
     'depends': ['base_import'],
     'data': [
-        'security/ir.model.access.csv',
-    ],
+        'security/ir.model.access.csv'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

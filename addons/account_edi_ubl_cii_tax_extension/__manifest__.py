@@ -11,8 +11,6 @@
     'website': 'https://www.odoo.com/app/invoicing',
     'depends': ['account_edi_ubl_cii'],
     'data': [
-        'views/account_tax_views.xml',
-    ],
+        'views/account_tax_views.xml'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

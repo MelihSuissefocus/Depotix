@@ -19,13 +19,9 @@ Activates:
     """,
     'author': 'Odoo S.A., Drysharks Consulting and Trading Ltd.',
     'depends': [
-        'account',
-    ],
+        'account'],
     'data': [
-        'data/account_tax_report_data.xml',
-    ],
+        'data/account_tax_report_data.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

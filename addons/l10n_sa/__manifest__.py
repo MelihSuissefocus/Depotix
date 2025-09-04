@@ -22,8 +22,7 @@ Activates:
 """,
     'depends': [
         'l10n_gcc_invoice',
-        'account',
-    ],
+        'account'],
     'data': [
         'data/account_data.xml',
         'data/account_tax_report_data.xml',
@@ -32,7 +31,5 @@ Activates:
         'views/report_templates_views.xml'
     ],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

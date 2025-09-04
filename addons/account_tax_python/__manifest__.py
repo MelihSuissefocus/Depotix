@@ -15,7 +15,5 @@ A tax defined as python code consists of two snippets of python code which are e
     'version': '1.0',
     'depends': ['account'],
     'data': [
-        'views/account_tax_views.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'views/account_tax_views.xml'],
+    'license': 'LGPL-3'}

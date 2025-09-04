@@ -9,9 +9,7 @@
     'data': [
         'data/fleet_service_type_data.xml',
         'views/account_move_views.xml',
-        'views/fleet_vehicle_views.xml',
-    ],
+        'views/fleet_vehicle_views.xml'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

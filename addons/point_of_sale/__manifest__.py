@@ -44,11 +44,9 @@
         'views/report_invoice.xml',
         'views/pos_printer_view.xml',
         'views/pos_ticket_view.xml',
-        'views/res_config_settings_views.xml',
-    ],
+        'views/res_config_settings_views.xml'],
     'demo': [
-        'data/point_of_sale_demo.xml',
-    ],
+        'data/point_of_sale_demo.xml'],
     'installable': True,
     'application': True,
     'website': 'https://www.odoo.com/app/point-of-sale-shop',
@@ -68,12 +66,10 @@
         'web.assets_backend': [
             'point_of_sale/static/src/scss/pos_dashboard.scss',
             'point_of_sale/static/src/backend/tours/point_of_sale.js',
-            'point_of_sale/static/src/backend/debug_manager.js',
-        ],
+            'point_of_sale/static/src/backend/debug_manager.js'],
         'web.assets_tests': [
             'barcodes/static/tests/helpers.js',
-            'point_of_sale/static/tests/tours/**/*',
-        ],
+            'point_of_sale/static/tests/tours/**/*'],
 
         # PoS assets
 
@@ -148,13 +144,11 @@
             'web/static/src/webclient/actions/**/*',
             ('remove', 'web/static/src/webclient/actions/reports/layout_assets/**/*'),
             ('remove', 'web/static/src/webclient/actions/**/*css'),
-            'web/static/src/webclient/company_service.js',
-        ],
+            'web/static/src/webclient/company_service.js'],
         # Bundle that starts the pos, loaded on /pos/ui
         'point_of_sale.assets_prod': [
             ('include', 'point_of_sale._assets_pos'),
-            'point_of_sale/static/src/app/main.js',
-        ],
+            'point_of_sale/static/src/app/main.js'],
         # Bundle for the unit tests at /pos/ui/tests
         'point_of_sale.assets_qunit_tests': [
             ('include', 'point_of_sale._assets_pos'),
@@ -225,8 +219,5 @@
 
             ## END copy of web.tests_assets
             # pos unit tests
-            'point_of_sale/static/tests/unit/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'point_of_sale/static/tests/unit/**/*']},
+    'license': 'LGPL-3'}

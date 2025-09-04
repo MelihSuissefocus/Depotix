@@ -6,5 +6,4 @@
     'description': """A module to test Odoo code with various linters.""",
     'depends': ['base'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

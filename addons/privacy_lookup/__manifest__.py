@@ -10,8 +10,6 @@
         'wizard/privacy_lookup_wizard_views.xml',
         'views/privacy_log_views.xml',
         'security/ir.model.access.csv',
-        'data/ir_actions_server_data.xml',
-    ],
+        'data/ir_actions_server_data.xml'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

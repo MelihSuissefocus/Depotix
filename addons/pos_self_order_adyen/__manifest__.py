@@ -5,5 +5,4 @@
     "category": "Sales/Point Of Sale",
     "depends": ["pos_adyen", "pos_self_order"],
     "auto_install": True,
-    "license": "LGPL-3",
-}
+    "license": "LGPL-3"}

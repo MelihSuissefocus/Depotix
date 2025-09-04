@@ -35,8 +35,7 @@ If you want to save your employees' time and avoid them to always have coins in 
         'views/res_config_settings.xml',
         'views/lunch_views.xml',
         'data/mail_template_data.xml',
-        'data/lunch_data.xml',
-    ],
+        'data/lunch_data.xml'],
     'demo': ['data/lunch_demo.xml'],
     'installable': True,
     'application': True,
@@ -46,14 +45,9 @@ If you want to save your employees' time and avoid them to always have coins in 
             'lunch/static/src/mixins/*.js',
             'lunch/static/src/views/*',
             'lunch/static/src/scss/lunch_view.scss',
-            'lunch/static/src/scss/lunch_kanban.scss',
-        ],
+            'lunch/static/src/scss/lunch_kanban.scss'],
         'web.assets_tests': [
-            'lunch/static/tests/tours/*.js',
-        ],
+            'lunch/static/tests/tours/*.js'],
         'web.qunit_suite_tests': [
-            'lunch/static/tests/lunch_kanban_tests.js',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'lunch/static/tests/lunch_kanban_tests.js']},
+    'license': 'LGPL-3'}

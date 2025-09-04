@@ -16,8 +16,6 @@ Badge received are displayed on the user profile.
         'security/ir.model.access.csv',
         'wizard/gamification_badge_user_wizard_views.xml',
         'views/gamification_views.xml',
-        'views/hr_employee_views.xml',
-        ],
+        'views/hr_employee_views.xml'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

@@ -11,13 +11,9 @@
     'depends': [
         'base',
         'account',
-        'base_vat',
-    ],
+        'base_vat'],
     'data': [
-        'data/account_tax_report.xml',
-    ],
+        'data/account_tax_report.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

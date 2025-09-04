@@ -10,6 +10,4 @@ Arabic/English for GCC
     'license': 'LGPL-3',
     'depends': ['account'],
     'data': [
-        'views/report_invoice.xml',
-    ],
-}
+        'views/report_invoice.xml']}

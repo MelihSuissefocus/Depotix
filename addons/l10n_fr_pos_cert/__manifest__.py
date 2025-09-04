@@ -33,13 +33,9 @@ The module adds following features:
         'report/pos_hash_integrity.xml',
         'data/account_sale_closure_cron.xml',
         'security/ir.model.access.csv',
-        'security/account_closing_intercompany.xml',
-    ],
+        'security/account_closing_intercompany.xml'],
     'post_init_hook': '_setup_inalterability',
     'assets': {
         'point_of_sale._assets_pos': [
-            'l10n_fr_pos_cert/static/src/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'l10n_fr_pos_cert/static/src/**/*']},
+    'license': 'LGPL-3'}

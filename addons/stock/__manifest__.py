@@ -14,8 +14,7 @@
         'data/stock_demo.xml',
         'data/stock_demo2.xml',
         'data/stock_orderpoint_demo.xml',
-        'data/stock_storage_category_demo.xml',
-    ],
+        'data/stock_storage_category_demo.xml'],
     'data': [
         'security/stock_security.xml',
         'security/ir.model.access.csv',
@@ -87,8 +86,7 @@
         'views/stock_rule_views.xml',
         'views/stock_package_level_views.xml',
         'views/stock_package_type_view.xml',
-        'views/stock_forecasted.xml',
-    ],
+        'views/stock_forecasted.xml'],
     'installable': True,
     'application': True,
     'pre_init_hook': 'pre_init_hook',
@@ -97,27 +95,20 @@
     'assets': {
         'web.report_assets_common': [
             'stock/static/src/scss/report_stock_reception.scss',
-            'stock/static/src/scss/report_stock_rule.scss',
-        ],
+            'stock/static/src/scss/report_stock_rule.scss'],
         'web.assets_backend': [
             'stock/static/src/**/*.js',
             'stock/static/src/**/*.xml',
             'stock/static/src/scss/*.scss',
-            'stock/static/src/views/**/*',
-        ],
+            'stock/static/src/views/**/*'],
         'web.assets_frontend': [
-            'stock/static/src/scss/stock_traceability_report.scss',
-        ],
+            'stock/static/src/scss/stock_traceability_report.scss'],
         'web.assets_tests': [
-            'stock/static/tests/tours/*.js',
-        ],
+            'stock/static/tests/tours/*.js'],
         'web.qunit_suite_tests': [
             'stock/static/tests/counted_quantity_widget_tests.js',
             'stock/static/tests/inventory_report_list_tests.js',
             'stock/static/tests/popover_widget_tests.js',
             'stock/static/tests/stock_traceability_report_backend_tests.js',
-            'stock/static/tests/stock_move_one2many_tests.js',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'stock/static/tests/stock_move_one2many_tests.js']},
+    'license': 'LGPL-3'}

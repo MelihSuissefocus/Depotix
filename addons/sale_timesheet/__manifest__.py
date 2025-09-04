@@ -33,24 +33,17 @@ have real delivered quantities in sales orders.
         'report/project_report_view.xml',
         'wizard/project_create_sale_order_views.xml',
         'wizard/project_create_invoice_views.xml',
-        'wizard/sale_make_invoice_advance_views.xml',
-    ],
+        'wizard/sale_make_invoice_advance_views.xml'],
     'demo': [
-        'data/sale_service_demo.xml',
-    ],
+        'data/sale_service_demo.xml'],
     'auto_install': True,
     'uninstall_hook': 'uninstall_hook',
     'assets': {
         'web.assets_frontend': [
-            'sale_timesheet/static/src/scss/sale_timesheet_portal.scss',
-        ],
+            'sale_timesheet/static/src/scss/sale_timesheet_portal.scss'],
         'web.assets_backend': [
-            'sale_timesheet/static/src/components/**/*',
-        ],
+            'sale_timesheet/static/src/components/**/*'],
         'web.assets_tests': [
-            'sale_timesheet/static/tests/**/*',
-        ],
-    },
+            'sale_timesheet/static/tests/**/*']},
     'license': 'LGPL-3',
-    'post_init_hook': '_sale_timesheet_post_init',
-}
+    'post_init_hook': '_sale_timesheet_post_init'}

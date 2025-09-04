@@ -17,14 +17,10 @@ to support In-App purchases inside Odoo. """,
         'security/ir.model.access.csv',
         'security/ir_rule.xml',
         'views/iap_views.xml',
-        'views/res_config_settings.xml',
-    ],
+        'views/res_config_settings.xml'],
     'auto_install': True,
     'assets': {
         'web.assets_backend': [
             'iap/static/src/**/*.js',
-            'iap/static/src/**/*.xml',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'iap/static/src/**/*.xml']},
+    'license': 'LGPL-3'}

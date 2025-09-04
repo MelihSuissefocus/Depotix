@@ -13,5 +13,4 @@
         'views/res_partner_views.xml',
         'views/stock_picking_views.xml',
         'templates/l10n_tr_nilvera_edispatch.xml'
-    ],
-}
+    ]}

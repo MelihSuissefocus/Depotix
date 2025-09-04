@@ -31,21 +31,15 @@ The service is provided by the In App Purchase Odoo platform.
         'views/sms_sms_views.xml',
         'views/sms_template_views.xml',
         'security/ir.model.access.csv',
-        'security/sms_security.xml',
-    ],
+        'security/sms_security.xml'],
     'demo': [
         'data/sms_demo.xml',
-        'data/mail_demo.xml',
-    ],
+        'data/mail_demo.xml'],
     'installable': True,
     'auto_install': True,
     'assets': {
         'web.assets_backend': [
-            'sms/static/src/**/*',
-        ],
+            'sms/static/src/**/*'],
         'web.qunit_suite_tests': [
-            'sms/static/tests/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'sms/static/tests/**/*']},
+    'license': 'LGPL-3'}

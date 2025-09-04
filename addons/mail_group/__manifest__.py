@@ -10,8 +10,7 @@ Manage your mailing lists from Odoo.
     'version': '1.1',
     'depends': [
         'mail',
-        'portal',
-    ],
+        'portal'],
     'data': [
         'data/ir_cron_data.xml',
         'data/mail_templates.xml',
@@ -25,19 +24,13 @@ Manage your mailing lists from Odoo.
         'views/mail_group_moderation_views.xml',
         'views/mail_group_views.xml',
         'views/mail_group_menus.xml',
-        'views/portal_templates.xml',
-    ],
+        'views/portal_templates.xml'],
     'demo': [
-        'data/mail_group_demo.xml',
-    ],
+        'data/mail_group_demo.xml'],
     'assets': {
         'web.assets_frontend': [
             'mail_group/static/src/css/mail_group.scss',
-            'mail_group/static/src/js/*',
-        ],
+            'mail_group/static/src/js/*'],
         'web.assets_backend': [
-            'mail_group/static/src/css/mail_group_backend.scss',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'mail_group/static/src/css/mail_group_backend.scss']},
+    'license': 'LGPL-3'}

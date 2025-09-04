@@ -8,9 +8,7 @@
     'description': 'Spreadsheet',
     'depends': ['spreadsheet_dashboard', 'pos_hr'],
     'data': [
-        "data/dashboards.xml",
-    ],
+        "data/dashboards.xml"],
     'installable': True,
     'auto_install': ['pos_hr'],
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

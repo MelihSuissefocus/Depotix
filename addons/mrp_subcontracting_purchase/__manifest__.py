@@ -11,12 +11,9 @@ This bridge module adds some smart buttons between Purchase and Subcontracting
     'depends': ['mrp_subcontracting', 'purchase_mrp'],
     'data': [
         'views/purchase_order_views.xml',
-        'views/stock_picking_views.xml',
-    ],
+        'views/stock_picking_views.xml'],
     'demo': [
-        'data/mrp_subcontracting_purchase_demo.xml',
-    ],
+        'data/mrp_subcontracting_purchase_demo.xml'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

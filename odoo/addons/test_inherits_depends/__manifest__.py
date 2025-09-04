@@ -7,5 +7,4 @@
     'description': """A module to verify the inheritance using _inherits in non-original modules.""",
     'depends': ['test_inherits'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

@@ -20,14 +20,10 @@ This module also includes:
     'website': 'https://www.odoo.com/documentation/17.0/applications/finance/fiscal_localizations.html',
     'category': 'Accounting/Localizations/Account Charts',
     'depends': [
-        'account',
-    ],
+        'account'],
     'data': [
         'data/account_account_tag_data.xml',
-        'data/res_bank_data.xml',
-    ],
+        'data/res_bank_data.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'installable': True,
-}
+        'demo/demo_company.xml'],
+    'installable': True}

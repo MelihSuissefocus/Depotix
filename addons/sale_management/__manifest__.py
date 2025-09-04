@@ -53,19 +53,14 @@ The Dashboard for the Sales Manager will include
         'views/sale_order_views.xml',
         'views/sale_portal_templates.xml',
 
-        'views/sale_management_menus.xml',
-    ],
+        'views/sale_management_menus.xml'],
     'demo': [
-        'data/sale_order_template_demo.xml',
-    ],
+        'data/sale_order_template_demo.xml'],
     'assets': {
         'web.assets_frontend': [
-            'sale_management/static/src/js/**/*',
-        ],
-    },
+            'sale_management/static/src/js/**/*']},
     'application': True,
     'pre_init_hook': 'pre_init_hook',
     'post_init_hook': 'post_init_hook',
     'uninstall_hook': 'uninstall_hook',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

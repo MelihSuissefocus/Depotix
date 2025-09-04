@@ -15,13 +15,9 @@ This is the latest Indonesian Odoo localisation necessary to run Odoo accounting
     'depends': [
         'account',
         'base_iban',
-        'base_vat',
-    ],
+        'base_vat'],
     'data': [
-        'data/account_tax_template_data.xml',
-    ],
+        'data/account_tax_template_data.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

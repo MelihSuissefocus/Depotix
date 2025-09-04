@@ -9,15 +9,10 @@
     'license': 'LGPL-3',
     'data': [
         'views/res_config_settings_views.xml',
-        'views/pos_order_views.xml',
-    ],
+        'views/pos_order_views.xml'],
     'assets': {
         'point_of_sale._assets_pos': [
-            'l10n_es_pos/static/src/**/*',
-        ],
+            'l10n_es_pos/static/src/**/*'],
         'web.assets_tests': [
-            'l10n_es_pos/static/tests/**/*',
-        ],
-    },
-    'post_init_hook': '_l10n_es_pos_post_init_hook',
-}
+            'l10n_es_pos/static/tests/**/*']},
+    'post_init_hook': '_l10n_es_pos_post_init_hook'}

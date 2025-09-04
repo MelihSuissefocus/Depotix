@@ -24,5 +24,4 @@ So this module is to get the warehouse address if the bill is created from Purch
     ],
 
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

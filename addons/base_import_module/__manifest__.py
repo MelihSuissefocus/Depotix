@@ -16,12 +16,9 @@ for customization purpose.
     'data': [
         'security/ir.model.access.csv',
         'views/base_import_module_view.xml',
-        'views/ir_module_views.xml',
-    ],
+        'views/ir_module_views.xml'],
     'assets': {
         'web.assets_backend': [
-            'base_import_module/static/src/**/*',
-        ]
+            'base_import_module/static/src/**/*']
     },
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

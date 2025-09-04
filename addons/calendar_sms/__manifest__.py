@@ -10,8 +10,6 @@
     'depends': ['calendar', 'sms'],
     'data': [
         'data/sms_data.xml',
-        'views/calendar_views.xml',
-    ],
+        'views/calendar_views.xml'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

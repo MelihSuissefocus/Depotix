@@ -14,5 +14,4 @@
     'installable': True,
     'auto_install': True,
     'post_init_hook': '_stock_landed_costs_company_post_init',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

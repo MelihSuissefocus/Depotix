@@ -12,9 +12,7 @@
         'security/hr_recruitment_skills_security.xml',
         'views/hr_applicant_views.xml',
         'views/hr_applicant_skill_views.xml',
-        'security/ir.model.access.csv',
-    ],
+        'security/ir.model.access.csv'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

@@ -11,11 +11,7 @@
     'auto_install': True,
     'assets': {
         'point_of_sale._assets_pos': [
-            'l10n_be_pos_sale/static/src/js/**/*',
-        ],
+            'l10n_be_pos_sale/static/src/js/**/*'],
         'web.assets_tests': [
-            'l10n_be_pos_sale/static/tests/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'l10n_be_pos_sale/static/tests/**/*']},
+    'license': 'LGPL-3'}

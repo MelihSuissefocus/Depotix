@@ -14,7 +14,5 @@
     'data': [
         'security/ir.model.access.csv',
         'views/res_config_settings_views.xml',
-        'wizard/account_update_tax_tags_wizard.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'wizard/account_update_tax_tags_wizard.xml'],
+    'license': 'LGPL-3'}

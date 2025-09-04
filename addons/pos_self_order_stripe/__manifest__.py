@@ -6,12 +6,8 @@
     "depends": ["pos_stripe", "pos_self_order"],
     "auto_install": True,
     'data': [
-        'views/assets_stripe.xml',
-    ],
+        'views/assets_stripe.xml'],
     'assets': {
         'pos_self_order.assets': [
-            'pos_self_order_stripe/static/**/*',
-        ],
-    },
-    "license": "LGPL-3",
-}
+            'pos_self_order_stripe/static/**/*']},
+    "license": "LGPL-3"}

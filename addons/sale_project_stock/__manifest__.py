@@ -10,7 +10,5 @@
     'category': 'Sales',
     'depends': ['sale_project', 'sale_stock'],
     'data': [
-        'views/stock_move_views.xml',
-    ],
-    'auto_install': True,
-}
+        'views/stock_move_views.xml'],
+    'auto_install': True}

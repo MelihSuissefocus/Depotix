@@ -116,18 +116,15 @@ For more specific needs, you may also assign custom-defined actions
         'views/res_partner_views.xml',
         'views/mail_blacklist_views.xml',
         'views/mail_menus.xml',
-        'views/res_company_views.xml',
-    ],
+        'views/res_company_views.xml'],
     'demo': [
-        'data/discuss_channel_demo.xml',
-    ],
+        'data/discuss_channel_demo.xml'],
     'installable': True,
     'application': True,
     'post_init_hook': '_mail_post_init',
     'assets': {
         'web._assets_primary_variables': [
-            'mail/static/src/**/primary_variables.scss',
-        ],
+            'mail/static/src/**/primary_variables.scss'],
         'web.assets_backend': [
             # depends on BS variables, can't be loaded in assets_primary or assets_secondary
             'mail/static/src/scss/variables/derived_variables.scss',
@@ -152,14 +149,11 @@ For more specific needs, you may also assign custom-defined actions
             'mail/static/src/discuss/**/public_web/**/*',
             'mail/static/src/discuss/**/web/**/*',
             ('remove', 'mail/static/src/discuss/**/*.dark.scss'),
-            'mail/static/src/views/fields/**/*',
-        ],
+            'mail/static/src/views/fields/**/*'],
         'web_editor.backend_assets_wysiwyg': [
-            'mail/static/src/core/web/wysiwyg.js',
-        ],
+            'mail/static/src/core/web/wysiwyg.js'],
         "web.assets_web_dark": [
-            'mail/static/src/**/*.dark.scss',
-        ],
+            'mail/static/src/**/*.dark.scss'],
         'mail.assets_discuss_public_test_tours': [
             'web_tour/static/src/tour_pointer/**/*',
             # scss not needed in tests and depends on scss variables that are not in this bundle
@@ -169,29 +163,22 @@ For more specific needs, you may also assign custom-defined actions
             'web/static/tests/helpers/utils.js',
             'web/static/tests/utils.js',
             'mail/static/tests/tours/discuss_channel_public_tour.js',
-            'mail/static/tests/tours/discuss_channel_as_guest_tour.js',
-        ],
+            'mail/static/tests/tours/discuss_channel_as_guest_tour.js'],
         'web.assets_tests': [
-            'mail/static/tests/tours/**/*',
-        ],
+            'mail/static/tests/tours/**/*'],
         'web.tests_assets': [
-            'mail/static/tests/helpers/**/*',
-        ],
+            'mail/static/tests/helpers/**/*'],
         'web.qunit_suite_tests': [
             'mail/static/tests/**/*',
             ('remove', 'mail/static/tests/tours/**/*'),
             ('remove', 'mail/static/tests/helpers/**/*'),
-            ('remove', 'mail/static/tests/mobile/**/*'),
-        ],
+            ('remove', 'mail/static/tests/mobile/**/*')],
         'web.qunit_mobile_suite_tests': [
-            'mail/static/tests/mobile/**/*',
-        ],
+            'mail/static/tests/mobile/**/*'],
         'mail.assets_odoo_sfu': [
-            'mail/static/lib/odoo_sfu/odoo_sfu.js',
-        ],
+            'mail/static/lib/odoo_sfu/odoo_sfu.js'],
         'mail.assets_lamejs': [
-            'mail/static/lib/lame/lame.js',
-        ],
+            'mail/static/lib/lame/lame.js'],
         'mail.assets_public': [
             'web/static/lib/jquery/jquery.js',
             'web/static/lib/odoo_ui_icons/style.css',
@@ -228,8 +215,6 @@ For more specific needs, you may also assign custom-defined actions
             'mail/static/src/discuss/**/public/**/*',
             'mail/static/src/discuss/**/public_web/**/*',
             ('remove', 'mail/static/src/discuss/**/*.dark.scss'),
-            ('remove', 'web/static/src/**/*.dark.scss'),
-        ]
+            ('remove', 'web/static/src/**/*.dark.scss')]
     },
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

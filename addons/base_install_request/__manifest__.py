@@ -15,8 +15,7 @@ Allow internal users requesting a module installation
         'wizard/base_module_install_request_views.xml',
         'data/mail_template_data.xml',
         'data/mail_templates_module_install.xml',
-        'views/ir_module_module_views.xml',
-    ],
+        'views/ir_module_module_views.xml'],
     'license': 'LGPL-3',
     'post_init_hook': '_auto_install_apps'
 }

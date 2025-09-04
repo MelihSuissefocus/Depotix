@@ -14,5 +14,4 @@ The `pdfminer.six` Python library has to be installed in order to index PDF file
 """,
     'depends': ['web'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

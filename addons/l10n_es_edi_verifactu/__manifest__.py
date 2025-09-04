@@ -18,18 +18,13 @@
         'views/report_invoice.xml',
         'views/res_company_views.xml',
         'views/res_config_settings_views.xml',
-        'data/ir_cron.xml',
-    ],
+        'data/ir_cron.xml'],
     'demo': [
         'demo/demo_certificate.xml',
-        'demo/demo_company.xml',
-    ],
+        'demo/demo_company.xml'],
     'post_init_hook': '_l10n_es_edi_verifactu_post_init_hook',
     'assets': {
         'web.assets_backend': [
-            'l10n_es_edi_verifactu/static/src/css/warning.scss',
-        ],
-    },
+            'l10n_es_edi_verifactu/static/src/css/warning.scss']},
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

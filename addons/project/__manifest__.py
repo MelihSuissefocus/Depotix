@@ -17,8 +17,7 @@
         'resource',
         'web',
         'web_tour',
-        'digest',
-    ],
+        'digest'],
     'data': [
         'security/project_security.xml',
         'security/ir.model.access.csv',
@@ -54,12 +53,10 @@
         'data/project_data.xml',
         'wizard/project_task_type_delete_views.xml',
         'wizard/project_project_stage_delete_views.xml',
-        'views/project_menus.xml',
-    ],
+        'views/project_menus.xml'],
     'demo': [
         'data/mail_template_demo.xml',
-        'data/project_demo.xml',
-    ],
+        'data/project_demo.xml'],
     'installable': True,
     'application': True,
     'post_init_hook': '_project_post_init',
@@ -74,20 +71,16 @@
             'project/static/src/scss/project_dashboard.scss',
             'project/static/src/scss/project_form.scss',
             'project/static/src/scss/project_widgets.scss',
-            'project/static/src/xml/**/*',
-        ],
+            'project/static/src/xml/**/*'],
         'web.assets_frontend': [
             'project/static/src/scss/portal_rating.scss',
             'project/static/src/scss/project_sharing_frontend.scss',
-            'project/static/src/js/portal_rating.js',
-        ],
+            'project/static/src/js/portal_rating.js'],
         'web.qunit_suite_tests': [
             'project/static/src/project_sharing/components/portal_file_input/portal_file_input.js',
-            'project/static/tests/**/*.js',
-        ],
+            'project/static/tests/**/*.js'],
         'web.assets_tests': [
-            'project/static/tests/tours/**/*',
-        ],
+            'project/static/tests/tours/**/*'],
         'project.webclient': [
             ('include', 'web._assets_helpers'),
             ('include', 'web._assets_backend_helpers'),
@@ -201,8 +194,5 @@
 
             'project/static/src/project_sharing/search/favorite_menu/custom_favorite_item.xml',
             'project/static/src/project_sharing/**/*',
-            'web/static/src/start.js',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'web/static/src/start.js']},
+    'license': 'LGPL-3'}

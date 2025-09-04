@@ -11,13 +11,9 @@ Mozambican Accounting localization
     'category': 'Accounting/Localizations/Account Charts',
     'depends': [
         'base',
-        'account',
-    ],
+        'account'],
     'data': [
-        'data/tax_report.xml',
-    ],
+        'data/tax_report.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

@@ -11,13 +11,9 @@ Chart accounting and taxes for Bulgaria
     """,
     'depends': [
         'account',
-        'base_vat',
-    ],
+        'base_vat'],
     'data': [
-        'data/tax_report.xml',
-    ],
+        'data/tax_report.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

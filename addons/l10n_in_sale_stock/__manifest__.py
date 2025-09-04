@@ -25,5 +25,4 @@ So this module is to get the warehouse address if the invoice is created from Sa
     ],
 
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

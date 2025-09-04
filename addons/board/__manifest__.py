@@ -16,21 +16,16 @@ Allows users to create custom dashboard.
     'depends': ['spreadsheet_dashboard'],
     'data': [
         'security/ir.model.access.csv',
-        'views/board_views.xml',
-        ],
+        'views/board_views.xml'],
     'assets': {
         'web.assets_backend': [
             'board/static/src/**/*.scss',
             'board/static/src/**/*.js',
-            'board/static/src/**/*.xml',
-        ],
+            'board/static/src/**/*.xml'],
         'web.qunit_suite_tests': [
             'board/static/tests/**/*',
             ('remove', 'board/static/tests/mobile/**/*'), # mobile test
         ],
         'web.qunit_mobile_suite_tests': [
-            'board/static/tests/mobile/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'board/static/tests/mobile/**/*']},
+    'license': 'LGPL-3'}

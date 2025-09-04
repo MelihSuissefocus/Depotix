@@ -13,5 +13,4 @@ Make the lock date irreversible:
     """,
     'depends': ['account'],
     'uninstall_hook': 'uninstall_hook',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

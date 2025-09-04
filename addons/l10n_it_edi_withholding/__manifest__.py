@@ -26,5 +26,4 @@ Withholding and Pension Fund handling for the E-invoice implementation for Italy
         'views/l10n_it_view.xml'
     ],
     'post_init_hook': '_l10n_it_edi_withholding_post_init',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

@@ -18,16 +18,11 @@ Odoo Web tours.
     ],
     'assets': {
         'web.assets_backend': [
-            'web_tour/static/src/**/*',
-        ],
+            'web_tour/static/src/**/*'],
         'web.assets_frontend': [
             'web_tour/static/src/tour_pointer/**/*',
-            'web_tour/static/src/tour_service/**/*',
-        ],
+            'web_tour/static/src/tour_service/**/*'],
         'web.qunit_suite_tests': [
-            'web_tour/static/tests/**/*',
-        ],
-    },
+            'web_tour/static/tests/**/*']},
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

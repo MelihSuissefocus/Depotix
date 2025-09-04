@@ -24,17 +24,12 @@ automatic lead generation, full Online support, ...
         'website_event_sale',
         'website_event_track',
         'website_event_track_live',
-        'website_event_track_quiz',
-    ],
+        'website_event_track_quiz'],
     'data': [
         # 'data/event_type_data.xml',  # uncomment to reproduce test tour
         'data/ir_actions_report_data.xml',
-        'views/event_registration_templates_reports.xml',
-    ],
+        'views/event_registration_templates_reports.xml'],
     'assets': {
         'web.assets_tests': [
-            'test_event_full/static/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'test_event_full/static/**/*']},
+    'license': 'LGPL-3'}

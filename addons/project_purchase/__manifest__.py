@@ -8,13 +8,9 @@
     'category': 'Services/Project',
     'depends': ['purchase', 'project_account'],
     'demo': [
-        'data/project_purchase_demo.xml',
-    ],
+        'data/project_purchase_demo.xml'],
     'assets': {
         'web.assets_backend': [
-            'project_purchase/static/src/product_catalog/kanban_record.js',
-        ],
-    },
+            'project_purchase/static/src/product_catalog/kanban_record.js']},
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

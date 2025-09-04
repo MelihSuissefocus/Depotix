@@ -13,8 +13,7 @@ The current version of Facturae supported is the 3.2.2
 for more informations, see https://www.facturae.gob.es/face/Paginas/FACE.aspx
     """,
     'depends': [
-        'l10n_es',
-    ],
+        'l10n_es'],
     'data': [
         'data/uom.uom.csv',
         'data/facturae_templates.xml',
@@ -30,13 +29,10 @@ for more informations, see https://www.facturae.gob.es/face/Paginas/FACE.aspx
         'views/account_menuitem.xml',
 
         'wizard/account_move_send_views.xml',
-        'wizard/account_move_reversal_view.xml',
-    ],
+        'wizard/account_move_reversal_view.xml'],
     'demo': [
-        'demo/l10n_es_edi_facturae_demo.xml',
-    ],
+        'demo/l10n_es_edi_facturae_demo.xml'],
     'post_init_hook': '_l10n_es_edi_facturae_post_init_hook',
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

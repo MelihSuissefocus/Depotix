@@ -14,12 +14,9 @@
         'views/account_move_views.xml',
         'views/report_invoice.xml',
         'views/res_config_settings_views.xml',
-        'wizard/account_move_send_views.xml',
-    ],
+        'wizard/account_move_send_views.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
+        'demo/demo_company.xml'],
     'installable': True,
     'auto_install': ['l10n_jo'],
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

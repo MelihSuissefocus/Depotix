@@ -12,15 +12,11 @@
         'security/ir.model.access.csv',
         'security/test_new_api_security.xml',
         'views/test_new_api_views.xml',
-        'data/test_new_api_data.xml',
-    ],
+        'data/test_new_api_data.xml'],
     'assets': {
         'web.assets_tests': [
             # inside .
             'test_new_api/static/tests/tours/constraint.js',
             # inside .
-            'test_new_api/static/tests/tours/x2many.js',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'test_new_api/static/tests/tours/x2many.js']},
+    'license': 'LGPL-3'}

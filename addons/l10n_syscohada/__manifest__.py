@@ -18,10 +18,7 @@ Countries that use OHADA are the following:
     """,
     'website': 'http://biblio.ohada.org/pmb/opac_css/doc_num.php?explnum_id=2063',
     'depends': [
-        'account',
-    ],
+        'account'],
     'data': [
-        'data/menuitem_data.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'data/menuitem_data.xml'],
+    'license': 'LGPL-3'}

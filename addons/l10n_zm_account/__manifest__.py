@@ -15,13 +15,10 @@ This is the basic Zambian localization necessary to run Odoo in ZM:
     - Default Settings
     """,
     "depends": [
-        "account",
-    ],
+        "account"],
     "data": [
         "data/account_tax_report_data.xml",
-        "views/report_invoice.xml",
-    ],
+        "views/report_invoice.xml"],
     "demo": [
-        "demo/demo_company.xml",
-    ]
+        "demo/demo_company.xml"]
 }

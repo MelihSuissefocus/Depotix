@@ -29,9 +29,6 @@ project.
         'web.assets_backend': [
             'transifex/static/src/views/fields/translation_dialog.xml',
             'transifex/static/src/views/*.js',
-            'transifex/static/src/views/*.xml',
-        ],
-    },
+            'transifex/static/src/views/*.xml']},
     'depends': ['base', 'web'],
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

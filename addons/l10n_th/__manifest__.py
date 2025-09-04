@@ -14,15 +14,11 @@ Thai accounting chart and localization.
     'author': 'Almacom (http://almacom.co.th/)',
     'website': 'https://www.odoo.com/documentation/17.0/applications/finance/fiscal_localizations/thailand.html',
     'depends': [
-        'account_qr_code_emv',
-    ],
+        'account_qr_code_emv'],
     'data': [
         'data/account_tax_report_data.xml',
-        'views/report_invoice.xml',
-    ],
+        'views/report_invoice.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
+        'demo/demo_company.xml'],
     'post_init_hook': '_preserve_tag_on_taxes',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

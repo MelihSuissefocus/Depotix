@@ -37,18 +37,14 @@ Demo data for testing:
     'depends': [
         'account',
         'l10n_latam_invoice_document',
-        'l10n_latam_base',
-    ],
+        'l10n_latam_base'],
     'data': [
         'data/account_tax_report_data.xml',
         'data/l10n_latam.document.type.csv',
         'data/l10n_latam_identification_type_data.xml',
         'data/res_partner_data.xml',
-        'views/account_tax_views.xml',
-    ],
+        'views/account_tax_views.xml'],
     'demo': [
         'demo/demo_company.xml',
-        'demo/res_currency_rate_demo.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/res_currency_rate_demo.xml'],
+    'license': 'LGPL-3'}

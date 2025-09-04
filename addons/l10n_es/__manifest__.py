@@ -25,8 +25,7 @@ Spanish charts of accounts (PGCE 2008).
     'depends': [
         'account',
         'base_iban',
-        'base_vat',
-    ],
+        'base_vat'],
     'data': [
         'data/account.account.tag.csv',
         'data/res_partner_data.xml',
@@ -44,10 +43,7 @@ Spanish charts of accounts (PGCE 2008).
         'data/mod390/mod390_section5.xml',
         'data/mod390/mod390_section6.xml',
         'data/mod390/mod390_section7.xml',
-        'data/mod390/mod390.xml',
-    ],
+        'data/mod390/mod390.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

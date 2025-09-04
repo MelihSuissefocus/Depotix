@@ -22,22 +22,16 @@ real applications. """,
         'sms',
         'test_mail',
         'test_mail_sms',
-        'test_mass_mailing',
-    ],
+        'test_mass_mailing'],
     'data': [
         'data/mail_message_subtype_data.xml',
         'security/ir.model.access.csv',
-        'security/ir_rule_data.xml',
-    ],
+        'security/ir_rule_data.xml'],
     'assets': {
         'web.qunit_suite_tests': [
             'test_mail_full/static/tests/**/*',
-            ('remove', 'test_mail_full/static/tests/helpers/**/*'),
-        ],
+            ('remove', 'test_mail_full/static/tests/helpers/**/*')],
         'web.tests_assets': [
-            'test_mail_full/static/tests/helpers/**/*',
-        ],
-    },
+            'test_mail_full/static/tests/helpers/**/*']},
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

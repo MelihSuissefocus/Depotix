@@ -8,8 +8,7 @@
     'summary': 'Organize your work with memos and to-do lists',
     'sequence': 260,
     'depends': [
-        'project',
-    ],
+        'project'],
     'auto_install': True,
     'data': [
         'security/ir.model.access.csv',
@@ -18,8 +17,7 @@
         'data/todo_template.xml',
         'views/project_task_views.xml',
         'views/project_todo_menus.xml',
-        'wizard/mail_activity_todo_create.xml',
-    ],
+        'wizard/mail_activity_todo_create.xml'],
     'installable': True,
     'application': True,
     'uninstall_hook': '_todo_uninstall',
@@ -28,8 +26,5 @@
             'project_todo/static/src/components/**/*',
             'project_todo/static/src/scss/todo.scss',
             'project_todo/static/src/views/**/*',
-            'project_todo/static/src/web/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'project_todo/static/src/web/**/*']},
+    'license': 'LGPL-3'}

@@ -27,16 +27,11 @@ following:
         'security/ir.model.access.csv',
         'views/pos_mercury_views.xml',
         'views/pos_mercury_transaction_templates.xml',
-        'views/pos_config_setting_views.xml',
-    ],
+        'views/pos_config_setting_views.xml'],
     'demo': [
-        'data/pos_mercury_demo.xml',
-    ],
+        'data/pos_mercury_demo.xml'],
     'installable': True,
     'assets': {
         'point_of_sale._assets_pos': [
-            'pos_mercury/static/src/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'pos_mercury/static/src/**/*']},
+    'license': 'LGPL-3'}

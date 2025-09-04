@@ -11,5 +11,4 @@ This module is a bridge to auto-install Audit Trail with Germany
     ],
     'installable': True,
     'auto_install': ['l10n_de'],
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

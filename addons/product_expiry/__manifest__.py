@@ -28,8 +28,6 @@ Also implements the removal strategy First Expiry First Out (FEFO) widely used, 
              'report/report_lot_barcode.xml',
              'report/report_package_barcode.xml',
              'data/product_expiry_data.xml',
-             'data/mail_activity_type_data.xml',
-            ],
+             'data/mail_activity_type_data.xml'],
     'post_init_hook': '_enable_tracking_numbers',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

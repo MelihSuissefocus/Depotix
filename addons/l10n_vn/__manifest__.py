@@ -25,14 +25,10 @@ This is the module to manage the accounting chart, bank information for Vietnam 
 """,
     'depends': [
         'account_qr_code_emv',
-        'base_iban',
-    ],
+        'base_iban'],
     'data': [
         'data/account_tax_report_data.xml',
-        'views/res_bank_views.xml',
-    ],
+        'views/res_bank_views.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

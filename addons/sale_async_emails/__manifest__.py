@@ -7,8 +7,6 @@
     'depends': ['sale'],
     'data': [
         'data/ir_config_parameter.xml',
-        'data/ir_cron.xml',
-    ],
+        'data/ir_cron.xml'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

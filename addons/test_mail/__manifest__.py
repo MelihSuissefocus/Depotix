@@ -11,29 +11,21 @@ present in a separate module as it contains models used only to perform
 tests independently to functional aspects of other models. """,
     'depends': [
         'mail',
-        'test_performance',
-    ],
+        'test_performance'],
     'data': [
         'security/ir.model.access.csv',
         'security/test_mail_security.xml',
         'data/data.xml',
         'data/mail_template_data.xml',
-        'data/subtype_data.xml',
-    ],
+        'data/subtype_data.xml'],
     'assets': {
         'web.qunit_suite_tests': [
-            'test_mail/static/tests/*',
-        ],
+            'test_mail/static/tests/*'],
         'web.qunit_mobile_suite_tests': [
-            'test_mail/static/tests/mobile/activity_tests.js',
-        ],
+            'test_mail/static/tests/mobile/activity_tests.js'],
         'web.tests_assets': [
-            'test_mail/static/tests/helpers/*',
-        ],
+            'test_mail/static/tests/helpers/*'],
         'web.assets_tests': [
-            'test_mail/static/tests/tours/*',
-        ],
-    },
+            'test_mail/static/tests/tours/*']},
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

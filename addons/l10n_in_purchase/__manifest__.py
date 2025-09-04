@@ -9,13 +9,10 @@
     'category': 'Accounting/Localizations/Purchase',
     'depends': [
         'l10n_in',
-        'purchase',
-    ],
+        'purchase'],
     'data': [
         'views/report_purchase_order.xml',
-        'views/purchase_order_views.xml',
-    ],
+        'views/purchase_order_views.xml'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

@@ -6,8 +6,6 @@
     'category': 'Accounting/Localizations',
     'depends': [
         'l10n_din5008',
-        'purchase',
-    ],
+        'purchase'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

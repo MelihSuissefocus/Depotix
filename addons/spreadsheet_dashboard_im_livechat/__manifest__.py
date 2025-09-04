@@ -8,9 +8,7 @@
     'description': 'Spreadsheet',
     'depends': ['spreadsheet_dashboard', 'im_livechat'],
     'data': [
-        "data/dashboards.xml",
-    ],
+        "data/dashboards.xml"],
     'installable': True,
     'auto_install': ['im_livechat'],
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

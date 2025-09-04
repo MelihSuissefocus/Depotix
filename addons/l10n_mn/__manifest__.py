@@ -18,14 +18,10 @@ This is the module to manage the accounting chart for Mongolia.
 Financial requirement contributor: Baskhuu Lodoikhuu. BumanIT LLC
 """,
     'depends': [
-        'account',
-    ],
+        'account'],
     'data': [
         'data/account.account.tag.csv',
-        'data/vat_report.xml',
-    ],
+        'data/vat_report.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

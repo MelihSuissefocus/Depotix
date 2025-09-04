@@ -16,14 +16,10 @@ https://www.rrif.hr/dok/preuzimanje/RRIF-RP2021-ENG.PDF
     'category': 'Accounting/Localizations/Account Charts',
     'depends': [
         'account',
-        'base_vat',
-    ],
+        'base_vat'],
     'data': [
         'data/l10n_hr_chart_data.xml',
-        'data/account_tax_report_data.xml',
-    ],
+        'data/account_tax_report_data.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

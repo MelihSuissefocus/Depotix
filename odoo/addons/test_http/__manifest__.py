@@ -11,5 +11,4 @@
         'ir.model.access.csv',
         'views.xml'
     ],
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

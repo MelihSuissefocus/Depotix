@@ -16,10 +16,7 @@ Con la Colaboración de
     'author': 'Cubic ERP',
     'category': 'Accounting/Localizations/Account Charts',
     'depends': [
-        'account',
-    ],
+        'account'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

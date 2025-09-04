@@ -6,11 +6,8 @@
     'countries': ['es'],
     'category': 'Accounting/Localizations/Account Charts',
     'depends': [
-        'l10n_es',
-    ],
+        'l10n_es'],
     'data': [
-        'data/mod130.xml',
-    ],
+        'data/mod130.xml'],
     'post_init_hook': '_add_mod130_tax_tags',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

@@ -26,8 +26,7 @@ Main Features
 """,
     'depends': [
         'base',
-        'mail',
-    ],
+        'mail'],
     'data': [
         'security/fleet_security.xml',
         'security/ir.model.access.csv',
@@ -40,8 +39,7 @@ Main Features
         'data/fleet_cars_data.xml',
         'data/fleet_data.xml',
         'data/mail_message_subtype_data.xml',
-        'data/mail_activity_type_data.xml',
-    ],
+        'data/mail_activity_type_data.xml'],
 
     'demo': ['data/fleet_demo.xml'],
 
@@ -49,8 +47,5 @@ Main Features
     'application': True,
     'assets': {
         'web.assets_backend': [
-            'fleet/static/src/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'fleet/static/src/**/*']},
+    'license': 'LGPL-3'}

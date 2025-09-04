@@ -18,8 +18,6 @@ It is primarily used for EDIs that might need a special city code.
         'security/ir.model.access.csv',
         'views/base_address_extended.xml',
         'views/res_city_view.xml',
-        'views/res_country_view.xml',
-    ],
+        'views/res_country_view.xml'],
     'depends': ['base', 'contacts'],
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

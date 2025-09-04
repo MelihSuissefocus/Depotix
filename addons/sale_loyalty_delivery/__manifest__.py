@@ -6,9 +6,7 @@
     'description': 'Integrate free shipping in sales orders.',
     'category': 'Sales/Sales',
     'data': [
-        'views/loyalty_reward_views.xml',
-    ],
+        'views/loyalty_reward_views.xml'],
     'depends': ['sale_loyalty', 'delivery'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

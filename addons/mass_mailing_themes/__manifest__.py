@@ -12,13 +12,11 @@ Design gorgeous mails
     'website': 'https://www.odoo.com/app/mailing',
     'category': 'Marketing/Email Marketing',
     'depends': [
-        'mass_mailing',
-    ],
+        'mass_mailing'],
     'data': [
         'data/ir_attachment_data.xml',
         'views/mass_mailing_themes_templates.xml'
     ],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

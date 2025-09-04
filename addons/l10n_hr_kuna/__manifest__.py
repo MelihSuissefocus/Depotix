@@ -35,13 +35,9 @@ Izvori podataka:
     'author': 'OpenERP Croatian Community',
     'category': 'Accounting/Localizations/Account Charts',
     'depends': [
-        'account',
-    ],
+        'account'],
     'data': [
-        'data/account_tax_report_data.xml',
-    ],
+        'data/account_tax_report_data.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

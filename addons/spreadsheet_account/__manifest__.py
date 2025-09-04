@@ -16,10 +16,7 @@
                 'after',
                 'spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js',
                 'spreadsheet_account/static/src/**/*.js'
-            ),
-        ],
+            )],
         'web.qunit_suite_tests': [
-            'spreadsheet_account/static/tests/**/*.js',
-        ],
-    }
+            'spreadsheet_account/static/tests/**/*.js']}
 }

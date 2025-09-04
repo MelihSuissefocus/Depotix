@@ -19,20 +19,15 @@
         'views/loyalty_program_views.xml',
         'views/loyalty_reward_views.xml',
         'views/loyalty_rule_views.xml',
-        'views/res_partner_views.xml',
-    ],
+        'views/res_partner_views.xml'],
     'demo': [
-        'data/loyalty_demo.xml',
-    ],
+        'data/loyalty_demo.xml'],
     'assets': {
         'web.assets_backend': [
             'loyalty/static/src/js/loyalty_card_list_view.js',
             'loyalty/static/src/js/loyalty_control_panel_widget.js',
             'loyalty/static/src/js/loyalty_list_view.js',
             'loyalty/static/src/scss/loyalty.scss',
-            'loyalty/static/src/xml/loyalty_templates.xml',
-        ],
-    },
+            'loyalty/static/src/xml/loyalty_templates.xml']},
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

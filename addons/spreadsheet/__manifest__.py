@@ -10,13 +10,11 @@
     'installable': True,
     'license': 'LGPL-3',
     'data': [
-        'views/public_readonly_spreadsheet_templates.xml',
-    ],
+        'views/public_readonly_spreadsheet_templates.xml'],
     'assets': {
         'spreadsheet.dependencies': [
             'web/static/lib/Chart/Chart.js',
-            'web/static/lib/chartjs-adapter-luxon/chartjs-adapter-luxon.js',
-        ],
+            'web/static/lib/chartjs-adapter-luxon/chartjs-adapter-luxon.js'],
         'spreadsheet.o_spreadsheet': [
             'web/static/src/polyfills/clipboard.js',
             'spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js',
@@ -25,11 +23,9 @@
             'spreadsheet/static/src/o_spreadsheet/o_spreadsheet.xml',
             'spreadsheet/static/src/**/*.xml',
             ('remove', 'spreadsheet/static/src/assets_backend/**/*'),
-            ('remove', 'spreadsheet/static/src/public_readonly_app/**/*'),
-        ],
+            ('remove', 'spreadsheet/static/src/public_readonly_app/**/*')],
         'spreadsheet.assets_print': [
-            'spreadsheet/static/src/print_assets/**/*',
-        ],
+            'spreadsheet/static/src/print_assets/**/*'],
         'spreadsheet.public_spreadsheet': [
             ('include', 'web.assets_frontend_minimal'),
             ('include', 'web._assets_helpers'), # bootstrap variables
@@ -73,24 +69,20 @@
             'spreadsheet/static/src/public_readonly_app/**/*.xml',
             'spreadsheet/static/src/public_readonly_app/**/*.scss',
             'spreadsheet/static/src/public_readonly_app/**/*',
-            'spreadsheet/static/src/hooks.js',
-        ],
+            'spreadsheet/static/src/hooks.js'],
         'web.assets_backend': [
             'spreadsheet/static/src/**/*.scss',
             'spreadsheet/static/src/assets_backend/**/*',
             ('remove', 'spreadsheet/static/src/public_readonly_app/**/*.scss'),
-            ('remove', 'spreadsheet/static/src/**/*.dark.scss'),
-        ],
+            ('remove', 'spreadsheet/static/src/**/*.dark.scss')],
         "web.assets_web_dark": [
-            'spreadsheet/static/src/**/*.dark.scss',
-        ],
+            'spreadsheet/static/src/**/*.dark.scss'],
         'web.qunit_suite_tests': [
             ('include', 'spreadsheet.dependencies'),
             'spreadsheet/static/tests/**/*',
             ('include', 'spreadsheet.o_spreadsheet'),
             'spreadsheet/static/src/public_readonly_app/**/*.xml',
             'spreadsheet/static/src/public_readonly_app/**/*.js',
-            ('remove', 'spreadsheet/static/src/public_readonly_app/main.js'),
-        ]
+            ('remove', 'spreadsheet/static/src/public_readonly_app/main.js')]
     }
 }

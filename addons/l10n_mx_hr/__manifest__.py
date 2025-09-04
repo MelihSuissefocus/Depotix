@@ -9,8 +9,6 @@
     'summary': 'Adds specific fields to Employees for Mexican companies.',
     'depends': ['hr'],
     'data': [
-        'views/hr_employee_views.xml',
-    ],
+        'views/hr_employee_views.xml'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

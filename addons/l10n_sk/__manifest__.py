@@ -25,17 +25,13 @@ Pre viac informácií kontaktujte info@26house.com alebo navštívte https://www
     'depends': [
         'base_iban',
         'base_vat',
-        'account',
-    ],
+        'account'],
     'data': [
         'views/res_partner_views.xml',
         'views/res_company_views.xml',
         'views/report_invoice.xml',
         'views/account_move_views.xml',
-        'views/report_template.xml',
-    ],
+        'views/report_template.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

@@ -46,25 +46,18 @@
         'report/report_stock_reception.xml',
         'report/report_stock_rule.xml',
         'report/mrp_zebra_production_templates.xml',
-        'report/mrp_workorder_templates.xml',
-    ],
+        'report/mrp_workorder_templates.xml'],
     'demo': [
-        'data/mrp_demo.xml',
-    ],
+        'data/mrp_demo.xml'],
     'application': True,
     'pre_init_hook': '_pre_init_mrp',
     'post_init_hook': '_create_warehouse_data',
     'uninstall_hook': 'uninstall_hook',
     'assets': {
         'web.assets_backend': [
-            'mrp/static/src/**/*',
-        ],
+            'mrp/static/src/**/*'],
         'web.assets_tests': [
-            'mrp/static/tests/tours/**/*',
-        ],
+            'mrp/static/tests/tours/**/*'],
         'web.qunit_suite_tests': [
-            'mrp/static/tests/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'mrp/static/tests/**/*']},
+    'license': 'LGPL-3'}

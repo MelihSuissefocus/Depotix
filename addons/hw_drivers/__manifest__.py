@@ -18,5 +18,4 @@ are found in other modules that must be installed separately.
 
 """,
     'installable': False,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

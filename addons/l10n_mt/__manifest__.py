@@ -11,14 +11,10 @@ Malta basic package that contains the chart of accounts, the taxes, tax reports,
     'category': 'Accounting/Localizations/Account Charts',
     'depends': [
         'account',
-        'base_vat',
-    ],
+        'base_vat'],
     'data': [
         'data/menuitem_data.xml',
-        'data/account_tax_report_data.xml',
-    ],
+        'data/account_tax_report_data.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

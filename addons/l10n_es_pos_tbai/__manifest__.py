@@ -5,16 +5,11 @@
     'category': 'Accounting/Localizations/Point of Sale',
     'depends': [
         'l10n_es_edi_tbai',
-        'l10n_es_pos',
-    ],
+        'l10n_es_pos'],
     'assets': {
         'point_of_sale._assets_pos': [
-            'l10n_es_pos_tbai/static/src/**/*',
-        ],
+            'l10n_es_pos_tbai/static/src/**/*'],
         'web.assets_tests': [
-            'l10n_es_pos_tbai/static/tests/**/*',
-        ],
-    },
+            'l10n_es_pos_tbai/static/tests/**/*']},
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

@@ -8,5 +8,4 @@
     'depends': ['web', 'test_mail'],
     'data': ['ir.model.access.csv'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

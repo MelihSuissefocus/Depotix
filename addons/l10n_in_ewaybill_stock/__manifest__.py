@@ -7,8 +7,7 @@
     "category": "Accounting/Localizations/EDI",
     "depends": [
         "l10n_in_stock",
-        "l10n_in_edi_ewaybill",
-    ],
+        "l10n_in_edi_ewaybill"],
     "description": """
 Indian E-waybill for Stock
 ==========================
@@ -23,9 +22,7 @@ This module enables users to create E-waybill from Inventory App without generat
         "views/stock_picking_views.xml",
         "report/ewaybill_report_views.xml",
         "report/ewaybill_report.xml",
-        "wizard/l10n_in_ewaybill_cancel_views.xml",
-    ],
+        "wizard/l10n_in_ewaybill_cancel_views.xml"],
     'installable': True,
     'auto_install': True,
-    "license": "LGPL-3",
-}
+    "license": "LGPL-3"}

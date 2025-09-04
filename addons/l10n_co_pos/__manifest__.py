@@ -17,8 +17,5 @@
     ],
     'assets': {
         'point_of_sale._assets_pos': [
-            'l10n_co_pos/static/src/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'l10n_co_pos/static/src/**/*']},
+    'license': 'LGPL-3'}

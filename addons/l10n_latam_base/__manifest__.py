@@ -47,15 +47,12 @@ This module is compatible with base_vat module in order to be able to validate V
 """,
     'depends': [
         'contacts',
-        'base_vat',
-    ],
+        'base_vat'],
     'data': [
         'data/l10n_latam.identification.type.csv',
         'views/res_partner_view.xml',
         'views/l10n_latam_identification_type_view.xml',
-        'security/ir.model.access.csv',
-    ],
+        'security/ir.model.access.csv'],
     'installable': True,
     'post_init_hook': '_set_default_identification_type',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

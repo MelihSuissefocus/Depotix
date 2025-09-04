@@ -13,8 +13,5 @@
     'installable': True,
     'assets': {
         'web.assets_backend': [
-            'test_translation_import/static/src/xml/js_templates.xml',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'test_translation_import/static/src/xml/js_templates.xml']},
+    'license': 'LGPL-3'}

@@ -13,16 +13,12 @@ This is the base module to manage the accounting chart for Taiwan in Odoo.
     """,
     'depends': [
         'account',
-        'base_address_extended',
-    ],
+        'base_address_extended'],
     'data': [
         'data/res.country.state.csv',
         'data/res_currency_data.xml',
         'data/res_country_data.xml',
-        'data/res.city.csv',
-    ],
+        'data/res.city.csv'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

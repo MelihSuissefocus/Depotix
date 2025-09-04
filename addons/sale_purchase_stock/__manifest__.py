@@ -12,5 +12,4 @@ Add relation information between Sale Orders and Purchase Orders if Make to Orde
     'depends': ['sale_stock', 'purchase_stock', 'sale_purchase'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

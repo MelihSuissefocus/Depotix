@@ -13,9 +13,7 @@
         'security/ir.model.access.csv',
         'views/account_move_views.xml',
         'views/res_config_settings_views.xml',
-        'wizard/account_move_send_views.xml',
-    ],
+        'wizard/account_move_send_views.xml'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

@@ -5,5 +5,4 @@
     'version': '0.1',
     'description': 'Handle BoM prices to compute sale margin.',
     'depends': ['sale_mrp', 'sale_stock_margin'],
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

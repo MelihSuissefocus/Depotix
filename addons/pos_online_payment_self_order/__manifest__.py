@@ -9,15 +9,11 @@
     'version': '1.0',
     'depends': ['pos_online_payment', 'pos_self_order'],
     'data': [
-        'views/res_config_settings_views.xml',
-    ],
+        'views/res_config_settings_views.xml'],
     'installable': True,
     'auto_install': True,
     'assets': {
         'pos_self_order.assets': [
             'pos_online_payment_self_order/static/src/**/*',
-            'web/static/lib/zxing-library/zxing-library.js',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'web/static/lib/zxing-library/zxing-library.js']},
+    'license': 'LGPL-3'}

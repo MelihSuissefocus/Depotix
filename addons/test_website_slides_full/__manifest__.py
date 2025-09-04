@@ -17,16 +17,11 @@ certification flow including purchase, certification, failure and success.
         'payment_demo'
     ],
     'data': [
-        'data/res_groups_data.xml',
-    ],
+        'data/res_groups_data.xml'],
     'demo': [
-        'data/product_demo.xml',
-    ],
+        'data/product_demo.xml'],
     'installable': True,
     'assets': {
         'web.assets_tests': [
-            'test_website_slides_full/static/tests/tours/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'test_website_slides_full/static/tests/tours/**/*']},
+    'license': 'LGPL-3'}

@@ -14,8 +14,6 @@
         'views/project_project_views.xml',
         'views/project_task_views.xml',
         'security/ir.model.access.csv',
-        'security/project_sms_security.xml',
-    ],
+        'security/project_sms_security.xml'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

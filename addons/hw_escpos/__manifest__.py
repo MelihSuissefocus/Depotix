@@ -17,8 +17,6 @@ that would need such functionality.
 
 """,
     'external_dependencies': {
-        'python' : ['pyusb','pyserial','qrcode'],
-    },
+        'python' : ['pyusb','pyserial','qrcode']},
     'installable': False,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

@@ -13,8 +13,6 @@ take them into account in your stock valuation.
     'depends': ['stock_landed_costs', 'mrp'],
     'category': 'Manufacturing/Manufacturing',
     'data': [
-        'views/stock_landed_cost_views.xml',
-    ],
+        'views/stock_landed_cost_views.xml'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

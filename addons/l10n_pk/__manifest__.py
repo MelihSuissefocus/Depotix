@@ -21,10 +21,7 @@ Activates:
     'depends': ['account'],
     'data': [
         'data/account_tax_vat_report.xml',
-        'data/account_tax_wh_report.xml',
-    ],
+        'data/account_tax_wh_report.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

@@ -36,9 +36,7 @@ you have not already sent to the government to reuse its number.
             'views/account_move_views.xml',
             'views/efaktur_views.xml',
             'views/res_config_settings_views.xml',
-            'views/res_partner_views.xml',
-    ],
+            'views/res_partner_views.xml'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

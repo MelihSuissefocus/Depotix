@@ -22,12 +22,9 @@ records numbers. """,
     'data': [
         'security/ir.model.access.csv',
         'views/phone_blacklist_views.xml',
-        'wizard/phone_blacklist_remove_view.xml',
-    ],
+        'wizard/phone_blacklist_remove_view.xml'],
     'depends': [
         'base',
-        'mail',
-    ],
+        'mail'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

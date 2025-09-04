@@ -71,8 +71,7 @@ Master Data:
     'category': 'Accounting/Localizations/Account Charts',
     'depends': [
         'l10n_latam_invoice_document',
-        'l10n_latam_base',
-    ],
+        'l10n_latam_base'],
     'data': [
         'security/ir.model.access.csv',
         'data/l10n_latam_identification_type_data.xml',
@@ -97,8 +96,7 @@ Master Data:
         'views/l10n_latam_document_type_view.xml',
         'views/report_invoice.xml',
         'views/res_config_settings_view.xml',
-        'report/invoice_report_view.xml',
-    ],
+        'report/invoice_report_view.xml'],
     'demo': [
         'demo/exento_demo.xml',
         'demo/mono_demo.xml',
@@ -108,8 +106,6 @@ Master Data:
         'demo/account_customer_invoice_demo.xml',
         'demo/account_customer_refund_demo.xml',
         'demo/account_supplier_invoice_demo.xml',
-        'demo/account_supplier_refund_demo.xml',
-    ],
+        'demo/account_supplier_refund_demo.xml'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

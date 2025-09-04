@@ -13,16 +13,12 @@ You can track your vendors, customers and other contacts.
 """,
     'depends': ['base', 'mail'],
     'data': [
-        'views/contact_views.xml',
-    ],
+        'views/contact_views.xml'],
     'demo': [
-        'data/mail_demo.xml',
-    ],
+        'data/mail_demo.xml'],
     'application': True,
     'license': 'LGPL-3',
     'assets': {
         'web.assets_tests': [
-            'contacts/static/tests/tours/**/*',
-        ],
-    }
+            'contacts/static/tests/tours/**/*']}
 }

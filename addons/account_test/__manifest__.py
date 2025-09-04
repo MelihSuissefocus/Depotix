@@ -23,8 +23,6 @@ and print the report from Print button in header area.
         'views/accounting_assert_test_views.xml',
         'report/accounting_assert_test_reports.xml',
         'data/accounting_assert_test_data.xml',
-        'report/report_account_test_templates.xml',
-    ],
+        'report/report_account_test_templates.xml'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

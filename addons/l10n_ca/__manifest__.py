@@ -36,17 +36,13 @@ position.
     """,
     'depends': [
         'account',
-        'base_iban',
-    ],
+        'base_iban'],
     'data': [
         'data/tax_report.xml',
         'views/res_partner_view.xml',
         'views/res_company_view.xml',
         'views/report_invoice.xml',
-        'views/report_template.xml',
-    ],
+        'views/report_template.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

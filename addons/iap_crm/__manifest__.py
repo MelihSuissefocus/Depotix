@@ -10,9 +10,7 @@
     'version': '1.0',
     'depends': [
         'crm',
-        'iap_mail',
-    ],
+        'iap_mail'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

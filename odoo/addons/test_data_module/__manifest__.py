@@ -4,5 +4,4 @@
     'version': '0.0.1',
     'category': 'Hidden/Tests',
     'sequence': 0,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

@@ -18,13 +18,9 @@ This is the latest Ethiopian Odoo localization and consists of:
     'author': 'Michael Telahun Makonnen <mmakonnen@gmail.com>',
     'website': 'https://www.odoo.com/documentation/17.0/applications/finance/fiscal_localizations.html',
     'depends': [
-        'account',
-    ],
+        'account'],
     'data': [
-        'data/account_tax_report_data.xml',
-    ],
+        'data/account_tax_report_data.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

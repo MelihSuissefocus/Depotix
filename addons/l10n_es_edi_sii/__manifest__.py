@@ -27,8 +27,7 @@ You need to configure your certificate and the tax agency.
     """,
     'depends': [
         'l10n_es',
-        'account_edi',
-    ],
+        'account_edi'],
     'data': [
         'data/account_edi_data.xml',
 
@@ -37,11 +36,8 @@ You need to configure your certificate and the tax agency.
 
         'views/l10n_es_edi_certificate_views.xml',
         'views/res_config_settings_views.xml',
-        'views/account_move_views.xml',
-    ],
+        'views/account_move_views.xml'],
     'demo': ['demo/demo_certificate.xml'],
     'external_dependencies': {
-        'python': ['pyOpenSSL'],
-    },
-    'license': 'LGPL-3',
-}
+        'python': ['pyOpenSSL']},
+    'license': 'LGPL-3'}

@@ -10,9 +10,7 @@ E-invoice implementation for Romania
     'countries': ['ro'],
     'depends': [
         'account_edi_ubl_cii',
-        'l10n_ro',
-    ],
+        'l10n_ro'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

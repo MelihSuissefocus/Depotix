@@ -35,11 +35,9 @@ The following topics are covered by this module:
         'views/stock_warehouse_views.xml',
         'report/repair_reports.xml',
         'report/repair_templates_repair_order.xml',
-        'data/repair_data.xml',
-    ],
+        'data/repair_data.xml'],
     'demo': ['data/repair_demo.xml'],
     'post_init_hook': '_create_warehouse_data',
     'installable': True,
     'application': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

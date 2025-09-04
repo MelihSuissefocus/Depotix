@@ -6,16 +6,11 @@
     'data': [
         'data/defaults.xml',
         'views/res_users.xml',
-        'views/res_config_settings_views.xml',
-    ],
+        'views/res_config_settings_views.xml'],
     'assets': {
         'web.assets_backend': [
-            'auth_password_policy/static/src/**/*',
-        ],
+            'auth_password_policy/static/src/**/*'],
         'web.assets_frontend': [
             'auth_password_policy/static/src/css/password_field.css',
-            'auth_password_policy/static/src/password_policy.js',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'auth_password_policy/static/src/password_policy.js']},
+    'license': 'LGPL-3'}

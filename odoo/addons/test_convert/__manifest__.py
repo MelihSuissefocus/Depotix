@@ -8,7 +8,5 @@
     'category': 'Hidden/Tests',
     'data': [
         'ir.model.access.csv',
-        'data/test_translated_field/test_model_data.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'data/test_translated_field/test_model_data.xml'],
+    'license': 'LGPL-3'}

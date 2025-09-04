@@ -7,8 +7,7 @@
     'version': '0.4',
     'depends': [
         'l10n_it',
-        'account_edi_proxy_client',
-    ],
+        'account_edi_proxy_client'],
     'auto_install': ['l10n_it'],
     'description': """
 E-invoice implementation
@@ -24,10 +23,7 @@ E-invoice implementation
         'views/res_config_settings_views.xml',
         'views/l10n_it_view.xml',
         'views/report_invoice.xml',
-        'wizard/account_move_send_views.xml',
-    ],
+        'wizard/account_move_send_views.xml'],
     'demo': [
-        'data/account_invoice_demo.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'data/account_invoice_demo.xml'],
+    'license': 'LGPL-3'}

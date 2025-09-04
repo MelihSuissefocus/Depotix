@@ -7,10 +7,7 @@
     'license': 'LGPL-3',
     'category': 'Accounting/Localizations/EDI',
     'depends': [
-        'l10n_es_edi_facturae',
-    ],
+        'l10n_es_edi_facturae'],
     'data': [
-        'views/account_move_views.xml',
-    ],
-    'auto_install': True,
-}
+        'views/account_move_views.xml'],
+    'auto_install': True}

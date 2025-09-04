@@ -10,13 +10,9 @@
 This provides a base chart of accounts and taxes template for use in Odoo for Kazakhstan.
     """,
     'depends': [
-        'account',
-    ],
+        'account'],
     'data': [
-        'data/tax_report.xml',
-    ],
+        'data/tax_report.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

@@ -6,8 +6,7 @@
     'category': 'Accounting/Localizations/Account Charts',
     'version': '1.0',
     'depends': [
-        'account',
-    ],
+        'account'],
     'description': """
     Tanzanian localisation containing:
     - COA
@@ -17,10 +16,7 @@
     """,
     'data': [
         'data/l10n_tz_chart_data.xml',
-        'data/account_tax_report_data.xml',
-    ],
+        'data/account_tax_report_data.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

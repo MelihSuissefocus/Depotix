@@ -20,5 +20,4 @@ speakers..
         'website_event_track'
     ],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

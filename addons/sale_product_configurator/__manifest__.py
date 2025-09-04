@@ -16,16 +16,11 @@ It also enables the "optional products" feature.
     'depends': ['sale'],
     'data': [
         'views/product_template_views.xml',
-        'views/sale_order_views.xml',
-    ],
+        'views/sale_order_views.xml'],
     'demo': [
-        'data/sale_demo.xml',
-    ],
+        'data/sale_demo.xml'],
     'assets': {
         'web.assets_backend': [
-            'sale_product_configurator/static/src/**/*',
-        ],
-    },
+            'sale_product_configurator/static/src/**/*']},
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

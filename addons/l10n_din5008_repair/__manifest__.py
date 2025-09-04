@@ -6,11 +6,8 @@
     'category': 'Accounting/Localizations',
     'depends': [
         'l10n_din5008',
-        'repair',
-    ],
+        'repair'],
     'data': [
-        'report/din5008_repair_order_layout.xml',
-    ],
+        'report/din5008_repair_order_layout.xml'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

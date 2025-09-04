@@ -13,8 +13,7 @@ This module contains all the common features of Sales Management and eCommerce.
     'depends': [
         'sales_team',
         'account_payment',  # -> account, payment, portal
-        'utm',
-    ],
+        'utm'],
     'data': [
         'security/ir.model.access.csv',
         'security/res_groups.xml',
@@ -61,8 +60,7 @@ This module contains all the common features of Sales Management and eCommerce.
     ],
     'demo': [
         'data/product_demo.xml',
-        'data/sale_demo.xml',
-    ],
+        'data/sale_demo.xml'],
     'installable': True,
     'assets': {
         'web.assets_backend': [
@@ -70,25 +68,19 @@ This module contains all the common features of Sales Management and eCommerce.
             'sale/static/src/js/sale_progressbar_field.js',
             'sale/static/src/js/tours/sale.js',
             'sale/static/src/js/sale_product_field.js',
-            'sale/static/src/xml/**/*',
-        ],
+            'sale/static/src/xml/**/*'],
         'web.assets_frontend': [
             'sale/static/src/scss/sale_portal.scss',
             'sale/static/src/js/sale_portal_sidebar.js',
             'sale/static/src/js/sale_portal_prepayment.js',
-            'sale/static/src/js/sale_portal.js',
-        ],
+            'sale/static/src/js/sale_portal.js'],
         'web.assets_tests': [
-            'sale/static/tests/tours/**/*',
-        ],
+            'sale/static/tests/tours/**/*'],
         'web.qunit_suite_tests': [
             'sale/static/tests/**/*',
             ('remove', 'sale/static/tests/tours/**/*')
         ],
         'web.report_assets_common': [
-            'sale/static/src/scss/sale_report.scss',
-        ],
-    },
+            'sale/static/src/scss/sale_report.scss']},
     'post_init_hook': '_synchronize_cron',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

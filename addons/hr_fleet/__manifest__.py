@@ -13,16 +13,11 @@
         'views/fleet_vehicle_views.xml',
         'views/fleet_vehicle_cost_views.xml',
         'wizard/hr_departure_wizard_views.xml',
-         'data/hr_fleet_data.xml',
-    ],
+         'data/hr_fleet_data.xml'],
     'demo': [
-        'data/hr_fleet_demo.xml',
-    ],
+        'data/hr_fleet_demo.xml'],
     'assets': {
         'web.assets_backend': [
-            'hr_fleet/static/src/views/**/*',
-        ],
-    },
+            'hr_fleet/static/src/views/**/*']},
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

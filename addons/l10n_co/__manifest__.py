@@ -11,14 +11,10 @@
     'depends': [
         'account_debit_note',
         'l10n_latam_base',
-        'account',
-    ],
+        'account'],
     'data': [
         'data/account_chart_template_data.xml',
-        'data/l10n_latam.identification.type.csv',
-    ],
+        'data/l10n_latam.identification.type.csv'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

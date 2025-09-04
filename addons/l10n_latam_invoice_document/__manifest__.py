@@ -26,8 +26,7 @@ If your localization needs this logic will then need to add this module as depen
 """,
     "depends": [
         "account",
-        "account_debit_note",
-    ],
+        "account_debit_note"],
     "data": [
         'views/account_journal_view.xml',
         'views/account_move_line_view.xml',
@@ -36,8 +35,6 @@ If your localization needs this logic will then need to add this module as depen
         'views/report_templates.xml',
         'report/invoice_report_view.xml',
         'wizards/account_move_reversal_view.xml',
-        'security/ir.model.access.csv',
-    ],
+        'security/ir.model.access.csv'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

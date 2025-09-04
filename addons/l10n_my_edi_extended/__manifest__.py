@@ -14,8 +14,7 @@
     'data': [
         'views/account_move_view.xml',
         'views/report_invoice.xml',
-        'views/res_partner_view.xml',
-    ],
+        'views/res_partner_view.xml'],
     'installable': True,
     'auto_install': ['l10n_my_edi'],
     'license': 'LGPL-3'

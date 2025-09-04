@@ -11,14 +11,10 @@ Accounting chart and localization for Hungary
     """,
     'depends': [
         'account',
-        'base_vat',
-    ],
+        'base_vat'],
     'data': [
         'data/account_tax_report_data.xml',
-        'data/res.bank.csv',
-    ],
+        'data/res.bank.csv'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

@@ -20,8 +20,7 @@ Sheet, now only Vertical format has been permitted Which is Supported By Odoo.
     'category': 'Accounting/Localizations/Account Charts',
     'depends': [
         'account_tax_python',
-        'base_vat',
-    ],
+        'base_vat'],
     'data': [
         'security/l10n_in_security.xml',
         'security/ir.model.access.csv',
@@ -43,16 +42,11 @@ Sheet, now only Vertical format has been permitted Which is Supported By Odoo.
         'views/res_partner_views.xml',
         'views/account_tax_views.xml',
         'views/uom_uom_views.xml',
-        'report/audit_trail_report_views.xml',
-    ],
+        'report/audit_trail_report_views.xml'],
     'demo': [
         'demo/demo_company.xml',
-        'demo/product_demo.xml',
-    ],
+        'demo/product_demo.xml'],
     'license': 'LGPL-3',
     'assets': {
         'web.assets_backend': [
-            'l10n_in/static/src/components/**/*',
-        ],
-    },
-}
+            'l10n_in/static/src/components/**/*']}}

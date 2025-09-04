@@ -10,7 +10,5 @@ supposed to do
     'depends': ['base', 'web'],
     'data': [
         'ir.model.access.csv',
-        'menu.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'menu.xml'],
+    'license': 'LGPL-3'}

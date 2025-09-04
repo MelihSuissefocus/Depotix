@@ -6,14 +6,11 @@
     "description": """Malta Compliance Letter for EXO Number""",
     "countries": ["mt"],
     "depends": [
-        "point_of_sale",
-    ],
+        "point_of_sale"],
     "data": [
         'security/ir.model.access.csv',
         'wizards/compliance_letter_view.xml',
-        'reports/compliance_letter_report.xml',
-    ],
+        'reports/compliance_letter_report.xml'],
     "installable": True,
     "auto_install": True,
-    "license": "LGPL-3",
-}
+    "license": "LGPL-3"}

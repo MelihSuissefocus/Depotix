@@ -21,8 +21,7 @@ Wewnętrzny numer wersji OpenGLOBE 1.02
     'depends': [
         'base_iban',
         'base_vat',
-        'account',
-    ],
+        'account'],
     'data': [
         'security/ir.model.access.csv',
         'data/l10n_pl.l10n_pl_tax_office.csv',
@@ -32,11 +31,8 @@ Wewnętrzny numer wersji OpenGLOBE 1.02
         'views/account_move_views.xml',
         'views/product_views.xml',
         'views/res_config_settings_views.xml',
-        'views/res_partner_views.xml',
-    ],
+        'views/res_partner_views.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
+        'demo/demo_company.xml'],
     'post_init_hook': '_preserve_tag_on_taxes',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

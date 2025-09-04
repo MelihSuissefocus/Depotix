@@ -11,9 +11,6 @@
     'auto_install': True,
     'license': 'LGPL-3',
     'data': [
-        'views/res_config_settings_views.xml',
-    ],
+        'views/res_config_settings_views.xml'],
     'demo': [
-        'data/l10n_fr_hr_holidays_demo.xml',
-    ],
-}
+        'data/l10n_fr_hr_holidays_demo.xml']}

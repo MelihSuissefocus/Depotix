@@ -21,8 +21,7 @@ bills and tickets to allow anyone to check they have been declared.
 You need to configure your certificate and the tax agency.
     """,
     'depends': [
-        'l10n_es_edi_sii',
-    ],
+        'l10n_es_edi_sii'],
     'data': [
         'data/account_edi_data.xml',
         'data/template_invoice.xml',
@@ -33,11 +32,8 @@ You need to configure your certificate and the tax agency.
         'views/res_config_settings_views.xml',
         'views/res_company_views.xml',
 
-        'wizards/account_move_reversal_views.xml',
-    ],
+        'wizards/account_move_reversal_views.xml'],
     'demo': [
         'demo/demo_res_partner.xml',
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

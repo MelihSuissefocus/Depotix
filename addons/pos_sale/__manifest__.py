@@ -22,17 +22,12 @@ This module adds a custom Sales Team for the Point of Sale. This enables you to 
         'views/pos_order_views.xml',
         'views/sales_team_views.xml',
         'views/res_config_settings_views.xml',
-        'views/stock_template.xml',
-    ],
+        'views/stock_template.xml'],
     'installable': True,
     'auto_install': True,
     'assets': {
         'point_of_sale._assets_pos': [
-            'pos_sale/static/src/**/*',
-        ],
+            'pos_sale/static/src/**/*'],
         'web.assets_tests': [
-            'pos_sale/static/tests/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'pos_sale/static/tests/**/*']},
+    'license': 'LGPL-3'}

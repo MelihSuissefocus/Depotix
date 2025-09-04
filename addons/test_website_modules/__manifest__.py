@@ -14,13 +14,9 @@ installed.""",
         'website',
         'website_blog',
         'website_event_sale',
-        'website_slides',
-    ],
+        'website_slides'],
     'installable': True,
     'assets': {
         'web.assets_tests': [
-            'test_website_modules/static/tests/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'test_website_modules/static/tests/**/*']},
+    'license': 'LGPL-3'}

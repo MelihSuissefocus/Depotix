@@ -6,13 +6,10 @@
     'category': 'Localization',
     'depends': [
         'l10n_br',
-        'website_sale',
-    ],
+        'website_sale'],
     'data': [
         'views/portal.xml',
-        'views/templates.xml',
-    ],
+        'views/templates.xml'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

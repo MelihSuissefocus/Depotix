@@ -38,11 +38,8 @@ Both goals and badges are flexibles and can be adapted to a large range of modul
         'data/mail_template_data.xml',  # keep before to populate challenge reports
         'data/gamification_badge_data.xml',
         'data/gamification_challenge_data.xml',
-        'data/gamification_karma_rank_data.xml',
-    ],
+        'data/gamification_karma_rank_data.xml'],
     'demo': [
         'data/gamification_karma_rank_demo.xml',
-        'data/gamification_karma_tracking_demo.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'data/gamification_karma_tracking_demo.xml'],
+    'license': 'LGPL-3'}

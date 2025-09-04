@@ -8,5 +8,4 @@
     'category': 'Services/Project',
     'depends': ['mrp_account', 'project'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

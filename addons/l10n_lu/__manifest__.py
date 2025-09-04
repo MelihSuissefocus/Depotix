@@ -24,19 +24,15 @@ Notes:
     'depends': [
         'account',
         'base_iban',
-        'base_vat',
-    ],
+        'base_vat'],
     'data': [
         'data/account.account.tag.csv',
         'data/l10n_lu_chart_data.xml',
         'data/tax_report/section_1.xml',
         'data/tax_report/section_2.xml',
         'data/tax_report/sections_34.xml',
-        'data/tax_report/tax_report.xml',
-    ],
+        'data/tax_report/tax_report.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
+        'demo/demo_company.xml'],
     'post_init_hook': '_post_init_hook',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

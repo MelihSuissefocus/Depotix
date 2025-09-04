@@ -12,5 +12,4 @@ This module is a bridge to be able to have audit trail module with Denmark
     ],
     'installable': True,
     'auto_install': ['l10n_dk'],
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

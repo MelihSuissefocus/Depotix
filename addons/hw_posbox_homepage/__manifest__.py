@@ -21,9 +21,6 @@ regular Odoo interface anymore.
 """,
     'assets': {
         'web.assets_backend': [
-            'hw_posbox_homepage/static/*/**',
-        ],
-    },
+            'hw_posbox_homepage/static/*/**']},
     'installable': False,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

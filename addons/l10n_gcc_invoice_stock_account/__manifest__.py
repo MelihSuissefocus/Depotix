@@ -12,8 +12,6 @@
     'depends': ['l10n_gcc_invoice', 'stock_account'],
 
     'data': [
-        'views/report_invoice.xml',
-    ],
+        'views/report_invoice.xml'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

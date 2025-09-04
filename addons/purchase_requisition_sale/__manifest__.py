@@ -9,5 +9,4 @@
     'sequence': 70,
     'depends': ['purchase_requisition', 'sale_purchase'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

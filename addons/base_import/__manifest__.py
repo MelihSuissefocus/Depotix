@@ -27,17 +27,12 @@ Re-implement Odoo's file import system:
     'installable': True,
     'auto_install': True,
     'data': [
-        'security/ir.model.access.csv',
-    ],
+        'security/ir.model.access.csv'],
     'assets': {
         'web.assets_backend': [
             'base_import/static/src/**/*.scss',
             'base_import/static/src/**/*.js',
-            'base_import/static/src/**/*.xml',
-        ],
+            'base_import/static/src/**/*.xml'],
         'web.qunit_suite_tests': [
-            'base_import/static/tests/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'base_import/static/tests/**/*']},
+    'license': 'LGPL-3'}

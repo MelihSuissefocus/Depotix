@@ -13,9 +13,7 @@ Allows to prepare batches depending on their carrier
 """,
     'depends': ['stock_delivery', 'stock_picking_batch'],
     'data': [
-        'views/stock_picking_type_views.xml',
-    ],
+        'views/stock_picking_type_views.xml'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

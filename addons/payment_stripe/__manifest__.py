@@ -19,8 +19,5 @@
     'uninstall_hook': 'uninstall_hook',
     'assets': {
         'web.assets_frontend': [
-            'payment_stripe/static/src/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'payment_stripe/static/src/**/*']},
+    'license': 'LGPL-3'}

@@ -11,13 +11,10 @@ Saudi Arabia POS Localization
     'license': 'LGPL-3',
     'depends': [
         'l10n_gcc_pos',
-        'l10n_sa',
-    ],
+        'l10n_sa'],
     'assets': {
         'point_of_sale._assets_pos': [
             'web/static/lib/zxing-library/zxing-library.js',
-            'l10n_sa_pos/static/src/**/*',
-        ]
+            'l10n_sa_pos/static/src/**/*']
     },
-    'auto_install': True,
-}
+    'auto_install': True}

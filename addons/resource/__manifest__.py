@@ -22,18 +22,12 @@ associated to every resource. It also manages the leaves of every resource.
         'views/resource_calendar_leaves_views.xml',
         'views/resource_calendar_attendance_views.xml',
         'views/resource_calendar_views.xml',
-        'views/menuitems.xml',
-    ],
+        'views/menuitems.xml'],
     'demo': [
-        'data/resource_demo.xml',
-    ],
+        'data/resource_demo.xml'],
     'assets': {
         'web.assets_backend': [
-            'resource/static/src/**/*',
-        ],
+            'resource/static/src/**/*'],
         'web.qunit_suite_tests': [
-            'resource/static/tests/components/*.js',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'resource/static/tests/components/*.js']},
+    'license': 'LGPL-3'}

@@ -7,5 +7,4 @@
     "depends": ["base", "web"],
     "installable": True,
     "data": ["ir.model.access.csv"],
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

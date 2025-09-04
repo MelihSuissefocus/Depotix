@@ -6,13 +6,9 @@
     "auto_install": True,
     "data": [
         "views/res_config_settings_views.xml",
-        "data/kiosk_sale_team.xml",
-    ],
+        "data/kiosk_sale_team.xml"],
     "assets": {
         # Assets
         "pos_self_order.assets": [
-            "pos_self_order_sale/static/src/app/**/**",
-        ],
-    },
-    "license": "LGPL-3",
-}
+            "pos_self_order_sale/static/src/app/**/**"]},
+    "license": "LGPL-3"}

@@ -24,22 +24,17 @@
         'views/subcontracting_portal_views.xml',
         'views/subcontracting_portal_templates.xml',
         'views/stock_location_views.xml',
-        'wizard/stock_picking_return_views.xml',
-    ],
+        'wizard/stock_picking_return_views.xml'],
     'demo': [
-        'data/mrp_subcontracting_demo.xml',
-    ],
+        'data/mrp_subcontracting_demo.xml'],
     'assets': {
         'web.assets_tests': [
-            'mrp_subcontracting/static/tests/tours/subcontracting_portal_tour.js',
-        ],
+            'mrp_subcontracting/static/tests/tours/subcontracting_portal_tour.js'],
         'web.assets_backend': [
             'mrp_subcontracting/static/src/components/**/*',
-            'mrp_subcontracting/static/src/views/**/*',
-        ],
+            'mrp_subcontracting/static/src/views/**/*'],
         'web.assets_frontend': [
-            'mrp_subcontracting/static/src/scss/subcontracting_portal.scss',
-        ],
+            'mrp_subcontracting/static/src/scss/subcontracting_portal.scss'],
         'mrp_subcontracting.webclient': [
             ('include', 'web._assets_helpers'),
             ('include', 'web._assets_backend_helpers'),
@@ -128,9 +123,6 @@
             'web/static/src/views/form/button_box/*.scss',
 
             'mrp_subcontracting/static/src/subcontracting_portal/*',
-            'web/static/src/start.js',
-        ],
-    },
+            'web/static/src/start.js']},
     'uninstall_hook': 'uninstall_hook',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

@@ -52,25 +52,18 @@ Print product labels with barcode.
         'report/product_product_templates.xml',
         'report/product_template_templates.xml',
         'report/product_packaging.xml',
-        'report/product_pricelist_report_templates.xml',
-    ],
+        'report/product_pricelist_report_templates.xml'],
     'demo': [
-        'data/product_demo.xml',
-    ],
+        'data/product_demo.xml'],
     'installable': True,
     'assets': {
         'web.assets_backend': [
             'product/static/src/js/**/*',
             'product/static/src/product_catalog/**/*.js',
             'product/static/src/product_catalog/**/*.xml',
-            'product/static/src/product_catalog/**/*.scss',
-        ],
+            'product/static/src/product_catalog/**/*.scss'],
         'web.report_assets_common': [
-            'product/static/src/scss/report_label_sheet.scss',
-        ],
+            'product/static/src/scss/report_label_sheet.scss'],
         'web.qunit_suite_tests': [
-            'product/static/tests/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'product/static/tests/**/*']},
+    'license': 'LGPL-3'}

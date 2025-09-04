@@ -8,16 +8,12 @@
     'category': 'Accounting/Localizations/Account Charts',
     'description': ' This is the base module to manage chart of accounts and localization for the Bangladesh ',
     'depends': [
-        'account',
-    ],
+        'account'],
     'data': [
         'data/account.account.tag.csv',
         'data/res.country.state.csv',
         'data/account_tax_report_data.xml',
-        'views/menu_items.xml',
-    ],
+        'views/menu_items.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

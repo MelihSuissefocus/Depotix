@@ -71,8 +71,7 @@ The kernel of Odoo, needed for all installation.
         'views/ir_property_views.xml',
         'views/res_config_settings_views.xml',
         'views/report_paperformat_views.xml',
-        'security/ir.model.access.csv',
-    ],
+        'security/ir.model.access.csv'],
     'demo': [
         'data/res_users_demo.xml',
         'data/res_partner_bank_demo.xml',
@@ -80,15 +79,11 @@ The kernel of Odoo, needed for all installation.
         'data/res_currency_rate_demo.xml',
         'data/res_bank_demo.xml',
         'data/res_partner_demo.xml',
-        'data/res_partner_image_demo.xml',
-    ],
+        'data/res_partner_image_demo.xml'],
     'assets': {
         'web.assets_tests': [
-            'base/static/tests/**/*',
-        ],
-    },
+            'base/static/tests/**/*']},
     'installable': True,
     'auto_install': True,
     'post_init_hook': 'post_init',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

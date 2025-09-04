@@ -9,15 +9,11 @@
     'category': 'Accounting/Localizations',
     'depends': [
         'l10n_in',
-        'stock',
-    ],
+        'stock'],
     'data': [
-        'views/report_stockpicking_operations.xml',
-    ],
+        'views/report_stockpicking_operations.xml'],
     'demo': [
-        'data/product_demo.xml',
-    ],
+        'data/product_demo.xml'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

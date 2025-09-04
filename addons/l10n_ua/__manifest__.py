@@ -12,13 +12,9 @@ Ukraine - Chart of accounts.
     """,
     'category': 'Accounting/Localizations/Account Charts',
     'depends': [
-        'account',
-    ],
+        'account'],
     'data': [
-        'data/account_account_tag_data.xml',
-    ],
+        'data/account_account_tag_data.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

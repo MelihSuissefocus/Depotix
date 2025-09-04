@@ -14,10 +14,7 @@ Nigerian localization.
     'depends': ['base_vat'],
     'data': [
         'data/tax_report.xml',
-        'data/withholding_vat_report.xml',
-    ],
+        'data/withholding_vat_report.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

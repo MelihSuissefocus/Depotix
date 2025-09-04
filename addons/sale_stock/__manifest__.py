@@ -38,15 +38,11 @@ Preferences
         'data/sale_stock_data.xml',
 
         'wizard/stock_rules_report_views.xml',
-        'wizard/sale_order_cancel_views.xml',
-    ],
+        'wizard/sale_order_cancel_views.xml'],
     'demo': ['data/sale_order_demo.xml'],
     'installable': True,
     'auto_install': True,
     'assets': {
         'web.assets_backend': [
-            'sale_stock/static/src/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'sale_stock/static/src/**/*']},
+    'license': 'LGPL-3'}

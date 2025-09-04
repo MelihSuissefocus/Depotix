@@ -12,8 +12,6 @@ by also displaying the associated picking reference in the search view.
     'depends': ['stock_landed_costs', 'mrp_subcontracting'],
     'category': 'Manufacturing/Manufacturing',
     'data': [
-        'views/stock_landed_cost_views.xml',
-    ],
+        'views/stock_landed_cost_views.xml'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

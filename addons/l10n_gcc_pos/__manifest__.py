@@ -11,8 +11,6 @@ GCC POS Localization
     'depends': ['point_of_sale', 'l10n_gcc_invoice'],
     'assets': {
         'point_of_sale._assets_pos': [
-            'l10n_gcc_pos/static/src/**/*',
-        ]
+            'l10n_gcc_pos/static/src/**/*']
     },
-    'auto_install': True,
-}
+    'auto_install': True}

@@ -7,17 +7,13 @@
     'data': [
         'data/barcodes_data.xml',
         'views/barcodes_view.xml',
-        'security/ir.model.access.csv',
-        ],
+        'security/ir.model.access.csv'],
     'installable': True,
     'post_init_hook': '_assign_default_nomeclature_id',
     'assets': {
         'web.assets_backend': [
-            'barcodes/static/src/**/*',
-        ],
+            'barcodes/static/src/**/*'],
         'web.tests_assets': ['barcodes/static/tests/helpers.js'],
         'web.qunit_suite_tests': ['barcodes/static/tests/basic/**/*.js'],
-        'web.qunit_mobile_suite_tests': ['barcodes/static/tests/mobile/*.js'],
-    },
-    'license': 'LGPL-3',
-}
+        'web.qunit_mobile_suite_tests': ['barcodes/static/tests/mobile/*.js']},
+    'license': 'LGPL-3'}

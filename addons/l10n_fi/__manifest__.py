@@ -22,15 +22,11 @@ Set the payment reference type from the Sales Journal.
     'depends': [
         'base_iban',
         'base_vat',
-        'account',
-    ],
+        'account'],
     'data': [
         'data/account_account_tag_data.xml',
-        'data/account_tax_report_line.xml',
-    ],
+        'data/account_tax_report_line.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
+        'demo/demo_company.xml'],
     'installable': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

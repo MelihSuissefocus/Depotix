@@ -7,11 +7,8 @@
     'data': [
         'report/ir_actions_report.xml',
         'views/sale_order_template_views.xml',
-        'wizards/res_config_settings_views.xml',
-    ],
+        'wizards/res_config_settings_views.xml'],
     'demo': [
-        'data/sale_pdf_quote_builder_demo.xml',
-    ],
+        'data/sale_pdf_quote_builder_demo.xml'],
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

@@ -15,14 +15,10 @@
 
         'data/payment_provider_data.xml',  # Depends on views/payment_adyen_templates.xml
 
-        'wizards/payment_capture_wizard_views.xml',
-    ],
+        'wizards/payment_capture_wizard_views.xml'],
     'post_init_hook': 'post_init_hook',
     'uninstall_hook': 'uninstall_hook',
     'assets': {
         'web.assets_frontend': [
-            'payment_adyen/static/src/js/payment_form.js',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'payment_adyen/static/src/js/payment_form.js']},
+    'license': 'LGPL-3'}

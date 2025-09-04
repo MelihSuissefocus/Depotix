@@ -9,9 +9,7 @@
     'category': 'Localization',
     'depends': [
         'l10n_fi',
-        'sale',
-    ],
+        'sale'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

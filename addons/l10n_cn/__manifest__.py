@@ -34,15 +34,11 @@ correctly when the cn2an library is installed. (e.g. with pip3 install cn2an)
     """,
     'depends': [
         'base',
-        'account',
-    ],
+        'account'],
     'data': [
         'views/account_move_view.xml',
         'views/account_report.xml',
-        'views/report_voucher.xml',
-    ],
+        'views/report_voucher.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

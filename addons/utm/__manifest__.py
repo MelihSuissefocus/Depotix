@@ -20,16 +20,11 @@ Enable management of UTM trackers: campaign, medium, source.
         'views/utm_stage_views.xml',
         'views/utm_tag_views.xml',
         'views/utm_menus.xml',
-        'security/ir.model.access.csv',
-    ],
+        'security/ir.model.access.csv'],
     'demo': [
         'data/utm_campaign_demo.xml',
-        'data/utm_stage_demo.xml',
-    ],
+        'data/utm_stage_demo.xml'],
     'assets': {
         'web.assets_backend': [
-            'utm/static/src/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'utm/static/src/**/*']},
+    'license': 'LGPL-3'}

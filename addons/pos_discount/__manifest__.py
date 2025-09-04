@@ -17,13 +17,9 @@ discount to a customer.
     'depends': ['point_of_sale'],
     'data': [
         'views/res_config_settings_views.xml',
-        'views/pos_config_views.xml',
-        ],
+        'views/pos_config_views.xml'],
     'installable': True,
     'assets': {
         'point_of_sale._assets_pos': [
-            'pos_discount/static/src/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'pos_discount/static/src/**/*']},
+    'license': 'LGPL-3'}

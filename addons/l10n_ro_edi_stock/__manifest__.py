@@ -8,9 +8,7 @@ E-Transport implementation for Romania
     'depends': ['stock_delivery', 'l10n_ro_efactura'],
     'assets': {
         'web.assets_backend': [
-            'l10n_ro_edi_stock/static/src/components/**/*',
-        ],
-    },
+            'l10n_ro_edi_stock/static/src/components/**/*']},
     'data': [
         'data/template_etransport.xml',
 
@@ -18,8 +16,6 @@ E-Transport implementation for Romania
         'views/stock_picking_views.xml',
         'views/delivery_carrier_views.xml',
 
-        'report/report_deliveryslip.xml',
-    ],
+        'report/report_deliveryslip.xml'],
     'installable': True,
-    'license': "LGPL-3",
-}
+    'license': "LGPL-3"}

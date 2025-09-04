@@ -13,9 +13,7 @@ Bridge module between MRP subcontracting and Repair
     ],
     'data': [
         'security/ir.model.access.csv',
-        'security/mrp_subcontracting_repair_security.xml',
-    ],
+        'security/mrp_subcontracting_repair_security.xml'],
     'installable': True,
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

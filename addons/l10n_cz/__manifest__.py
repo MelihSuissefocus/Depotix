@@ -21,18 +21,14 @@ Tento modul definuje:
     'depends': [
         'account',
         'base_iban',
-        'base_vat',
-    ],
+        'base_vat'],
     'data': [
         'data/tax_report.xml',
         'views/report_invoice.xml',
         'views/res_partner_views.xml',
         'views/res_company_views.xml',
         'views/account_move_views.xml',
-        'views/report_template.xml',
-    ],
+        'views/report_template.xml'],
     'demo': [
-        'data/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'data/demo_company.xml'],
+    'license': 'LGPL-3'}

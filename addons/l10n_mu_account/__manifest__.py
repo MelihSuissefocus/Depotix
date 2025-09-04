@@ -14,14 +14,10 @@ This is the base module to manage the accounting chart for the Republic of Mauri
     """,
     "author": "Odoo SA",
     "depends": [
-        "account",
-    ],
+        "account"],
     "data": [
         "data/tax_report-mu.xml",
-        "views/report_invoice.xml",
-    ],
+        "views/report_invoice.xml"],
     "demo": [
-        "demo/demo_company.xml",
-    ],
-    "license": "LGPL-3",
-}
+        "demo/demo_company.xml"],
+    "license": "LGPL-3"}

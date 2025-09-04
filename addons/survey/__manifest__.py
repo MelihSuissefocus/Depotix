@@ -40,8 +40,7 @@ sent mails with personal token for the invitation of the survey.
         'views/survey_templates_user_input_session.xml',
         'views/gamification_badge_views.xml',
         'wizard/survey_invite_views.xml',
-        'views/res_partner_views.xml',
-    ],
+        'views/res_partner_views.xml'],
     'demo': [
         'data/gamification_badge_demo.xml',
         'data/res_users_demo.xml',
@@ -54,8 +53,7 @@ sent mails with personal token for the invitation of the survey.
         'data/survey_demo_quiz.xml',
         'data/survey_demo_quiz_user_input.xml',
         'data/survey_demo_quiz_user_input_line.xml',
-        'data/survey_demo_conditional.xml',
-    ],
+        'data/survey_demo_conditional.xml'],
     'installable': True,
     'application': True,
     'sequence': 220,
@@ -77,39 +75,29 @@ sent mails with personal token for the invitation of the survey.
             'web/static/lib/bootstrap/scss/_variables.scss',
             'survey/static/src/scss/survey_templates_form.scss',
             'survey/static/src/scss/survey_templates_results.scss',
-            'survey/static/src/xml/survey_breadcrumb_templates.xml',
-        ],
+            'survey/static/src/xml/survey_breadcrumb_templates.xml'],
         'survey.survey_user_input_session_assets': [
             'survey/static/src/js/survey_session_colors.js',
             'survey/static/src/js/survey_session_chart.js',
             'survey/static/src/js/survey_session_text_answers.js',
             'survey/static/src/js/survey_session_leaderboard.js',
             'survey/static/src/js/survey_session_manage.js',
-            'survey/static/src/xml/survey_session_text_answer_template.xml',
-        ],
+            'survey/static/src/xml/survey_session_text_answer_template.xml'],
         'web.report_assets_common': [
-            'survey/static/src/scss/survey_reports.scss',
-        ],
+            'survey/static/src/scss/survey_reports.scss'],
         'web.assets_backend': [
             'survey/static/src/question_page/*',
             'survey/static/src/views/**/*.js',
             'survey/static/src/views/**/*.xml',
             'survey/static/src/scss/survey_survey_views.scss',
             'survey/static/src/scss/survey_question_views.scss',
-            'survey/static/src/js/tours/survey_tour.js',
-        ],
+            'survey/static/src/js/tours/survey_tour.js'],
         "web.assets_web_dark": [
-            'survey/static/src/scss/*.dark.scss',
-        ],
+            'survey/static/src/scss/*.dark.scss'],
         'web.assets_tests': [
-            'survey/static/tests/tours/*.js',
-        ],
+            'survey/static/tests/tours/*.js'],
         'web.qunit_suite_tests': [
-            'survey/static/tests/components/*.js',
-        ],
+            'survey/static/tests/components/*.js'],
         'web.assets_frontend': [
-            'survey/static/src/js/tours/survey_tour.js',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'survey/static/src/js/tours/survey_tour.js']},
+    'license': 'LGPL-3'}

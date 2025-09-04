@@ -13,10 +13,7 @@ social media configuration for any other module that might need it.
     'depends': ['base'],
 
     'data': [
-        'views/res_company_views.xml',
-    ],
+        'views/res_company_views.xml'],
     'demo': [
-        'demo/res_company_demo.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/res_company_demo.xml'],
+    'license': 'LGPL-3'}

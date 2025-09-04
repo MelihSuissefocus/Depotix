@@ -7,13 +7,10 @@
     "category": "Hidden",
     "description": "Outlook support for incoming / outgoing mail servers",
     "depends": [
-        "mail",
-    ],
+        "mail"],
     "data": [
         "views/fetchmail_server_views.xml",
         "views/ir_mail_server_views.xml",
         "views/res_config_settings_views.xml",
-        "views/templates.xml",
-    ],
-    "license": "LGPL-3",
-}
+        "views/templates.xml"],
+    "license": "LGPL-3"}

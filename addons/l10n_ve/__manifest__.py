@@ -36,10 +36,7 @@ If you install this module, and select Custom chart a basic chart will be propos
 but you will need set manually account defaults for taxes.
 """,
     'depends': [
-        'account',
-    ],
+        'account'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

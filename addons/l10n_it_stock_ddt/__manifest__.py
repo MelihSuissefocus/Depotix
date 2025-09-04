@@ -28,9 +28,7 @@ invoice line to export in the FatturaPA XML.
         'report/l10n_it_ddt_report.xml',
         'views/stock_picking_views.xml',
         'views/account_invoice_views.xml',
-        'data/l10n_it_ddt_template.xml',
-    ],
+        'data/l10n_it_ddt_template.xml'],
     'auto_install': True,
     'post_init_hook': '_create_picking_seq',
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

@@ -17,16 +17,12 @@ Activates:
  - States
     """,
     'depends': [
-        'account',
-    ],
+        'account'],
     'data': [
         'data/tax_report_full.xml',
         'data/tax_report_simplified.xml',
         'data/res.country.state.csv',
-        'data/res_country_data.xml',
-    ],
+        'data/res_country_data.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

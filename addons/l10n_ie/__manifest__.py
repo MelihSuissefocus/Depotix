@@ -12,13 +12,9 @@ This is the base module to manage the accounting chart for Republic of Ireland i
     "depends": [
         "account",
         "base_iban",
-        "base_vat",
-    ],
+        "base_vat"],
     "data": [
-        "data/tax_report-ie.xml",
-    ],
+        "data/tax_report-ie.xml"],
     "demo": [
-        "demo/demo_company.xml",
-    ],
-    "license": "LGPL-3",
-}
+        "demo/demo_company.xml"],
+    "license": "LGPL-3"}

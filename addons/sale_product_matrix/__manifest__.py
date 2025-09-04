@@ -13,15 +13,11 @@ by choosing product variants quantity through a Grid Entry.
     'data': [
         'views/product_template_views.xml',
         'views/sale_order_views.xml',
-        'report/sale_report_templates.xml',
-    ],
+        'report/sale_report_templates.xml'],
     'demo': [
         'data/product_matrix_demo.xml'
     ],
     'assets': {
         'web.assets_backend': [
-            'sale_product_matrix/static/src/**/*',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'sale_product_matrix/static/src/**/*']},
+    'license': 'LGPL-3'}

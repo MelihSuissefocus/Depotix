@@ -19,15 +19,11 @@ By default, the audit trail is enabled for GoBD compliance.
     'depends': [
         'base_iban',
         'base_vat',
-        'l10n_din5008',
-    ],
+        'l10n_din5008'],
     'data': [
         'data/account_account_tags_data.xml',
         'views/account_view.xml',
-        'views/res_company_views.xml',
-    ],
+        'views/res_company_views.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}

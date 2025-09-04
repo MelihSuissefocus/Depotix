@@ -6,8 +6,7 @@
     "version": "1.03.00",
     "category": "Accounting/Localizations/EDI",
     "depends": [
-        "l10n_in_edi",
-    ],
+        "l10n_in_edi"],
     "description": """
 Indian - E-waybill
 ====================================
@@ -25,12 +24,9 @@ Step 4: Repeat steps 1,2,3 for all GSTIN you have in odoo. If you have a multi-c
         "data/ewaybill_type_data.xml",
         "views/account_move_views.xml",
         "views/edi_pdf_report.xml",
-        "views/res_config_settings_views.xml",
-    ],
+        "views/res_config_settings_views.xml"],
     "demo": [
-        "demo/demo_company.xml",
-    ],
+        "demo/demo_company.xml"],
     "installable": True,
     # not auto_install because the company can be related to the service industry
-    "license": "LGPL-3",
-}
+    "license": "LGPL-3"}

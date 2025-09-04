@@ -13,5 +13,4 @@ This module adds support for SEPA Credit Transfer QR-code generation.
     'depends': ['account', 'base_iban'],
 
     'auto_install': True,
-    'license': 'LGPL-3',
-}
+    'license': 'LGPL-3'}

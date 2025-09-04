@@ -18,17 +18,13 @@ Also:
     'author': 'Odoo S.A., Richard deMeester - Willow IT',
     'website': 'https://www.odoo.com/documentation/17.0/applications/finance/fiscal_localizations.html',
     'depends': [
-        'account',
-    ],
+        'account'],
     'data': [
         'data/account_tax_report_data.xml',
         'data/res_currency_data.xml',
         'views/report_invoice.xml',
         'views/res_company_views.xml',
-        'views/res_partner_views.xml',
-    ],
+        'views/res_partner_views.xml'],
     'demo': [
-        'demo/demo_company.xml',
-    ],
-    'license': 'LGPL-3',
-}
+        'demo/demo_company.xml'],
+    'license': 'LGPL-3'}
