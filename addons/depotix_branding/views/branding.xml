@@ -1,22 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <template id="depotix_assets" inherit_id="web.assets_frontend">
-        <xpath expr="." position="inside">
-            <script type="text/javascript">
-                document.addEventListener('DOMContentLoaded', function() {
-                    document.title = 'Depotix Login';
-                });
-            </script>
-        </xpath>
-    </template>
-
-    <template id="depotix_backend_assets" inherit_id="web.assets_backend">
-        <xpath expr="." position="inside">
-            <script type="text/javascript">
-                document.addEventListener('DOMContentLoaded', function() {
-                    document.title = 'Depotix';
-                });
-            </script>
-        </xpath>
-    </template>
+    <!-- Branding-Modul für Depotix -->
+    <!-- Titel-Anpassungen können über Company-Einstellungen oder JavaScript erfolgen -->
 </odoo>
