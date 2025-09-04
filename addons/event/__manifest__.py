@@ -1,7 +1,7 @@
 {
-    'name': 'Event Blocker',
-    'version': '1.0',
-    'category': 'Hidden',
-    'installable': False,
-    'auto_install': False,
+  "name": "Blocked: event",
+  "version": "17.0.0.0",
+  "summary": "Depotix blockiert dieses Modul.",
+  "installable": False,
+  "application": False
 }

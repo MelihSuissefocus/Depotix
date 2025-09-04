@@ -1,28 +1,29 @@
 version: '3.1'
 services:
   web:
-    image: ${IMAGE_NAME:-odoo:17.0}   # <— NEU: nimmt IMAGE_NAME aus .env, sonst odoo:17.0
+    image: depotix:local
+    build: .
     depends_on:
       - db
     ports:
       - "8069:8069"
     volumes:
-      - odoo-web-data:/var/lib/odoo
-      - ./addons:/mnt/extra-addons
-      - ./config:/etc/odoo
+      - depotix-web-data:/var/lib/depotix
     environment:
+      - DEPOTIX_RC=/etc/depotix/depotix.conf
       - HOST=db
-      - USER=odoo
+      - USER=depotix
       - PASSWORD=depotixdb2024
   db:
     image: postgres:15
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_PASSWORD=depotixdb2024
-      - POSTGRES_USER=odoo
+      - POSTGRES_USER=depotix
     volumes:
-      - odoo-db-data:/var/lib/postgresql/data
+      - depotix-db-data:/var/lib/postgresql/data
 
 volumes:
-  odoo-web-data:
-  odoo-db-data:
+  depotix-web-data:
+  depotix-db-data:
+
