@@ -72,3 +72,14 @@ for details and get in touch with us via email.
 - After starting, access Odoo at `http://localhost:8069`.
 - To update the app list in Odoo, go to Apps > Update Apps List.
 - For development, you can mount volumes for live reloading.
+
+## Branding installieren
+
+Um das Depotix Branding zu installieren:
+
+1. Stelle sicher, dass Odoo läuft.
+2. Installiere das Modul `depotix_branding` über die Odoo-Weboberfläche oder CLI:
+   ```bash
+   odoo-bin -c config/odoo.conf -d depotix -i depotix_branding --stop-after-init
+   ```
+3. Nach der Installation werden die Titelleisten in Login und Backend auf "Depotix" angepasst.

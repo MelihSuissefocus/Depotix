@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Überschreibe den Titel in der Login-Seite -->
+    <template id="web.login" inherit_id="web.login">
+        <xpath expr="//title" position="replace">
+            <title>Depotix Login</title>
+        </xpath>
+    </template>
+
+    <!-- Überschreibe den Titel im Backend -->
+    <template id="web.webclient_bootstrap" inherit_id="web.webclient_bootstrap">
+        <xpath expr="//title" position="replace">
+            <title>Depotix</title>
+        </xpath>
+    </template>
+</odoo>
