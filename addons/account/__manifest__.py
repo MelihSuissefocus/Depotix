@@ -72,18 +72,15 @@ You could use this simplified accounting in case you work with an (external) acc
         'wizard/accrued_orders.xml',
         'views/bill_preview_template.xml',
         'data/account_reports_data.xml',
-        'views/uom_uom_views.xml',
-    ],
+        'views/uom_uom_views.xml'],
     'demo': [
-        'demo/account_demo.xml',
-    ],
+        'demo/account_demo.xml'],
     'installable': True,
     'application': True,
     'post_init_hook': '_account_post_init',
     'assets': {
         'web._assets_primary_variables': [
-            'account/static/src/scss/variables.scss',
-        ],
+            'account/static/src/scss/variables.scss'],
         'web.assets_backend': [
             'account/static/src/css/account_bank_and_cash.css',
             'account/static/src/css/account.css',
@@ -94,25 +91,17 @@ You could use this simplified accounting in case you work with an (external) acc
             'account/static/src/services/*.js',
             'account/static/src/js/tours/account.js',
             'account/static/src/views/**/*.js',
-            'account/static/src/js/search/search_bar/search_bar.js',
-        ],
+            'account/static/src/js/search/search_bar/search_bar.js'],
         'web.assets_frontend': [
             'account/static/src/js/account_portal_sidebar.js',
-            'account/static/src/js/account_portal.js',
-        ],
+            'account/static/src/js/account_portal.js'],
         'web.assets_tests': [
-            'account/static/tests/tours/**/*',
-        ],
+            'account/static/tests/tours/**/*'],
         'web.qunit_suite_tests': [
             'account/static/tests/helpers/*.js',
-            'account/static/tests/*.js',
-        ],
+            'account/static/tests/*.js'],
         'web.report_assets_common': [
-            'account/static/src/css/report_invoice.css',
-        ],
+            'account/static/src/css/report_invoice.css'],
         'web.report_assets_pdf': [
-            'account/static/src/css/report_invoice.css',
-        ],
-    },
-    'license': 'LGPL-3',
-}
+            'account/static/src/css/report_invoice.css']},
+    'license': 'LGPL-3'}

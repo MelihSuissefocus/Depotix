@@ -35,3 +35,51 @@ Developers can start with [the developer tutorials](https://www.odoo.com/documen
 
 If you believe you have found a security issue, check our [Responsible Disclosure page](https://www.odoo.com/security-report)
 for details and get in touch with us via email.
+
+# Depotix Build & Run
+
+## Prerequisites
+
+- Docker and Docker Compose installed on your system.
+- Git for version control.
+- Python 3.8+ (if running without Docker).
+
+## Building and Running with Docker
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd depotix
+   ```
+
+2. Start the services:
+   ```bash
+   docker compose up -d
+   ```
+
+3. To stop the services:
+   ```bash
+   docker compose down
+   ```
+
+## Configuration
+
+- **Admin/Master Password**: The default master password is set to `admin`. For production, change it in the Docker Compose file or environment variables.
+- **Addons Path**: Custom addons are located in the `addons/` directory. Ensure the `addons_path` in the Odoo configuration includes this path.
+
+## Additional Notes
+
+- After starting, access Odoo at `http://localhost:8069`.
+- To update the app list in Odoo, go to Apps > Update Apps List.
+- For development, you can mount volumes for live reloading.
+
+## Branding installieren
+
+Um das Depotix Branding zu installieren:
+
+1. Stelle sicher, dass Odoo läuft.
+2. Installiere das Modul `depotix_branding` über die Odoo-Weboberfläche oder CLI:
+   ```bash
+   odoo-bin -c config/odoo.conf -d depotix -i depotix_branding --stop-after-init
+   ```
+3. Nach der Installation werden die Titelleisten in Login und Backend auf "Depotix" angepasst.
