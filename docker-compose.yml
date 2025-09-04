@@ -1,7 +1,7 @@
 version: '3.1'
 services:
   web:
-    image: odoo:17.0
+    image: ${IMAGE_NAME:-odoo:17.0}   # <— NEU: nimmt IMAGE_NAME aus .env, sonst odoo:17.0
     depends_on:
       - db
     ports:
