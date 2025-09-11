@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'django_filters',
+    'drf_spectacular',
     
     # Local apps
     'inventory',
@@ -149,10 +150,12 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 50,
+    'PAGE_SIZE': 25,
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'inventory.views.custom_exception_handler',
 }
 
 # JWT Configuration
@@ -179,13 +182,13 @@ SIMPLE_JWT = {
 }
 
 # CORS configuration
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Next.js frontend
-    "http://127.0.0.1:3000",
-]
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://localhost:3000,http://127.0.0.1:3000',
+    cast=lambda v: [s.strip() for s in v.split(',')]
+)
 
 CORS_ALLOW_CREDENTIALS = True
-
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only in development
 
 # Static files configuration
@@ -223,4 +226,24 @@ LOGGING = {
             'propagate': True,
         },
     },
+}
+
+# drf-spectacular settings
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Depotix API',
+    'DESCRIPTION': 'Inventory Management System API',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'TAGS': [
+        {'name': 'Authentication', 'description': 'User authentication and authorization'},
+        {'name': 'Categories', 'description': 'Product categories management'},
+        {'name': 'Suppliers', 'description': 'Supplier management'},
+        {'name': 'Customers', 'description': 'Customer management'},
+        {'name': 'Items', 'description': 'Inventory items management'},
+        {'name': 'Expenses', 'description': 'Expense tracking'},
+        {'name': 'Stock Movements', 'description': 'Stock movement tracking and operations'},
+        {'name': 'Sales Orders', 'description': 'Sales order management and workflows'},
+        {'name': 'Invoices', 'description': 'Invoice generation and management'},
+    ],
 }

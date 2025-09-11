@@ -139,10 +139,16 @@ python manage.py runserver
 ### Backend Environment Configuration
 Create `api/.env` file:
 ```env
-SECRET_KEY=your-secret-key-here
+# Django Core
+SECRET_KEY=your-secret-key-here-make-it-very-long-and-random
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database (SQLite for development)
 DATABASE_URL=sqlite:///db.sqlite3
+
+# CORS Configuration (for frontend)
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ```
 
 ### Phase 1 Data Model Features
@@ -391,5 +397,86 @@ npm install --save-dev @next/bundle-analyzer
 4. **CI/CD**: Set up automated deployment pipeline
 5. **Monitoring**: Add error tracking and analytics
 
+## Phase 2 API Layer Updates
+
+### New API Endpoints (Phase 2)
+
+The backend now includes comprehensive API endpoints with OpenAPI documentation:
+
+#### API Documentation
+- **Interactive Docs:** `http://localhost:8000/api/docs/` (Swagger UI)
+- **Alternative Docs:** `http://localhost:8000/api/redoc/` (ReDoc)
+- **OpenAPI Schema:** `http://localhost:8000/api/schema/`
+
+#### Stock Movement Operations
+- `POST /api/v1/stock/in/` - Add stock (IN operation)
+- `POST /api/v1/stock/out/` - Remove stock (OUT operation)
+- `POST /api/v1/stock/return/` - Return stock (RETURN operation)
+- `POST /api/v1/stock/defect/` - Mark as defective (DEFECT operation)
+- `POST /api/v1/stock/adjust/` - Adjust quantities (ADJUST operation with required reason)
+
+#### Sales Order Workflow
+- `POST /api/v1/orders/{id}/confirm/` - Confirm draft order
+- `POST /api/v1/orders/{id}/deliver/` - Deliver order (creates stock movements)
+- `POST /api/v1/orders/{id}/invoice/` - Generate invoice with automatic numbering
+
+#### Low Stock & Filtering
+- `GET /api/v1/items/low_stock/` - Items below minimum stock level
+- Enhanced filtering on all endpoints (date ranges, search, ordering)
+- Consistent pagination (25 items per page)
+
+#### Invoice Management
+- `GET /api/v1/invoices/{id}/pdf/` - Download invoice PDF (HTML stub implementation)
+- Automatic invoice numbering (INV-YYYY-####)
+- Automatic sales order numbering (LS-YYYY-####)
+
+### Authentication & Security
+
+#### JWT Authentication
+```bash
+# Obtain access token
+curl -X POST http://localhost:8000/auth/token/ \
+  -H "Content-Type: application/json" \
+  -d '{"username": "your_username", "password": "your_password"}'
+
+# Use in API requests
+curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  http://localhost:8000/api/v1/items/
+```
+
+#### Role-Based Access Control (RBAC)
+- **Staff Users:** Full access to all data
+- **Regular Users:** Access only to their own created/owned resources
+- **Categories:** Staff-only write access, read access for all authenticated users
+
+### Error Handling
+
+All API responses use consistent error format:
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR|UNAUTHORIZED|FORBIDDEN|NOT_FOUND|BUSINESS_RULE_VIOLATION",
+    "message": "Human-readable error message",
+    "fields": {"field_name": ["Field-specific errors"]}
+  }
+}
+```
+
+### Testing
+
+Run comprehensive API tests:
+```bash
+cd api
+python manage.py test inventory.test_api
+```
+
+Test coverage includes:
+- Authentication flows
+- RBAC permissions
+- Stock movement operations
+- Sales order workflows
+- Data validation
+- Error handling
+
 ---
-*Setup documentation created during Phase 0 Repository Audit - September 11, 2025*
+*Updated during Phase 2 API Implementation - September 11, 2025*

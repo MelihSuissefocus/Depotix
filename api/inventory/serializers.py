@@ -395,15 +395,41 @@ class DocumentSequenceSerializer(serializers.ModelSerializer):
 
 # Specialized serializers for business operations
 class StockMovementCreateSerializer(serializers.ModelSerializer):
-    """Simplified serializer for creating stock movements via API"""
+    """Serializer for creating stock movements via API with UoM support"""
     
     class Meta:
         model = StockMovement
-        fields = ['item', 'type', 'qty_base', 'note', 'supplier', 'customer']
+        fields = [
+            'item', 'type', 'qty_base', 'qty_pallets', 'qty_packages', 
+            'qty_singles', 'note', 'supplier', 'customer'
+        ]
 
     def create(self, validated_data):
         validated_data['created_by'] = self.context['request'].user
         return super().create(validated_data)
+    
+    def validate(self, data):
+        """Validate UoM calculations and business rules"""
+        item = data.get('item')
+        qty_base = data.get('qty_base', 0)
+        qty_pallets = data.get('qty_pallets', 0)
+        qty_packages = data.get('qty_packages', 0)
+        qty_singles = data.get('qty_singles', 0)
+        
+        # Require either qty_base OR UoM inputs
+        if not qty_base and not any([qty_pallets, qty_packages, qty_singles]):
+            raise serializers.ValidationError("Either qty_base or UoM quantities (pallets/packages/singles) must be provided")
+        
+        # Calculate qty_base from UoM inputs if not provided
+        if not qty_base and (qty_pallets or qty_packages or qty_singles):
+            calculated_base = (
+                qty_pallets * item.unit_pallet_factor * item.unit_package_factor +
+                qty_packages * item.unit_package_factor +
+                qty_singles
+            )
+            data['qty_base'] = calculated_base
+        
+        return data
 
 
 class OrderToInvoiceSerializer(serializers.Serializer):
