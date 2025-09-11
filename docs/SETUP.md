@@ -92,32 +92,81 @@ npm run build
 npm start
 ```
 
-## Backend Setup (External Dependency)
+## Backend Setup (Phase 1 Implementation)
 
 ### Backend Repository
-**Missing Component**: Backend is in separate repository
-- **Repository**: [inventory-management-api](https://github.com/namodynamic/inventory-management-api)
-- **Framework**: Django REST Framework
-- **Database**: PostgreSQL
-- **Authentication**: JWT-based
+**Status**: ✅ **IMPLEMENTED** - Django REST Framework backend included
+- **Location**: `api/` directory
+- **Framework**: Django 5.0.8 + Django REST Framework 3.15.2
+- **Database**: SQLite (development) / PostgreSQL (production)
+- **Authentication**: JWT-based with Simple JWT
 
-### Backend Setup Steps (Separate Repository)
+### Backend Setup Steps
 ```bash
-# Clone backend repository
-git clone https://github.com/namodynamic/inventory-management-api.git
-cd inventory-management-api
+# Navigate to backend directory
+cd /Users/melihoezkan/Documents/Projekte/Depotix/api
 
-# Follow backend README for setup:
-# - Install Python 3.9+
-# - Install Django/DRF
-# - Configure PostgreSQL
-# - Run migrations
-# - Start Django server on port 8000
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run database migrations
+python manage.py migrate
+
+# Load seed data (optional)
+python manage.py loaddata ../fixtures/seed_phase1.json
+
+# Create superuser (optional)
+python manage.py createsuperuser
+
+# Start Django development server
+python manage.py runserver
+# Server will run on: http://localhost:8000
 ```
 
-### Mock Backend (For Frontend-Only Development)
+### Backend Environment Configuration
+Create `api/.env` file:
+```env
+SECRET_KEY=your-secret-key-here
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+DATABASE_URL=sqlite:///db.sqlite3
+```
 
-Since backend is external, create a simple mock server for local frontend testing:
+### Phase 1 Data Model Features
+The backend now includes all Phase 1 requirements:
+
+**Core Models**:
+- ✅ Enhanced InventoryItem with multi-unit support
+- ✅ Customer management
+- ✅ Expense tracking  
+- ✅ Legacy InventoryLog compatibility
+
+**New Features**:
+- ✅ Defective stock tracking
+- ✅ Unit conversions (piece/package/pallet)
+- ✅ Cost tracking alongside pricing
+- ✅ Enhanced supplier relationships
+
+**Admin Interface**:
+- ✅ All models registered with Django Admin
+- ✅ Access at: http://localhost:8000/admin/
+
+**Seed Data**: 24 demo objects loaded including:
+- 2 users (admin/demo_user)
+- 3 categories (Beverages, Snacks, Dairy)
+- 2 suppliers (Coca-Cola, Bahlsen)
+- 2 customers (Restaurant, Cafe)
+- 4 inventory items with stock levels
+- 3 expenses with different categories
+- 5 inventory log entries
+
+### Alternative: Mock Backend (For Frontend-Only Development)
+
+If you prefer to develop frontend-only, create a simple mock server:
 
 **Option 1: MSW (Mock Service Worker)**
 ```bash

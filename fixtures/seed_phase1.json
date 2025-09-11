@@ -1,0 +1,384 @@
+[
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "username": "admin",
+      "email": "admin@depotix.com",
+      "first_name": "Admin",
+      "last_name": "User",
+      "is_staff": true,
+      "is_superuser": true,
+      "is_active": true,
+      "date_joined": "2025-09-11T10:00:00Z",
+      "password": "pbkdf2_sha256$870000$dummy_hash_for_seed_data"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 2,
+    "fields": {
+      "username": "demo_user",
+      "email": "demo@depotix.com",
+      "first_name": "Demo",
+      "last_name": "User",
+      "is_staff": false,
+      "is_superuser": false,
+      "is_active": true,
+      "date_joined": "2025-09-11T10:30:00Z",
+      "password": "pbkdf2_sha256$870000$dummy_hash_for_seed_data"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 1,
+    "fields": {
+      "name": "Beverages",
+      "description": "All types of drinks and beverages",
+      "created_at": "2025-09-11T10:00:00Z",
+      "updated_at": "2025-09-11T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 2,
+    "fields": {
+      "name": "Snacks",
+      "description": "Chips, crackers, and other snack foods",
+      "created_at": "2025-09-11T10:00:00Z",
+      "updated_at": "2025-09-11T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 3,
+    "fields": {
+      "name": "Dairy Products",
+      "description": "Milk, cheese, yogurt and dairy items",
+      "created_at": "2025-09-11T10:00:00Z",
+      "updated_at": "2025-09-11T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.supplier",
+    "pk": 1,
+    "fields": {
+      "name": "Coca-Cola Deutschland GmbH",
+      "contact_name": "Hans Mueller",
+      "email": "hans.mueller@coca-cola.de",
+      "phone": "+49 30 12345678",
+      "address": "Stralauer Allee 4, 10245 Berlin",
+      "tax_id": "DE123456789",
+      "payment_terms": "30 days net",
+      "notes": "Main beverage supplier for soft drinks",
+      "owner": 1,
+      "is_active": true,
+      "created_at": "2025-09-11T10:00:00Z",
+      "updated_at": "2025-09-11T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.supplier",
+    "pk": 2,
+    "fields": {
+      "name": "Bahlsen GmbH & Co. KG",
+      "contact_name": "Anna Schmidt",
+      "email": "anna.schmidt@bahlsen.de",
+      "phone": "+49 511 9876543",
+      "address": "Podbielskistraße 11, 30163 Hannover",
+      "tax_id": "DE987654321",
+      "payment_terms": "14 days net",
+      "notes": "Snacks and biscuits supplier",
+      "owner": 1,
+      "is_active": true,
+      "created_at": "2025-09-11T10:00:00Z",
+      "updated_at": "2025-09-11T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.customer",
+    "pk": 1,
+    "fields": {
+      "name": "Restaurant Zum Alten Fritz",
+      "contact_name": "Klaus Weber",
+      "email": "klaus@alter-fritz.de",
+      "phone": "+49 30 5551234",
+      "address": "Unter den Linden 1, 10117 Berlin",
+      "shipping_address": "Unter den Linden 1, 10117 Berlin",
+      "tax_id": "DE555123456",
+      "credit_limit": "5000.00",
+      "payment_terms": "30 days net",
+      "notes": "Regular customer, orders weekly",
+      "owner": 1,
+      "is_active": true,
+      "created_at": "2025-09-11T10:00:00Z",
+      "updated_at": "2025-09-11T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.customer",
+    "pk": 2,
+    "fields": {
+      "name": "Cafe Berliner Luft",
+      "contact_name": "Maria Schneider",
+      "email": "maria@berliner-luft.de",
+      "phone": "+49 30 5559876",
+      "address": "Friedrichstraße 50, 10117 Berlin",
+      "shipping_address": "Friedrichstraße 50, 10117 Berlin",
+      "tax_id": "DE555987654",
+      "credit_limit": "2500.00",
+      "payment_terms": "14 days net",
+      "notes": "Small cafe, monthly orders",
+      "owner": 1,
+      "is_active": true,
+      "created_at": "2025-09-11T10:00:00Z",
+      "updated_at": "2025-09-11T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.inventoryitem",
+    "pk": 1,
+    "fields": {
+      "name": "Coca-Cola Classic 0.5L",
+      "description": "Classic Coca-Cola in 0.5L bottles",
+      "sku": "CC-0.5L-001",
+      "quantity": 500,
+      "defective_qty": 5,
+      "price": "1.50",
+      "cost": "0.85",
+      "min_stock_level": 50,
+      "location": "Warehouse A, Shelf 1-3",
+      "unit_base": "PIECE",
+      "unit_package_factor": 24,
+      "unit_pallet_factor": 60,
+      "category": 1,
+      "owner": 1,
+      "is_active": true,
+      "date_added": "2025-09-11T10:00:00Z",
+      "last_updated": "2025-09-11T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.inventoryitem",
+    "pk": 2,
+    "fields": {
+      "name": "Fanta Orange 0.33L",
+      "description": "Orange flavored soft drink in 0.33L cans",
+      "sku": "FO-0.33L-001",
+      "quantity": 300,
+      "defective_qty": 0,
+      "price": "1.20",
+      "cost": "0.70",
+      "min_stock_level": 40,
+      "location": "Warehouse A, Shelf 2-1",
+      "unit_base": "PIECE",
+      "unit_package_factor": 24,
+      "unit_pallet_factor": 80,
+      "category": 1,
+      "owner": 1,
+      "is_active": true,
+      "date_added": "2025-09-11T10:00:00Z",
+      "last_updated": "2025-09-11T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.inventoryitem",
+    "pk": 3,
+    "fields": {
+      "name": "Bahlsen Leibniz Kekse 200g",
+      "description": "Original Leibniz butter biscuits 200g package",
+      "sku": "LK-200G-001",
+      "quantity": 150,
+      "defective_qty": 2,
+      "price": "2.50",
+      "cost": "1.40",
+      "min_stock_level": 20,
+      "location": "Warehouse B, Shelf 1-1",
+      "unit_base": "PIECE",
+      "unit_package_factor": 12,
+      "unit_pallet_factor": 40,
+      "category": 2,
+      "owner": 1,
+      "is_active": true,
+      "date_added": "2025-09-11T10:00:00Z",
+      "last_updated": "2025-09-11T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.inventoryitem",
+    "pk": 4,
+    "fields": {
+      "name": "Low Stock Test Item",
+      "description": "Item for testing low stock alerts",
+      "sku": "LOW-STOCK-001",
+      "quantity": 8,
+      "defective_qty": 0,
+      "price": "5.00",
+      "cost": "3.00",
+      "min_stock_level": 10,
+      "location": "Test Area",
+      "unit_base": "PIECE",
+      "unit_package_factor": 1,
+      "unit_pallet_factor": 1,
+      "category": 2,
+      "owner": 1,
+      "is_active": true,
+      "date_added": "2025-09-11T10:00:00Z",
+      "last_updated": "2025-09-11T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.inventoryitemsupplier",
+    "pk": 1,
+    "fields": {
+      "item": 1,
+      "supplier": 1,
+      "supplier_sku": "CC500ML-CLASSIC",
+      "supplier_price": "0.85",
+      "lead_time_days": 7,
+      "notes": "Minimum order 10 cases (240 bottles)"
+    }
+  },
+  {
+    "model": "inventory.inventoryitemsupplier",
+    "pk": 2,
+    "fields": {
+      "item": 2,
+      "supplier": 1,
+      "supplier_sku": "FO330ML-ORANGE",
+      "supplier_price": "0.70",
+      "lead_time_days": 7,
+      "notes": "Available in 24-can cases"
+    }
+  },
+  {
+    "model": "inventory.inventoryitemsupplier",
+    "pk": 3,
+    "fields": {
+      "item": 3,
+      "supplier": 2,
+      "supplier_sku": "LEIBNIZ-200G",
+      "supplier_price": "1.40",
+      "lead_time_days": 3,
+      "notes": "Fresh stock weekly delivery"
+    }
+  },
+  {
+    "model": "inventory.expense",
+    "pk": 1,
+    "fields": {
+      "date": "2025-09-10",
+      "description": "Monthly beverage purchase",
+      "amount": "2500.00",
+      "category": "PURCHASE",
+      "supplier": 1,
+      "receipt_number": "CC-2025-09-001",
+      "notes": "Regular monthly stock replenishment",
+      "owner": 1,
+      "created_at": "2025-09-11T10:00:00Z",
+      "updated_at": "2025-09-11T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.expense",
+    "pk": 2,
+    "fields": {
+      "date": "2025-09-09",
+      "description": "Truck fuel for delivery",
+      "amount": "150.00",
+      "category": "TRANSPORT",
+      "supplier": null,
+      "receipt_number": "FUEL-001",
+      "notes": "Delivery route to customers",
+      "owner": 1,
+      "created_at": "2025-09-11T10:00:00Z",
+      "updated_at": "2025-09-11T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.expense",
+    "pk": 3,
+    "fields": {
+      "date": "2025-09-08",
+      "description": "Snacks and biscuits purchase",
+      "amount": "800.00",
+      "category": "PURCHASE",
+      "supplier": 2,
+      "receipt_number": "BH-2025-09-001",
+      "notes": "Weekly snack inventory replenishment",
+      "owner": 1,
+      "created_at": "2025-09-11T10:00:00Z",
+      "updated_at": "2025-09-11T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.inventorylog",
+    "pk": 1,
+    "fields": {
+      "item": 1,
+      "user": 1,
+      "action": "ADD",
+      "quantity_change": 240,
+      "previous_quantity": 260,
+      "new_quantity": 500,
+      "timestamp": "2025-09-11T09:00:00Z",
+      "notes": "Stock replenishment - 10 cases received"
+    }
+  },
+  {
+    "model": "inventory.inventorylog",
+    "pk": 2,
+    "fields": {
+      "item": 1,
+      "user": 1,
+      "action": "REMOVE",
+      "quantity_change": 24,
+      "previous_quantity": 500,
+      "new_quantity": 476,
+      "timestamp": "2025-09-11T11:30:00Z",
+      "notes": "Sold to Restaurant Zum Alten Fritz"
+    }
+  },
+  {
+    "model": "inventory.inventorylog",
+    "pk": 3,
+    "fields": {
+      "item": 2,
+      "user": 1,
+      "action": "ADD",
+      "quantity_change": 120,
+      "previous_quantity": 180,
+      "new_quantity": 300,
+      "timestamp": "2025-09-11T09:30:00Z",
+      "notes": "Stock replenishment - 5 cases received"
+    }
+  },
+  {
+    "model": "inventory.inventorylog",
+    "pk": 4,
+    "fields": {
+      "item": 3,
+      "user": 1,
+      "action": "UPDATE",
+      "quantity_change": 0,
+      "previous_quantity": 150,
+      "new_quantity": 150,
+      "timestamp": "2025-09-11T10:00:00Z",
+      "notes": "Inventory count verification"
+    }
+  },
+  {
+    "model": "inventory.inventorylog",
+    "pk": 5,
+    "fields": {
+      "item": 1,
+      "user": 1,
+      "action": "UPDATE",
+      "quantity_change": 5,
+      "previous_quantity": 476,
+      "new_quantity": 476,
+      "timestamp": "2025-09-11T12:00:00Z",
+      "notes": "Marked 5 bottles as defective due to damaged labels"
+    }
+  }
+]
