@@ -161,7 +161,7 @@ export default function Header() {
           <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground z-10" />
           <Input
             type="search"
-            placeholder="Search inventory item..."
+            placeholder="Lagerartikel suchen..."
             className="w-64 pl-8 bg-background"
             value={searchQuery}
             onChange={handleSearchChange}
@@ -180,7 +180,7 @@ export default function Header() {
               {isSearching ? (
                 <div className="p-4 text-center">
                   <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
-                  <p className="text-sm text-muted-foreground">Searching...</p>
+                  <p className="text-sm text-muted-foreground">Suche läuft...</p>
                 </div>
               ) : searchResults.length > 0 ? (
                 searchResults.map((item) => (
@@ -191,21 +191,21 @@ export default function Header() {
                   >
                     <div>
                       <div className="font-medium">{item.name}</div>
-                      <div className="text-xs text-muted-foreground">threshold: {item.low_stock_threshold || "N/A"}</div>
+                      <div className="text-xs text-muted-foreground">Schwellenwert: {item.low_stock_threshold || "N/A"}</div>
                     </div>
                     <div className="text-sm">
                       {item.is_low_stock ? (
                         <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                        <AlertTriangle/>  Low
+                        <AlertTriangle/>  Niedrig
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Qty: {item.quantity}</Badge>
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Menge: {item.quantity}</Badge>
                       )}
                     </div>
                   </div>
                 ))
               ) : searchQuery ? (
-                <div className="p-4 text-center text-muted-foreground">No items found matching &quot;{searchQuery}&quot;</div>
+                <div className="p-4 text-center text-muted-foreground">Keine Artikel gefunden für &quot;{searchQuery}&quot;</div>
               ) : null}
             </div>
           )}
@@ -214,7 +214,7 @@ export default function Header() {
         <Button variant="outline" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-600"></span>
-          <span className="sr-only">Notifications</span>
+          <span className="sr-only">Benachrichtigungen</span>
         </Button>
         <ModeToggle />
         <DropdownMenu>

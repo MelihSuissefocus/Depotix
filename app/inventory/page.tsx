@@ -92,7 +92,7 @@ export default function InventoryPage() {
         : categoriesData.results || [];
       setCategories(categoriesArray);
     } catch (err) {
-      toast.error("Failed to fetch inventory data");
+      toast.error("Inventardaten konnten nicht geladen werden");
       console.error("Failed to fetch inventory data:", err);
     } finally {
       setIsLoading(false);
@@ -165,10 +165,10 @@ export default function InventoryPage() {
         low_stock_threshold: 10,
       });
 
-      toast.success(`${itemData.name} added successfully`);
+      toast.success(`${itemData.name} erfolgreich hinzugefügt`);
     } catch (err) {
       console.error("Failed to add item:", err);
-      toast.error("Failed to add item. Please try again.");
+      toast.error("Artikel konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut.");
     }
   };
 
@@ -185,7 +185,7 @@ export default function InventoryPage() {
       setIsDeleteDialogOpen(false);
       setSelectedItem(null);
 
-      toast.success(`${selectedItem.name} deleted successfully`);
+      toast.success(`${selectedItem.name} erfolgreich gelöscht`);
     } catch (err) {
       console.error("Failed to delete item:", err);
     }
@@ -196,7 +196,7 @@ export default function InventoryPage() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
-          <p className="mt-2">Loading inventory data...</p>
+          <p className="mt-2">Inventardaten werden geladen...</p>
         </div>
       </div>
     );
@@ -209,7 +209,7 @@ export default function InventoryPage() {
           <AlertTriangle className="h-8 w-8 mx-auto" />
           <p className="mt-2">{error}</p>
           <p className="text-sm text-gray-500 mt-1">
-            Please check your API connection
+            Bitte überprüfen Sie Ihre API-Verbindung
           </p>
         </div>
       </div>
@@ -223,7 +223,7 @@ export default function InventoryPage() {
           <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search by name or SKU..."
+            placeholder="Nach Name oder SKU suchen..."
             className="pl-8 w-full sm:w-[300px]"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -231,7 +231,7 @@ export default function InventoryPage() {
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Item
+          Artikel hinzufügen
         </Button>
       </div>
 
@@ -297,11 +297,11 @@ export default function InventoryPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>SKU</TableHead>
-                <TableHead>Owner</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead className="text-right">Quantity</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Eigentümer</TableHead>
+                <TableHead>Kategorie</TableHead>
+                <TableHead className="text-right">Menge</TableHead>
+                <TableHead className="text-right">Preis</TableHead>
+                <TableHead className="text-right">Aktionen</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -331,7 +331,7 @@ export default function InventoryPage() {
                               variant="outline"
                               className="bg-red-50 text-red-700 border-red-200"
                             >
-                              Low
+                              Niedrig
                             </Badge>
                           )}
                         </div>
@@ -344,16 +344,16 @@ export default function InventoryPage() {
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon">
                               <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Actions</span>
+                              <span className="sr-only">Aktionen</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuLabel>Aktionen</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem asChild>
                               <Link href={`/inventory/${item.id}`}>
                                 <Edit className="h-4 w-4 mr-2" />
-                                Edit
+                                Bearbeiten
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -364,7 +364,7 @@ export default function InventoryPage() {
                               }}
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
+                              Löschen
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -378,7 +378,7 @@ export default function InventoryPage() {
                     colSpan={6}
                     className="h-24 text-center text-muted-foreground"
                   >
-                    No inventory items found.
+                    Keine Lagerartikel gefunden.
                   </TableCell>
                 </TableRow>
               )}
@@ -391,9 +391,9 @@ export default function InventoryPage() {
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Add New Inventory Item</DialogTitle>
+            <DialogTitle>Neuen Lagerartikel hinzufügen</DialogTitle>
             <DialogDescription>
-              Enter the details for the new inventory item.
+              Geben Sie die Details für den neuen Lagerartikel ein.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -419,9 +419,8 @@ export default function InventoryPage() {
                   }
                 />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+            </div>              <div className="space-y-2">
+                <Label htmlFor="description">Beschreibung</Label>
               <Textarea
                 id="description"
                 value={newItem.description}
@@ -433,7 +432,7 @@ export default function InventoryPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="quantity">Quantity</Label>
+                <Label htmlFor="quantity">Menge</Label>
                 <Input
                   id="quantity"
                   type="number"
@@ -449,7 +448,7 @@ export default function InventoryPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="price">Price ($)</Label>
+                <Label htmlFor="price">Preis ($)</Label>
                 <Input
                   id="price"
                   type="number"
@@ -465,7 +464,7 @@ export default function InventoryPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category">Kategorie</Label>
                 <Select
                   value={newItem.category}
                   onValueChange={(value) =>
@@ -473,7 +472,7 @@ export default function InventoryPage() {
                   }
                 >
                   <SelectTrigger id="category">
-                    <SelectValue placeholder="Select a category" />
+                    <SelectValue placeholder="Kategorie auswählen" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
@@ -488,7 +487,7 @@ export default function InventoryPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
+                <Label htmlFor="location">Standort</Label>
                 <Input
                   id="location"
                   value={newItem.location}
@@ -499,7 +498,7 @@ export default function InventoryPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="low_stock_threshold">Low Stock Threshold</Label>
+              <Label htmlFor="low_stock_threshold">Niedriger Lagerbestand Schwellenwert</Label>
               <Input
                 id="low_stock_threshold"
                 type="number"
@@ -516,9 +515,9 @@ export default function InventoryPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Cancel
+              Abbrechen
             </Button>
-            <Button onClick={handleAddItem}>Add Item</Button>
+            <Button onClick={handleAddItem}>Artikel hinzufügen</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -527,11 +526,11 @@ export default function InventoryPage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogTitle>Löschung bestätigen</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-semibold">{selectedItem?.name}</span>? This
-              action cannot be undone.
+              Sind Sie sicher, dass Sie{" "}
+              <span className="font-semibold">{selectedItem?.name}</span> löschen möchten? Diese
+              Aktion kann nicht rückgängig gemacht werden.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -539,10 +538,10 @@ export default function InventoryPage() {
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
             >
-              Cancel
+              Abbrechen
             </Button>
             <Button variant="destructive" onClick={handleDeleteItem}>
-              Delete
+              Löschen
             </Button>
           </DialogFooter>
         </DialogContent>

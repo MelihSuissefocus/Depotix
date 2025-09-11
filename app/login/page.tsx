@@ -27,7 +27,7 @@ export default function LoginPage() {
     try {
       await login(username, password)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to login. Please check your credentials.")
+      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten.")
     } finally {
       setIsLoading(false)
     }
@@ -40,8 +40,8 @@ export default function LoginPage() {
           <div className="flex justify-center mb-4">
             <Box className="h-12 w-12 text-indigo-600" />
           </div>
-          <CardTitle className="text-2xl text-center">Login</CardTitle>
-          <CardDescription className="text-center">Enter your credentials to access your inventory</CardDescription>
+          <CardTitle className="text-2xl text-center">Anmelden</CardTitle>
+          <CardDescription className="text-center">Geben Sie Ihre Anmeldedaten ein, um auf Ihr Lager zuzugreifen</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -52,11 +52,11 @@ export default function LoginPage() {
               </Alert>
             )}
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Benutzername</Label>
               <Input
                 id="username"
                 type="text"
-                placeholder="Enter your username"
+                placeholder="Geben Sie Ihren Benutzernamen ein"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -64,15 +64,15 @@ export default function LoginPage() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Passwort</Label>
                 <Link href="#" className="text-sm text-indigo-600 hover:text-indigo-500">
-                  Forgot password?
+                  Passwort vergessen?
                 </Link>
               </div>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="Geben Sie Ihr Passwort ein"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -80,15 +80,15 @@ export default function LoginPage() {
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {isLoading ? "Logging in..." : "Login"}
+              {isLoading ? "Melde an..." : "Anmelden"}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col">
           <div className="text-center text-sm mt-2">
-            Don&apos;t have an account?{" "}
+            Haben Sie noch kein Konto?{" "}
             <Link href="/register" className="text-indigo-600 hover:text-indigo-500 font-medium">
-              Register
+              Registrieren
             </Link>
           </div>
         </CardFooter>

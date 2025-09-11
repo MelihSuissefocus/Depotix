@@ -55,7 +55,7 @@ export default function Dashboard() {
             : categoriesData.results || []
         );
       } catch (err) {
-        setError("Failed to fetch dashboard data");
+        setError("Dashboard-Daten konnten nicht geladen werden");
         console.error(err);
       } finally {
         setIsLoading(false);
@@ -99,7 +99,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
-          <p className="mt-2">Loading dashboard data...</p>
+          <p className="mt-2">Dashboard-Daten werden geladen...</p>
         </div>
       </div>
     );
@@ -112,7 +112,7 @@ export default function Dashboard() {
           <AlertTriangle className="h-8 w-8 mx-auto" />
           <p className="mt-2">{error}</p>
           <p className="text-sm text-gray-500 mt-1">
-            Please check your API connection
+            Bitte überprüfen Sie Ihre API-Verbindung
           </p>
         </div>
       </div>
@@ -123,7 +123,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div className="flex items-center">
         <h1 className="text-2xl font-bold">
-          Welcome, {user?.first_name || user?.username}
+          Willkommen, {user?.first_name || user?.username}
         </h1>
       </div>
 
@@ -149,26 +149,26 @@ export default function Dashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
+          <CardTitle>Letzte Aktivitäten</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Item</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Initial Qty</TableHead>
-                <TableHead>Qty Change</TableHead>
-                <TableHead>Current Qty</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>User</TableHead>
+                <TableHead>Artikel</TableHead>
+                <TableHead>Aktion</TableHead>
+                <TableHead>Vorherige Menge</TableHead>
+                <TableHead>Mengenänderung</TableHead>
+                <TableHead>Aktuelle Menge</TableHead>
+                <TableHead>Datum</TableHead>
+                <TableHead>Benutzer</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {logs.map((log) => (
                 <TableRow key={log.id}>
                   <TableCell className="font-medium">
-                    {log.item_name || `Item #${log.item}`}
+                    {log.item_name || `Artikel #${log.item}`}
                   </TableCell>
                   <TableCell>
                     <Badge
@@ -213,7 +213,7 @@ export default function Dashboard() {
                     colSpan={5}
                     className="text-center py-4 text-gray-500"
                   >
-                    No recent activity
+                    Keine letzten Aktivitäten
                   </TableCell>
                 </TableRow>
               )}

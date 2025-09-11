@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { BarChart3, Box, ClipboardList, Home, LogOut, Package, Settings, Tag, Truck, BaggageClaimIcon } from "lucide-react"
+import { Box, ClipboardList, Home, LogOut, Package, Settings, Tag, Truck } from "lucide-react"
 import { useAuth } from "@/lib/auth"
 
 const routes = [
@@ -14,43 +14,31 @@ const routes = [
     color: "text-sky-500",
   },
   {
-    label: "Inventory",
+    label: "Artikel",
     icon: Package,
     href: "/inventory",
     color: "text-violet-500",
   },
   {
-    label: "Categories",
+    label: "Kategorien",
     icon: Tag,
     href: "/categories",
     color: "text-pink-700",
   },
   {
-    label: "Suppliers",
+    label: "Lieferanten",
     icon: Truck,
     href: "/suppliers",
     color: "text-orange-500",
   },
   {
-    label: "Item Suppliers",
-    icon: BaggageClaimIcon,
-    href: "/item-suppliers",
-    color: "text-orange-200",
-  },
-  {
-    label: "Logs",
+    label: "Bewegungen",
     icon: ClipboardList,
     href: "/logs",
     color: "text-emerald-500",
   },
   {
-    label: "Reports",
-    icon: BarChart3,
-    href: "/reports",
-    color: "text-blue-500",
-  },
-  {
-    label: "Settings",
+    label: "Einstellungen",
     icon: Settings,
     href: "/settings",
   },
@@ -66,7 +54,7 @@ export default function Sidebar() {
         <Link href="/">
           <div className="flex items-center gap-2">
             <Box className="h-8 w-8 text-indigo-600" />
-            <h1 className="text-xl font-bold">Inventory</h1>
+            <h1 className="text-xl font-bold">Lagerverwaltung</h1>
           </div>
         </Link>
       </div>
@@ -94,7 +82,7 @@ export default function Sidebar() {
             className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             <LogOut className="h-5 w-5 mr-3 text-gray-500" />
-            Logout
+            Abmelden
           </button>
         </div>
       </div>

@@ -285,7 +285,7 @@ export default function InventoryItemPage() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
-          <p className="mt-2">Loading item data...</p>
+          <p className="mt-2">Artikeldaten werden geladen...</p>
         </div>
       </div>
     );
@@ -296,14 +296,14 @@ export default function InventoryItemPage() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center text-red-500">
           <AlertTriangle className="h-8 w-8 mx-auto" />
-          <p className="mt-2">{error || "Item not found"}</p>
+          <p className="mt-2">{error || "Artikel nicht gefunden"}</p>
           <Button
             variant="outline"
             className="mt-4"
             onClick={() => router.push("/inventory")}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Inventory
+            Zurück zum Lager
           </Button>
         </div>
       </div>
@@ -319,14 +319,14 @@ export default function InventoryItemPage() {
           className="gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back
+          Zurück
         </Button>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setFormData(item)}>
-            Reset
+            Zurücksetzen
           </Button>
           <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? "Saving..." : "Save Changes"}
+            {isSaving ? "Speichert..." : "Änderungen speichern"}
           </Button>
         </div>
       </div>
@@ -334,17 +334,17 @@ export default function InventoryItemPage() {
       <Tabs defaultValue="details">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="suppliers">Lieferanten</TabsTrigger>
+          <TabsTrigger value="history">Verlauf</TabsTrigger>
         </TabsList>
 
         {/* Item Details Tab */}
         <TabsContent value="details" className="space-y-4 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Item Details</CardTitle>
+              <CardTitle>Artikeldetails</CardTitle>
               <CardDescription>
-                View and edit the details of this inventory item.
+                Sehen und bearbeiten Sie die Details dieses Lagerartikels.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -371,8 +371,7 @@ export default function InventoryItemPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+              <div className="space-y-2">                  <Label htmlFor="description">Beschreibung</Label>
                 <Textarea
                   id="description"
                   value={formData.description || ""}
@@ -385,7 +384,7 @@ export default function InventoryItemPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="quantity">Quantity</Label>
+                  <Label htmlFor="quantity">Menge</Label>
                   <Input
                     id="quantity"
                     type="number"
@@ -399,7 +398,7 @@ export default function InventoryItemPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="price">Price ($)</Label>
+                  <Label htmlFor="price">Preis ($)</Label>
                   <Input
                     id="price"
                     type="number"
@@ -410,7 +409,7 @@ export default function InventoryItemPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
+                  <Label htmlFor="category">Kategorie</Label>
                   <Select
                     value={formData.category?.toString() || ""}
                     onValueChange={(value) =>
@@ -418,7 +417,7 @@ export default function InventoryItemPage() {
                     }
                   >
                     <SelectTrigger id="category">
-                      <SelectValue placeholder="Select a category" />
+                      <SelectValue placeholder="Kategorie auswählen" />
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map((category) => (
@@ -436,7 +435,7 @@ export default function InventoryItemPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
+                  <Label htmlFor="location">Standort</Label>
                   <Input
                     id="location"
                     value={formData.location || ""}
@@ -447,7 +446,7 @@ export default function InventoryItemPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="low_stock_threshold">
-                    Low Stock Threshold
+                    Niedriger Lagerbestand Schwellenwert
                   </Label>
                   <Input
                     id="low_stock_threshold"
@@ -467,7 +466,7 @@ export default function InventoryItemPage() {
             </CardContent>
             <CardFooter className="flex justify-between">
               <div className="text-sm text-gray-500">
-                Last updated:{" "}
+                Zuletzt aktualisiert:{" "}
                 {new Date(item.last_updated || "").toLocaleString()}
               </div>
               {item.is_low_stock && (
@@ -475,7 +474,7 @@ export default function InventoryItemPage() {
                   variant="outline"
                   className="bg-red-50 text-red-700 border-red-200"
                 >
-                  Low Stock Alert
+                  Niedrigbestand-Warnung
                 </Badge>
               )}
             </CardFooter>

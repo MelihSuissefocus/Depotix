@@ -275,7 +275,7 @@ export default function SuppliersPage() {
                     colSpan={5}
                     className="h-24 text-center text-muted-foreground"
                   >
-                    No suppliers found.
+                    Keine Lieferanten gefunden.
                   </TableCell>
                 </TableRow>
               )}

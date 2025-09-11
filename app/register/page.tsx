@@ -77,35 +77,35 @@ export default function RegisterPage() {
             )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="first_name">First Name</Label>
+                <Label htmlFor="first_name">Vorname</Label>
                 <Input
                   id="first_name"
                   name="first_name"
                   type="text"
-                  placeholder="Enter your first name"
+                  placeholder="Geben Sie Ihren Vornamen ein"
                   value={formData.first_name}
                   onChange={handleChange}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="last_name">Last Name</Label>
+                <Label htmlFor="last_name">Nachname</Label>
                 <Input
                   id="last_name"
                   name="last_name"
                   type="text"
-                  placeholder="Enter your last name"
+                  placeholder="Geben Sie Ihren Nachnamen ein"
                   value={formData.last_name}
                   onChange={handleChange}
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Benutzername</Label>
               <Input
                 id="username"
                 name="username"
                 type="text"
-                placeholder="Enter a username"
+                placeholder="Geben Sie einen Benutzernamen ein"
                 value={formData.username}
                 onChange={handleChange}
                 required
