@@ -2,55 +2,99 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslations } from 'next-intl'
 import { cn } from "@/lib/utils"
-import { BarChart3, Box, ClipboardList, Home, LogOut, Package, Settings, Tag, Truck, BaggageClaimIcon } from "lucide-react"
+import { BarChart3, Box, ClipboardList, Home, LogOut, Package, Settings, Tag, Truck, BaggageClaimIcon, Users, Receipt, ArrowUpDown, ShoppingCart, FileText } from "lucide-react"
 import { useAuth } from "@/lib/auth"
 
-const routes = [
+const getRoutes = (t: any) => [
   {
-    label: "Dashboard",
+    labelKey: "dashboard",
+    label: t('nav.dashboard'),
     icon: Home,
     href: "/",
     color: "text-sky-500",
   },
   {
-    label: "Inventory",
+    labelKey: "inventory",
+    label: t('nav.inventory'),
     icon: Package,
     href: "/inventory",
     color: "text-violet-500",
   },
   {
-    label: "Categories",
+    labelKey: "categories",
+    label: t('nav.categories'),
     icon: Tag,
     href: "/categories",
     color: "text-pink-700",
   },
   {
-    label: "Suppliers",
+    labelKey: "suppliers",
+    label: t('nav.suppliers'),
     icon: Truck,
     href: "/suppliers",
     color: "text-orange-500",
   },
   {
-    label: "Item Suppliers",
+    labelKey: "customers",
+    label: t('nav.customers'),
+    icon: Users,
+    href: "/customers",
+    color: "text-blue-500",
+  },
+  {
+    labelKey: "expenses",
+    label: t('nav.expenses'),
+    icon: Receipt,
+    href: "/expenses",
+    color: "text-red-500",
+  },
+  {
+    labelKey: "stock_movements",
+    label: t('nav.stock_movements'),
+    icon: ArrowUpDown,
+    href: "/stock-movements",
+    color: "text-purple-500",
+  },
+  {
+    labelKey: "orders",
+    label: t('nav.orders'),
+    icon: ShoppingCart,
+    href: "/orders",
+    color: "text-green-500",
+  },
+  {
+    labelKey: "invoices",
+    label: t('nav.invoices'),
+    icon: FileText,
+    href: "/invoices",
+    color: "text-indigo-500",
+  },
+  {
+    labelKey: "item_suppliers",
+    label: t('nav.item_suppliers'),
     icon: BaggageClaimIcon,
     href: "/item-suppliers",
     color: "text-orange-200",
   },
   {
-    label: "Logs",
+    labelKey: "logs",
+    label: t('nav.logs'),
     icon: ClipboardList,
     href: "/logs",
     color: "text-emerald-500",
   },
   {
-    label: "Reports",
+    labelKey: "reports",
+    label: t('nav.reports'),
     icon: BarChart3,
     href: "/reports",
     color: "text-blue-500",
   },
   {
-    label: "Settings",
+    labelKey: "settings",
+    label: t('nav.settings'),
     icon: Settings,
     href: "/settings",
   },
@@ -59,6 +103,8 @@ const routes = [
 export default function Sidebar() {
   const pathname = usePathname()
   const { logout } = useAuth()
+  const t = useTranslations()
+  const routes = getRoutes(t)
 
   return (
     <div className="hidden md:flex h-full flex-col bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700">
@@ -66,7 +112,7 @@ export default function Sidebar() {
         <Link href="/">
           <div className="flex items-center gap-2">
             <Box className="h-8 w-8 text-indigo-600" />
-            <h1 className="text-xl font-bold">Inventory</h1>
+            <h1 className="text-xl font-bold">Depotix</h1>
           </div>
         </Link>
       </div>
@@ -94,7 +140,7 @@ export default function Sidebar() {
             className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             <LogOut className="h-5 w-5 mr-3 text-gray-500" />
-            Logout
+            {t('nav.logout')}
           </button>
         </div>
       </div>

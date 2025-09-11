@@ -1,6 +1,5 @@
 "use client";
 import type React from "react";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Sidebar from "@/components/sidebar";
@@ -10,30 +9,24 @@ import AuthGuard from "@/components/auth-guard";
 import { usePathname } from "next/navigation";
 import { Toaster } from "react-hot-toast";
 
-const inter = Inter({ subsets: ["latin"] });
-
 export default function ClientRootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <AuthProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <AuthGuard>
-              <LayoutContent>{children}</LayoutContent>
-            </AuthGuard>
-          </ThemeProvider>
-        </AuthProvider>
-      </body>
-    </html>
+    <AuthProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <AuthGuard>
+          <LayoutContent>{children}</LayoutContent>
+        </AuthGuard>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 

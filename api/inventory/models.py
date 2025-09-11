@@ -397,19 +397,7 @@ class SalesOrder(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.order_number:
-            # Generate order number: LS-YYYY-####
-            year = timezone.now().year
-            last_order = SalesOrder.objects.filter(
-                order_number__startswith=f'LS-{year}-'
-            ).order_by('order_number').last()
-            
-            if last_order:
-                last_num = int(last_order.order_number.split('-')[-1])
-                new_num = last_num + 1
-            else:
-                new_num = 1
-            
-            self.order_number = f'LS-{year}-{new_num:04d}'
+            self.order_number = DocumentSequence.next_delivery_number()
         
         super().save(*args, **kwargs)
 
@@ -495,19 +483,7 @@ class Invoice(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.invoice_number:
-            # Generate invoice number: INV-YYYY-####
-            year = timezone.now().year
-            last_invoice = Invoice.objects.filter(
-                invoice_number__startswith=f'INV-{year}-'
-            ).order_by('invoice_number').last()
-            
-            if last_invoice:
-                last_num = int(last_invoice.invoice_number.split('-')[-1])
-                new_num = last_num + 1
-            else:
-                new_num = 1
-            
-            self.invoice_number = f'INV-{year}-{new_num:04d}'
+            self.invoice_number = DocumentSequence.next_invoice_number()
         
         # Copy totals from order if not set
         if not self.total_net:
@@ -532,17 +508,51 @@ class Invoice(models.Model):
         return f"{self.invoice_number} - {self.order.customer.name}"
 
 
-# TODO: DocumentSequence for atomic number generation
 class DocumentSequence(models.Model):
     """Atomic document number sequence generation"""
     
-    document_type = models.CharField(max_length=10, unique=True,
+    document_type = models.CharField(max_length=10,
                                     choices=[('LS', 'Sales Order'), ('INV', 'Invoice')])
     year = models.IntegerField()
     last_number = models.IntegerField(default=0)
     
     class Meta:
         unique_together = ['document_type', 'year']
+        indexes = [
+            models.Index(fields=['document_type', 'year']),
+        ]
+    
+    @classmethod
+    def next_invoice_number(cls):
+        """Generate next invoice number atomically"""
+        from django.db import transaction
+        
+        current_year = timezone.now().year
+        with transaction.atomic():
+            sequence, created = cls.objects.select_for_update().get_or_create(
+                document_type='INV',
+                year=current_year,
+                defaults={'last_number': 0}
+            )
+            sequence.last_number += 1
+            sequence.save()
+            return f"INV-{current_year}-{sequence.last_number:04d}"
+    
+    @classmethod
+    def next_delivery_number(cls):
+        """Generate next delivery note number atomically"""
+        from django.db import transaction
+        
+        current_year = timezone.now().year
+        with transaction.atomic():
+            sequence, created = cls.objects.select_for_update().get_or_create(
+                document_type='LS',
+                year=current_year,
+                defaults={'last_number': 0}
+            )
+            sequence.last_number += 1
+            sequence.save()
+            return f"LS-{current_year}-{sequence.last_number:04d}"
     
     def __str__(self):
         return f"{self.document_type}-{self.year} (last: {self.last_number})"

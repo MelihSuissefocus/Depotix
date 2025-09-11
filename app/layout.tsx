@@ -1,16 +1,2 @@
-import type React from "react"
-import type { Metadata } from "next"
-import ClientRootLayout from "./clientLayout"
-
-export const metadata: Metadata = {
-  title: "Inventory Management System",
-  description: "A comprehensive inventory management system",
-}
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
-  return <ClientRootLayout>{children}</ClientRootLayout>
-}
+// This file now only contains metadata and type declarations
+// The actual layout implementation has been moved to [locale]/layout.tsx

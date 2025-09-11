@@ -1,5 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, AlertTriangle, DollarSign, Tag } from "lucide-react";
+import { useTranslations } from 'next-intl';
+import { useFormatters } from '@/lib/formatters';
 import CountUp from "react-countup";
 import { Bar, BarChart, Line, LineChart, XAxis } from "recharts";
 import {
@@ -9,16 +11,16 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-const chartConfig = {
+const getChartConfig = (t: any): ChartConfig => ({
   inventoryValue: {
-    label: "Value",
+    label: t('common.amount'),
     color: "hsl(var(--chart-7))",
   },
   totalItems: {
-    label: "Quantity",
+    label: t('common.quantity'),
     color: "hsl(var(--chart-7))",
   },
-} satisfies ChartConfig;
+});
 
 export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
   totalItems,
@@ -29,6 +31,9 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
   totalCategories,
   activeCategories,
 }) => {
+  const t = useTranslations();
+  const { formatCurrency } = useFormatters();
+  const chartConfig = getChartConfig(t);
   // Limit the number of items for the chart to most recent 10
   const maxItems = 10;
   const limitedInventoryItems = inventoryItems
@@ -52,7 +57,7 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
       {/* Total Items Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Total Items</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('dashboard.total_items')}</CardTitle>
           <Package className="h-4 w-4 text-gray-500" />
         </CardHeader>
         <CardContent>
@@ -60,8 +65,7 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
             <CountUp start={0} end={totalItems} />
           </div>
           <p className="text-xs text-gray-500">
-            {inventoryItems.reduce((sum, item) => sum + item.quantity, 0)} units
-            in stock
+            {inventoryItems.reduce((sum, item) => sum + item.quantity, 0)} {t('common.quantity')} {t('items.in_stock')}
           </p>
           <ChartContainer config={chartConfig} className="h-[80px] w-full">
             <BarChart data={chartData}>
@@ -80,7 +84,7 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
       {/* Low Stock Items Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('dashboard.low_stock_items')}</CardTitle>
           <AlertTriangle className="h-4 w-4 text-amber-500" />
         </CardHeader>
         <CardContent>
@@ -91,7 +95,7 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
             {totalItems > 0
               ? ((lowStockItems / totalItems) * 100).toFixed(1)
               : 0}
-            % of inventory needs reordering
+            % {t('items.low_stock')}
           </p>
 
           <ChartContainer config={chartConfig} className="h-[80px] w-full">
@@ -124,24 +128,16 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium">
-            Total Inventory Value
+            {t('dashboard.inventory_value')}
           </CardTitle>
           <DollarSign className="h-4 w-4 text-green-500" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            <CountUp
-              start={0}
-              prefix="$"
-              end={totalValue}
-              separator=","
-              decimals={2}
-              decimal="."
-            />
+            {formatCurrency(totalValue)}
           </div>
           <p className="text-xs text-gray-500">
-            Avg. ${totalItems > 0 ? (totalValue / totalItems).toFixed(2) : 0}{" "}
-            per item
+            Ø {formatCurrency(totalItems > 0 ? (totalValue / totalItems) : 0)} pro Artikel
           </p>
           <ChartContainer config={chartConfig} className="h-[80px] w-full">
             <LineChart
@@ -172,25 +168,24 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
       {/* Total Categories Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Categories</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('nav.categories')}</CardTitle>
           <Tag className="h-4 w-4 text-purple-500" />
         </CardHeader>
         <CardContent>
         <div className="flex flex-col items-center gap-2">
       <div className="flex flex-row items-center gap-4">
         <div className="text-center">
-          <p className="text-xs text-gray-500">Active</p>
+          <p className="text-xs text-gray-500">{t('common.active')}</p>
           <CountUp start={0} end={activeCategories} className="text-2xl font-bold text-primary" />
         </div>
         <span className="text-gray-400 text-4xl">/</span>
         <div className="text-center">
-          <p className="text-xs text-gray-500">Total</p>
+          <p className="text-xs text-gray-500">{t('common.total')}</p>
           <CountUp start={0} end={totalCategories} className="text-2xl font-bold text-primary" />
         </div>
       </div>
           <p className="text-xs text-gray-500">
-            {totalItems > 0 ? (totalItems / activeCategories).toFixed(1) : 0}{" "}
-            items per category avg.
+            Ø {totalItems > 0 ? (totalItems / activeCategories).toFixed(1) : 0} Artikel pro Kategorie
           </p>
           </div>
         </CardContent>

@@ -68,7 +68,7 @@ ROOT_URLCONF = 'depotix_api.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -117,13 +117,25 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'de-ch'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Zurich'
 
 USE_I18N = True
 
 USE_TZ = True
+
+# Additional locale configuration for de-CH
+USE_L10N = True
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
+
+# Number and date formatting for Swiss German
+USE_THOUSAND_SEPARATOR = True
+THOUSAND_SEPARATOR = "'"
+DECIMAL_SEPARATOR = "."
+NUMBER_GROUPING = 3
 
 
 # Static files (CSS, JavaScript, Images)
@@ -155,7 +167,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'EXCEPTION_HANDLER': 'inventory.views.custom_exception_handler',
+    'EXCEPTION_HANDLER': 'inventory.exceptions.custom_exception_handler',
 }
 
 # JWT Configuration

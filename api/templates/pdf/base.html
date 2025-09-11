@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Depotix Dokument{% endblock %}</title>
+    <style>
+        @page {
+            margin: 2cm;
+            @top-center {
+                content: "{% block page_header %}{% endblock %}";
+                font-family: Arial, sans-serif;
+                font-size: 10pt;
+                color: #666;
+            }
+            @bottom-center {
+                content: "Seite " counter(page) " von " counter(pages);
+                font-family: Arial, sans-serif;
+                font-size: 9pt;
+                color: #666;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #333;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2cm;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 1cm;
+        }
+
+        .company-info {
+            flex: 1;
+        }
+
+        .company-name {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 0.5cm;
+        }
+
+        .company-tagline {
+            font-size: 12pt;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 0.5cm;
+        }
+
+        .company-address {
+            font-size: 10pt;
+            line-height: 1.3;
+            color: #555;
+        }
+
+        .document-info {
+            text-align: right;
+            flex: 1;
+        }
+
+        .document-title {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 0.5cm;
+        }
+
+        .document-number {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.3cm;
+        }
+
+        .document-date {
+            font-size: 11pt;
+            color: #666;
+        }
+
+        .customer-section {
+            margin-bottom: 1.5cm;
+        }
+
+        .customer-label {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 0.3cm;
+        }
+
+        .customer-address {
+            font-size: 11pt;
+            line-height: 1.4;
+            background-color: #f8fafc;
+            padding: 0.5cm;
+            border-left: 4px solid #2563eb;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5cm;
+            font-size: 10pt;
+        }
+
+        .items-table th {
+            background-color: #2563eb;
+            color: white;
+            padding: 0.4cm 0.3cm;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #1e40af;
+        }
+
+        .items-table td {
+            padding: 0.3cm;
+            border: 1px solid #d1d5db;
+            vertical-align: top;
+        }
+
+        .items-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .currency {
+            font-family: 'Courier New', monospace;
+        }
+
+        .totals-section {
+            margin-top: 1cm;
+            float: right;
+            width: 7cm;
+        }
+
+        .totals-table {
+            width: 100%;
+            font-size: 11pt;
+        }
+
+        .totals-table td {
+            padding: 0.2cm 0.3cm;
+            border: none;
+        }
+
+        .totals-table .total-label {
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .totals-table .total-amount {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            width: 3cm;
+        }
+
+        .grand-total {
+            border-top: 2px solid #2563eb;
+            font-weight: bold;
+            font-size: 12pt;
+            background-color: #f0f7ff;
+        }
+
+        .footer {
+            margin-top: 2cm;
+            padding-top: 1cm;
+            border-top: 1px solid #d1d5db;
+            font-size: 9pt;
+            color: #666;
+            text-align: center;
+            clear: both;
+        }
+
+        .footer-content {
+            line-height: 1.3;
+        }
+
+        .signature-section {
+            margin-top: 2cm;
+            clear: both;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #333;
+            width: 6cm;
+            margin: 1cm 0 0.3cm 0;
+        }
+
+        .signature-label {
+            font-size: 10pt;
+            color: #666;
+        }
+
+        .logo-placeholder {
+            width: 3cm;
+            height: 2cm;
+            background-color: #e5e7eb;
+            border: 2px dashed #9ca3af;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8pt;
+            color: #6b7280;
+            margin-bottom: 0.5cm;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        /* Print-specific styles */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="header">
+        <div class="company-info">
+            <div class="logo-placeholder">DEPOTIX LOGO</div>
+            <div class="company-name">Depotix</div>
+            <div class="company-tagline">Schweizer Lagerverwaltung</div>
+            <div class="company-address">
+                {{ company.address|linebreaksbr }}<br>
+                Tel: {{ company.phone }}<br>
+                E-Mail: {{ company.email }}<br>
+                Web: {{ company.website }}
+            </div>
+        </div>
+        <div class="document-info">
+            <div class="document-title">{% block document_title %}{% endblock %}</div>
+            <div class="document-number">{% block document_number %}{% endblock %}</div>
+            <div class="document-date">{% block document_date %}{% endblock %}</div>
+        </div>
+    </div>
+
+    {% block content %}{% endblock %}
+
+    <div class="footer">
+        <div class="footer-content">
+            <strong>Depotix - Schweizer Lagerverwaltung</strong><br>
+            Professionelle Inventarverwaltung für kleine und mittlere Unternehmen<br>
+            Generiert am {{ generated_at|date:"d.m.Y H:i" }} Uhr mit Depotix
+        </div>
+    </div>
+</body>
+</html>

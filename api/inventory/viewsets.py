@@ -326,6 +326,30 @@ class SalesOrderViewSet(viewsets.ModelViewSet):
                 {"error": {"code": "BUSINESS_RULE_VIOLATION", "message": str(e)}},
                 status=status.HTTP_422_UNPROCESSABLE_ENTITY
             )
+    
+    @extend_schema(
+        tags=['Sales Orders'],
+        summary="Download delivery note PDF",
+        description="Returns PDF file for the delivery note (Lieferschein)"
+    )
+    @action(detail=True, methods=['get'], url_path='delivery-note-pdf')
+    def delivery_note_pdf(self, request, pk=None):
+        """Generate and return PDF for delivery note"""
+        from .services import generate_delivery_note_pdf, PDFGenerationError
+        
+        try:
+            order = self.get_object()
+            return generate_delivery_note_pdf(order)
+        except PDFGenerationError as e:
+            return Response(
+                {"error": {"code": "PDF_GENERATION_ERROR", "message": str(e)}},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            return Response(
+                {"error": {"code": "INTERNAL_ERROR", "message": "PDF generation failed"}},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 @extend_schema_view(
@@ -382,96 +406,21 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def pdf(self, request, pk=None):
         """Generate and return PDF for invoice"""
-        invoice = self.get_object()
+        from .services import generate_invoice_pdf, PDFGenerationError
         
-        # Simple HTML to PDF conversion (stub implementation)
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Invoice {invoice.invoice_number}</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; margin: 40px; }}
-                .header {{ text-align: center; margin-bottom: 30px; }}
-                .invoice-details {{ margin-bottom: 20px; }}
-                .customer-details {{ margin-bottom: 20px; }}
-                .items-table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
-                .items-table th, .items-table td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
-                .items-table th {{ background-color: #f2f2f2; }}
-                .totals {{ text-align: right; }}
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>INVOICE</h1>
-                <h2>{invoice.invoice_number}</h2>
-            </div>
-            
-            <div class="invoice-details">
-                <p><strong>Issue Date:</strong> {invoice.issue_date.strftime('%Y-%m-%d')}</p>
-                <p><strong>Due Date:</strong> {invoice.due_date.strftime('%Y-%m-%d')}</p>
-                <p><strong>Order Number:</strong> {invoice.order.order_number}</p>
-            </div>
-            
-            <div class="customer-details">
-                <h3>Bill To:</h3>
-                <p><strong>{invoice.customer.name}</strong></p>
-                <p>{invoice.customer.address or 'Address not provided'}</p>
-                <p>Email: {invoice.customer.email or 'Not provided'}</p>
-                <p>Phone: {invoice.customer.phone or 'Not provided'}</p>
-            </div>
-            
-            <table class="items-table">
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Quantity</th>
-                        <th>Unit Price</th>
-                        <th>Tax Rate</th>
-                        <th>Net Total</th>
-                        <th>Tax</th>
-                        <th>Gross Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-        """
-        
-        for item in invoice.order.items.all():
-            html_content += f"""
-                    <tr>
-                        <td>{item.item.name}</td>
-                        <td>{item.qty_base}</td>
-                        <td>{item.unit_price:.2f} {invoice.currency}</td>
-                        <td>{item.tax_rate}%</td>
-                        <td>{item.line_total_net:.2f} {invoice.currency}</td>
-                        <td>{item.line_tax:.2f} {invoice.currency}</td>
-                        <td>{item.line_total_gross:.2f} {invoice.currency}</td>
-                    </tr>
-            """
-        
-        html_content += f"""
-                </tbody>
-            </table>
-            
-            <div class="totals">
-                <p><strong>Net Total: {invoice.total_net:.2f} {invoice.currency}</strong></p>
-                <p><strong>Tax Total: {invoice.total_tax:.2f} {invoice.currency}</strong></p>
-                <p><strong>Gross Total: {invoice.total_gross:.2f} {invoice.currency}</strong></p>
-            </div>
-        </body>
-        </html>
-        """
-        
-        # Create PDF response (this is a stub - in production you'd use a proper PDF library)
-        response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="invoice_{invoice.invoice_number}.pdf"'
-        
-        # For now, return HTML content as a demo
-        # In production, use libraries like WeasyPrint, ReportLab, or similar
-        response = HttpResponse(html_content, content_type='text/html')
-        response['Content-Disposition'] = f'inline; filename="invoice_{invoice.invoice_number}.html"'
-        
-        return response
+        try:
+            invoice = self.get_object()
+            return generate_invoice_pdf(invoice)
+        except PDFGenerationError as e:
+            return Response(
+                {"error": {"code": "PDF_GENERATION_ERROR", "message": str(e)}},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            return Response(
+                {"error": {"code": "INTERNAL_ERROR", "message": "PDF generation failed"}},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 # Stock Movement Action Endpoints

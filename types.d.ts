@@ -4,6 +4,7 @@ interface InventoryItem {
     description?: string | null;
     quantity: number;
     price: string;
+    cost?: string;
     category: number | null;
     category_name?: string;
     owner_username?: string | null;
@@ -13,6 +14,13 @@ interface InventoryItem {
     date_added?: string;
     last_updated?: string;
     is_low_stock?: boolean;
+    // Phase 2 enhancements
+    defective_qty?: number;
+    available_qty?: number;
+    min_stock_level?: number;
+    unit_base?: string;
+    unit_package_factor?: number;
+    unit_pallet_factor?: number;
   }
   
 interface Supplier {
@@ -22,9 +30,13 @@ interface Supplier {
     email: string | null;
     phone: string | null;
     address: string | null;
+    tax_id?: string | null;
+    payment_terms?: string | null;
+    notes?: string | null;
     owner: number;
     created_at: string;
     updated_at: string;
+    is_active?: boolean;
   }
   
 interface InventoryLog {
@@ -137,4 +149,145 @@ interface InventoryTrendChartProps {
   currentYearValue: number;
   currentMonthValue: number;
 };
+
+// Phase 2 New Entities
+interface Customer {
+  id?: number;
+  name: string;
+  contact_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  shipping_address?: string | null;
+  tax_id?: string | null;
+  credit_limit?: number | null;
+  payment_terms?: string | null;
+  notes?: string | null;
+  owner?: number;
+  created_at?: string;
+  updated_at?: string;
+  is_active?: boolean;
+}
+
+interface Expense {
+  id?: number;
+  date: string;
+  description: string;
+  amount: string;
+  category: string;
+  supplier?: number | null;
+  supplier_name?: string;
+  receipt_number?: string | null;
+  notes?: string | null;
+  owner?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface StockMovement {
+  id?: number;
+  item: number;
+  item_name?: string;
+  type: 'IN' | 'OUT' | 'RETURN' | 'DEFECT' | 'ADJUST';
+  qty_base: number;
+  qty_units?: string;
+  supplier?: number | null;
+  supplier_name?: string;
+  customer?: number | null;
+  customer_name?: string;
+  note?: string | null;
+  created_by?: number;
+  created_by_username?: string;
+  created_at?: string;
+}
+
+interface SalesOrder {
+  id?: number;
+  order_number?: string;
+  customer: number;
+  customer_name?: string;
+  status: 'DRAFT' | 'CONFIRMED' | 'DELIVERED' | 'INVOICED';
+  order_date: string;
+  delivery_date?: string | null;
+  net_amount?: string;
+  tax_amount?: string;
+  gross_amount?: string;
+  notes?: string | null;
+  created_by?: number;
+  created_at?: string;
+  updated_at?: string;
+  items?: SalesOrderItem[];
+}
+
+interface SalesOrderItem {
+  id?: number;
+  order?: number;
+  item: number;
+  item_name?: string;
+  quantity: number;
+  unit_price: string;
+  tax_rate?: number;
+  net_amount?: string;
+  tax_amount?: string;
+  gross_amount?: string;
+}
+
+interface Invoice {
+  id?: number;
+  invoice_number?: string;
+  order: number;
+  order_number?: string;
+  customer?: number;
+  customer_name?: string;
+  invoice_date: string;
+  due_date?: string | null;
+  net_amount?: string;
+  tax_amount?: string;
+  gross_amount?: string;
+  notes?: string | null;
+  created_at?: string;
+}
+
+// UoM Conversion Helper
+interface UoMConversion {
+  pallets: number;
+  packages: number;
+  singles: number;
+  total_base: number;
+}
+
+// Stock Action Data
+interface StockActionData {
+  item: number;
+  qty_base?: number;
+  qty_pallets?: number;
+  qty_packages?: number;
+  qty_singles?: number;
+  supplier?: number | null;
+  customer?: number | null;
+  note?: string;
+}
+
+// API List Response
+interface APIListResponse<T> {
+  results: T[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+}
+
+// Error Response
+interface APIError {
+  error: {
+    code: string;
+    message: string;
+    fields?: Record<string, string[]>;
+  };
+}
+
+// Expense Categories
+type ExpenseCategory = 'PURCHASE' | 'TRANSPORT' | 'UTILITIES' | 'MAINTENANCE' | 'OFFICE' | 'MARKETING' | 'OTHER';
+
+// Unit Types
+type UnitType = 'PIECE' | 'KG' | 'LITER' | 'METER' | 'PACK' | 'BOX';
   

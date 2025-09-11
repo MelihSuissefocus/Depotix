@@ -1,0 +1,141 @@
+{% extends "pdf/base.html" %}
+
+{% block title %}Lieferschein {{ order.order_number }}{% endblock %}
+
+{% block page_header %}Lieferschein {{ order.order_number }} - {{ customer.name }}{% endblock %}
+
+{% block document_title %}LIEFERSCHEIN{% endblock %}
+
+{% block document_number %}{{ order.order_number }}{% endblock %}
+
+{% block document_date %}
+    Lieferdatum: {{ order.delivery_date|date:"d.m.Y"|default:"Nach Vereinbarung" }}<br>
+    Bestelldatum: {{ order.order_date|date:"d.m.Y" }}<br>
+    Status: {{ order.get_status_display }}
+{% endblock %}
+
+{% block content %}
+    <div class="customer-section">
+        <div style="display: flex; justify-content: space-between;">
+            <div style="flex: 1; margin-right: 1cm;">
+                <div class="customer-label">Rechnungsadresse:</div>
+                <div class="customer-address">
+                    <strong>{{ customer.name }}</strong><br>
+                    {% if customer.contact_name %}{{ customer.contact_name }}<br>{% endif %}
+                    {{ customer.address|linebreaksbr }}<br>
+                    {% if customer.email %}E-Mail: {{ customer.email }}<br>{% endif %}
+                    {% if customer.phone %}Tel: {{ customer.phone }}{% endif %}
+                </div>
+            </div>
+            {% if customer.shipping_address and customer.shipping_address != customer.address %}
+            <div style="flex: 1;">
+                <div class="customer-label">Lieferadresse:</div>
+                <div class="customer-address">
+                    <strong>{{ customer.name }}</strong><br>
+                    {% if customer.contact_name %}{{ customer.contact_name }}<br>{% endif %}
+                    {{ customer.shipping_address|linebreaksbr }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="delivery-info" style="margin-bottom: 1cm; background-color: #f0f7ff; padding: 0.5cm; border-left: 4px solid #2563eb;">
+        <h4 style="color: #1e40af; margin-bottom: 0.3cm;">Lieferinformationen</h4>
+        <p><strong>Liefertermin:</strong> {{ order.delivery_date|date:"d.m.Y"|default:"Nach Vereinbarung" }}</p>
+        <p><strong>Bestellnummer:</strong> {{ order.order_number }}</p>
+        {% if order.total_gross %}
+        <p><strong>Auftragswert:</strong> {{ order.total_gross|floatformat:2 }} {{ order.currency }}</p>
+        {% endif %}
+    </div>
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 5%;">Pos.</th>
+                <th style="width: 50%;">Artikel</th>
+                <th style="width: 15%;">Menge</th>
+                <th style="width: 10%;">Einheit</th>
+                <th style="width: 20%;">Lagerort</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td class="text-center">{{ forloop.counter }}</td>
+                <td>
+                    <strong>{{ item.item.name }}</strong><br>
+                    {% if item.item.sku %}<small>Art.-Nr: {{ item.item.sku }}</small><br>{% endif %}
+                    {% if item.item.description %}<small>{{ item.item.description|truncatewords:20 }}</small>{% endif %}
+                </td>
+                <td class="text-right" style="font-weight: bold;">{{ item.qty_base }}</td>
+                <td>{{ item.item.unit_base }}</td>
+                <td>{{ item.item.location|default:"Nicht angegeben" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center" style="color: #666; font-style: italic;">
+                    Keine Positionen vorhanden
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="margin-top: 1.5cm;">
+        <div style="background-color: #fff3cd; padding: 0.5cm; border-left: 4px solid #ffc107; margin-bottom: 1cm;">
+            <h4 style="color: #856404; margin-bottom: 0.3cm;">Wichtige Hinweise</h4>
+            <ul style="margin-left: 1cm; line-height: 1.5;">
+                <li>Bitte prüfen Sie die Lieferung umgehend auf Vollständigkeit und Beschädigungen</li>
+                <li>Reklamationen sind innerhalb von 48 Stunden zu melden</li>
+                <li>Bei beschädigten Artikeln kontaktieren Sie uns bitte unverzüglich</li>
+                <li>Diese Lieferung gilt als genehmigt, wenn keine Beanstandungen innerhalb der Frist eingehen</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="signature-section">
+        <div style="display: flex; justify-content: space-between; margin-top: 2cm;">
+            <div style="width: 45%;">
+                <p style="margin-bottom: 0.5cm;"><strong>Ware geliefert durch:</strong></p>
+                <div class="signature-line"></div>
+                <div class="signature-label">Unterschrift Lieferant / Datum</div>
+            </div>
+            <div style="width: 45%;">
+                <p style="margin-bottom: 0.5cm;"><strong>Ware erhalten durch:</strong></p>
+                <div class="signature-line"></div>
+                <div class="signature-label">Unterschrift Empfänger / Datum</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 1.5cm; font-size: 10pt; color: #666; text-align: center; border-top: 1px solid #d1d5db; padding-top: 0.5cm;">
+        <p><strong>Mit Ihrer Unterschrift bestätigen Sie den ordnungsgemäßen Empfang der oben aufgeführten Waren.</strong></p>
+        <p>Eine Kopie dieses Lieferscheins verbleibt bei Ihnen als Empfangsbestätigung.</p>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .items-table th,
+    .items-table td {
+        font-size: 10pt;
+    }
+    
+    .signature-line {
+        border-bottom: 1px solid #333;
+        width: 6cm;
+        margin: 1cm 0 0.3cm 0;
+    }
+    
+    .signature-label {
+        font-size: 9pt;
+        color: #666;
+        text-align: center;
+    }
+    
+    .delivery-info h4 {
+        font-size: 12pt;
+    }
+</style>
+{% endblock %}

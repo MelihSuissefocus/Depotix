@@ -1,0 +1,126 @@
+{% extends "pdf/base.html" %}
+
+{% block title %}Rechnung {{ invoice.invoice_number }}{% endblock %}
+
+{% block page_header %}Rechnung {{ invoice.invoice_number }} - {{ customer.name }}{% endblock %}
+
+{% block document_title %}RECHNUNG{% endblock %}
+
+{% block document_number %}{{ invoice.invoice_number }}{% endblock %}
+
+{% block document_date %}
+    Rechnungsdatum: {{ invoice.issue_date|date:"d.m.Y" }}<br>
+    Fälligkeitsdatum: {{ invoice.due_date|date:"d.m.Y" }}<br>
+    Bestellnummer: {{ order.order_number }}
+{% endblock %}
+
+{% block content %}
+    <div class="customer-section">
+        <div class="customer-label">Rechnungsadresse:</div>
+        <div class="customer-address">
+            <strong>{{ customer.name }}</strong><br>
+            {% if customer.contact_name %}{{ customer.contact_name }}<br>{% endif %}
+            {{ customer.address|linebreaksbr }}<br>
+            {% if customer.email %}E-Mail: {{ customer.email }}<br>{% endif %}
+            {% if customer.phone %}Tel: {{ customer.phone }}<br>{% endif %}
+            {% if customer.tax_id %}USt-IdNr: {{ customer.tax_id }}{% endif %}
+        </div>
+    </div>
+
+    <div class="order-details" style="margin-bottom: 1cm;">
+        <p><strong>Liefertermin:</strong> {{ order.delivery_date|date:"d.m.Y"|default:"Nach Vereinbarung" }}</p>
+        <p><strong>Zahlungsbedingungen:</strong> {{ customer.payment_terms|default:"30 Tage netto" }}</p>
+    </div>
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 5%;">Pos.</th>
+                <th style="width: 40%;">Artikel</th>
+                <th style="width: 10%;">Menge</th>
+                <th style="width: 10%;">Einheit</th>
+                <th style="width: 12%;" class="text-right">Einzelpreis</th>
+                <th style="width: 8%;" class="text-right">MwSt%</th>
+                <th style="width: 15%;" class="text-right">Gesamtpreis</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td class="text-center">{{ forloop.counter }}</td>
+                <td>
+                    <strong>{{ item.item.name }}</strong><br>
+                    {% if item.item.sku %}<small>Art.-Nr: {{ item.item.sku }}</small><br>{% endif %}
+                    {% if item.item.description %}<small>{{ item.item.description|truncatewords:15 }}</small>{% endif %}
+                </td>
+                <td class="text-right">{{ item.qty_base }}</td>
+                <td>{{ item.item.unit_base }}</td>
+                <td class="text-right currency">{{ item.unit_price|floatformat:2 }} {{ invoice.currency }}</td>
+                <td class="text-right">{{ item.tax_rate|floatformat:1 }}%</td>
+                <td class="text-right currency">{{ item.line_total_gross|floatformat:2 }} {{ invoice.currency }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center" style="color: #666; font-style: italic;">
+                    Keine Positionen vorhanden
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals-section">
+        <table class="totals-table">
+            <tr>
+                <td class="total-label">Zwischensumme (netto):</td>
+                <td class="total-amount currency">{{ invoice.total_net|floatformat:2 }} {{ invoice.currency }}</td>
+            </tr>
+            <tr>
+                <td class="total-label">Mehrwertsteuer:</td>
+                <td class="total-amount currency">{{ invoice.total_tax|floatformat:2 }} {{ invoice.currency }}</td>
+            </tr>
+            <tr class="grand-total">
+                <td class="total-label">Rechnungsbetrag (brutto):</td>
+                <td class="total-amount currency">{{ invoice.total_gross|floatformat:2 }} {{ invoice.currency }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="clear: both; margin-top: 2cm;">
+        <div style="background-color: #f0f7ff; padding: 0.5cm; border-left: 4px solid #2563eb; margin-bottom: 1cm;">
+            <h4 style="color: #1e40af; margin-bottom: 0.3cm;">Zahlungsinformationen</h4>
+            <p><strong>Zahlungsziel:</strong> {{ invoice.due_date|date:"d.m.Y" }}</p>
+            <p><strong>Betrag:</strong> {{ invoice.total_gross|floatformat:2 }} {{ invoice.currency }}</p>
+            <p><strong>Verwendungszweck:</strong> {{ invoice.invoice_number }}</p>
+            {% if customer.payment_terms %}
+            <p><strong>Zahlungsbedingungen:</strong> {{ customer.payment_terms }}</p>
+            {% endif %}
+        </div>
+
+        <div style="font-size: 10pt; color: #666; line-height: 1.4;">
+            <p><strong>Vielen Dank für Ihr Vertrauen!</strong></p>
+            <p>Bei Fragen zu dieser Rechnung wenden Sie sich gerne an uns.</p>
+            <p>Diese Rechnung wurde elektronisch erstellt und ist ohne Unterschrift gültig.</p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .totals-section {
+        margin-top: 0.5cm;
+    }
+    
+    .items-table th {
+        font-size: 9pt;
+    }
+    
+    .items-table td {
+        font-size: 9pt;
+    }
+    
+    .grand-total td {
+        color: #1e40af;
+    }
+</style>
+{% endblock %}
