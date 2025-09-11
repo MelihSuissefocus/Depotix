@@ -39,3 +39,23 @@ docker-compose.override.yml
 # OS
 .DS_Store
 Thumbs.db
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js
+.next/
+out/
+
+# Production
+build/
+dist/
+
+# Misc
+*.log
+
+# Vercel
+.vercel
