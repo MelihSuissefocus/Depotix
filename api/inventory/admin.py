@@ -1,7 +1,8 @@
 from django.contrib import admin
 from .models import (
     Category, Supplier, Customer, InventoryItem, 
-    Expense, InventoryLog, InventoryItemSupplier
+    Expense, InventoryLog, InventoryItemSupplier,
+    StockMovement, SalesOrder, SalesOrderItem, Invoice, DocumentSequence
 )
 
 
@@ -170,3 +171,136 @@ class InventoryItemSupplierAdmin(admin.ModelAdmin):
             'fields': ('notes',)
         }),
     )
+
+
+@admin.register(StockMovement)
+class StockMovementAdmin(admin.ModelAdmin):
+    list_display = [
+        'created_at', 'type', 'item', 'qty_base', 'qty_pallets', 
+        'qty_packages', 'qty_singles', 'supplier', 'customer', 'created_by'
+    ]
+    list_filter = ['type', 'created_at', 'supplier', 'customer', 'created_by']
+    search_fields = ['item__name', 'item__sku', 'note', 'supplier__name', 'customer__name']
+    ordering = ['-created_at']
+    readonly_fields = ['created_at']
+    raw_id_fields = ['item', 'supplier', 'customer', 'created_by']
+    
+    fieldsets = (
+        ('Movement Details', {
+            'fields': ('item', 'type', 'qty_base', 'note')
+        }),
+        ('UoM Input Helpers', {
+            'fields': ('qty_pallets', 'qty_packages', 'qty_singles'),
+            'classes': ('collapse',)
+        }),
+        ('Relationships', {
+            'fields': ('supplier', 'customer', 'created_by')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+class SalesOrderItemInline(admin.TabularInline):
+    model = SalesOrderItem
+    extra = 1
+    raw_id_fields = ['item']
+    readonly_fields = ['line_total_net', 'line_tax', 'line_total_gross']
+
+
+@admin.register(SalesOrder)
+class SalesOrderAdmin(admin.ModelAdmin):
+    list_display = [
+        'order_number', 'customer', 'status', 'order_date', 
+        'total_gross', 'currency', 'created_by'
+    ]
+    list_filter = ['status', 'order_date', 'currency', 'created_by']
+    search_fields = ['order_number', 'customer__name']
+    ordering = ['-order_date']
+    readonly_fields = ['order_number', 'order_date', 'total_net', 'total_tax', 'total_gross']
+    raw_id_fields = ['customer', 'created_by']
+    inlines = [SalesOrderItemInline]
+    
+    fieldsets = (
+        ('Order Information', {
+            'fields': ('order_number', 'customer', 'status', 'created_by')
+        }),
+        ('Dates', {
+            'fields': ('order_date', 'delivery_date')
+        }),
+        ('Financial Summary', {
+            'fields': ('currency', 'total_net', 'total_tax', 'total_gross'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def save_model(self, request, obj, form, change):
+        if not change:  # New object
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(SalesOrderItem)
+class SalesOrderItemAdmin(admin.ModelAdmin):
+    list_display = [
+        'order', 'item', 'qty_base', 'unit_price', 'tax_rate', 
+        'line_total_net', 'line_tax', 'line_total_gross'
+    ]
+    list_filter = ['order__status', 'tax_rate']
+    search_fields = ['order__order_number', 'item__name', 'item__sku']
+    ordering = ['order__order_date', 'order', 'item__name']
+    readonly_fields = ['line_total_net', 'line_tax', 'line_total_gross']
+    raw_id_fields = ['order', 'item']
+
+
+@admin.register(Invoice)
+class InvoiceAdmin(admin.ModelAdmin):
+    list_display = [
+        'invoice_number', 'customer', 'issue_date', 'due_date', 
+        'total_gross', 'currency'
+    ]
+    list_filter = ['issue_date', 'due_date', 'currency']
+    search_fields = ['invoice_number', 'order__customer__name', 'order__order_number']
+    ordering = ['-issue_date']
+    readonly_fields = [
+        'invoice_number', 'issue_date', 'customer', 'total_net', 
+        'total_tax', 'total_gross'
+    ]
+    raw_id_fields = ['order']
+    
+    fieldsets = (
+        ('Invoice Information', {
+            'fields': ('invoice_number', 'order', 'customer')
+        }),
+        ('Dates', {
+            'fields': ('issue_date', 'due_date')
+        }),
+        ('Financial Details', {
+            'fields': ('currency', 'total_net', 'total_tax', 'total_gross')
+        }),
+        ('Documents', {
+            'fields': ('pdf_file',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def customer(self, obj):
+        return obj.order.customer.name
+    customer.short_description = 'Customer'
+
+
+@admin.register(DocumentSequence)
+class DocumentSequenceAdmin(admin.ModelAdmin):
+    list_display = ['document_type', 'year', 'last_number']
+    list_filter = ['document_type', 'year']
+    ordering = ['document_type', '-year']
+    
+    def has_add_permission(self, request):
+        # Sequences should be managed automatically
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        # Sequences should not be manually edited
+        return False

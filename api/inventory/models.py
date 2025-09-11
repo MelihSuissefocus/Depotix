@@ -266,3 +266,283 @@ class InventoryItemSupplier(models.Model):
 
     def __str__(self):
         return f"{self.item.name} - {self.supplier.name}"
+
+
+class StockMovement(models.Model):
+    """Enhanced stock movement tracking with UoM support"""
+    
+    MOVEMENT_TYPE_CHOICES = [
+        ('IN', 'Stock In'),
+        ('OUT', 'Stock Out'),
+        ('RETURN', 'Return'),
+        ('DEFECT', 'Defective'),
+        ('ADJUST', 'Adjustment'),
+    ]
+    
+    item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='stock_movements')
+    type = models.CharField(max_length=20, choices=MOVEMENT_TYPE_CHOICES)
+    qty_base = models.PositiveIntegerField(help_text="Quantity in base units")
+    
+    # UoM input helpers for better UX
+    qty_pallets = models.IntegerField(default=0, help_text="Quantity in pallets")
+    qty_packages = models.IntegerField(default=0, help_text="Quantity in packages")
+    qty_singles = models.IntegerField(default=0, help_text="Quantity in single units")
+    
+    # Tracking and relationships
+    created_at = models.DateTimeField(auto_now_add=True)
+    note = models.TextField(blank=True, help_text="Movement notes or reason")
+    supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True, 
+                                related_name='stock_movements')
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True,
+                                related_name='stock_movements')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                  related_name='created_movements')
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['item', 'created_at']),
+            models.Index(fields=['type', 'created_at']),
+            models.Index(fields=['created_by', 'created_at']),
+        ]
+
+    def clean(self):
+        """Validate UoM calculations and business rules"""
+        from django.core.exceptions import ValidationError
+        
+        # Calculate qty_base from UoM inputs if not set
+        if not self.qty_base and (self.qty_pallets or self.qty_packages or self.qty_singles):
+            calculated_base = (
+                self.qty_pallets * self.item.unit_pallet_factor * self.item.unit_package_factor +
+                self.qty_packages * self.item.unit_package_factor +
+                self.qty_singles
+            )
+            self.qty_base = calculated_base
+        
+        # Validate stock availability for OUT/DEFECT movements
+        if self.type in ['OUT', 'DEFECT']:
+            available_qty = self.item.available_qty
+            if self.qty_base > available_qty:
+                raise ValidationError(
+                    f"Cannot {self.type.lower()} {self.qty_base} units. "
+                    f"Only {available_qty} units available."
+                )
+        
+        # RETURN should have customer reference
+        if self.type == 'RETURN' and not self.customer:
+            raise ValidationError("RETURN movements should reference a customer.")
+        
+        # IN movements typically have supplier reference
+        if self.type == 'IN' and not self.supplier and not self.note:
+            raise ValidationError("IN movements should reference a supplier or include a note.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+        
+        # Update item quantities based on movement type
+        if self.type == 'IN':
+            self.item.quantity += self.qty_base
+        elif self.type == 'OUT':
+            self.item.quantity = max(0, self.item.quantity - self.qty_base)
+        elif self.type == 'RETURN':
+            self.item.quantity += self.qty_base
+        elif self.type == 'DEFECT':
+            # Move from available to defective
+            transfer_qty = min(self.qty_base, self.item.available_qty)
+            self.item.quantity -= transfer_qty
+            self.item.defective_qty += transfer_qty
+        elif self.type == 'ADJUST':
+            # Direct adjustment to quantity
+            self.item.quantity = max(0, self.qty_base)
+        
+        self.item.save()
+
+    def __str__(self):
+        return f"{self.type} - {self.item.name} - {self.qty_base} units"
+
+
+class SalesOrder(models.Model):
+    """Sales order management with status tracking"""
+    
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('CONFIRMED', 'Confirmed'),
+        ('DELIVERED', 'Delivered'),
+        ('INVOICED', 'Invoiced'),
+    ]
+    
+    order_number = models.CharField(max_length=20, unique=True, blank=True)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='orders')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    order_date = models.DateTimeField(auto_now_add=True)
+    delivery_date = models.DateField(null=True, blank=True)
+    currency = models.CharField(max_length=3, default='CHF')
+    
+    # Financial totals
+    total_net = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    total_tax = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    total_gross = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                  related_name='created_orders')
+
+    class Meta:
+        ordering = ['-order_date']
+        indexes = [
+            models.Index(fields=['order_number']),
+            models.Index(fields=['customer', 'order_date']),
+            models.Index(fields=['status', 'order_date']),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            # Generate order number: LS-YYYY-####
+            year = timezone.now().year
+            last_order = SalesOrder.objects.filter(
+                order_number__startswith=f'LS-{year}-'
+            ).order_by('order_number').last()
+            
+            if last_order:
+                last_num = int(last_order.order_number.split('-')[-1])
+                new_num = last_num + 1
+            else:
+                new_num = 1
+            
+            self.order_number = f'LS-{year}-{new_num:04d}'
+        
+        super().save(*args, **kwargs)
+
+    def calculate_totals(self):
+        """Recalculate order totals from line items"""
+        total_net = sum(item.line_total_net for item in self.items.all())
+        total_tax = sum(item.line_tax for item in self.items.all())
+        
+        self.total_net = total_net
+        self.total_tax = total_tax
+        self.total_gross = total_net + total_tax
+        self.save()
+
+    def __str__(self):
+        return f"{self.order_number} - {self.customer.name}"
+
+
+class SalesOrderItem(models.Model):
+    """Sales order line items with tax calculations"""
+    
+    order = models.ForeignKey(SalesOrder, on_delete=models.CASCADE, related_name='items')
+    item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='order_items')
+    qty_base = models.PositiveIntegerField(help_text="Quantity in base units")
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2, 
+                                    help_text="Price per base unit")
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'),
+                                  help_text="Tax rate as percentage (e.g., 7.7 for 7.7%)")
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['order']),
+            models.Index(fields=['item']),
+        ]
+
+    @property
+    def line_total_net(self):
+        """Net line total without tax"""
+        return self.qty_base * self.unit_price
+
+    @property
+    def line_tax(self):
+        """Tax amount for this line"""
+        return self.line_total_net * (self.tax_rate / 100)
+
+    @property
+    def line_total_gross(self):
+        """Gross line total including tax"""
+        return self.line_total_net + self.line_tax
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Trigger order total recalculation
+        self.order.calculate_totals()
+
+    def __str__(self):
+        return f"{self.order.order_number} - {self.item.name} ({self.qty_base} units)"
+
+
+class Invoice(models.Model):
+    """Invoice generation from sales orders"""
+    
+    invoice_number = models.CharField(max_length=20, unique=True, blank=True)
+    order = models.OneToOneField(SalesOrder, on_delete=models.CASCADE, related_name='invoice')
+    issue_date = models.DateTimeField(auto_now_add=True)
+    due_date = models.DateField(null=True, blank=True)
+    
+    # Financial amounts (copied from order)
+    total_net = models.DecimalField(max_digits=12, decimal_places=2)
+    total_tax = models.DecimalField(max_digits=12, decimal_places=2)
+    total_gross = models.DecimalField(max_digits=12, decimal_places=2)
+    currency = models.CharField(max_length=3, default='CHF')
+    
+    # Optional PDF file path
+    pdf_file = models.TextField(blank=True, help_text="Path to generated PDF file")
+
+    class Meta:
+        ordering = ['-issue_date']
+        indexes = [
+            models.Index(fields=['invoice_number']),
+            models.Index(fields=['issue_date']),
+            models.Index(fields=['due_date']),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.invoice_number:
+            # Generate invoice number: INV-YYYY-####
+            year = timezone.now().year
+            last_invoice = Invoice.objects.filter(
+                invoice_number__startswith=f'INV-{year}-'
+            ).order_by('invoice_number').last()
+            
+            if last_invoice:
+                last_num = int(last_invoice.invoice_number.split('-')[-1])
+                new_num = last_num + 1
+            else:
+                new_num = 1
+            
+            self.invoice_number = f'INV-{year}-{new_num:04d}'
+        
+        # Copy totals from order if not set
+        if not self.total_net:
+            self.total_net = self.order.total_net
+            self.total_tax = self.order.total_tax
+            self.total_gross = self.order.total_gross
+            self.currency = self.order.currency
+        
+        # Set due date if not set (30 days from issue)
+        if not self.due_date:
+            from datetime import timedelta
+            self.due_date = timezone.now().date() + timedelta(days=30)
+        
+        super().save(*args, **kwargs)
+
+    @property
+    def customer(self):
+        """Access customer through order"""
+        return self.order.customer
+
+    def __str__(self):
+        return f"{self.invoice_number} - {self.order.customer.name}"
+
+
+# TODO: DocumentSequence for atomic number generation
+class DocumentSequence(models.Model):
+    """Atomic document number sequence generation"""
+    
+    document_type = models.CharField(max_length=10, unique=True,
+                                    choices=[('LS', 'Sales Order'), ('INV', 'Invoice')])
+    year = models.IntegerField()
+    last_number = models.IntegerField(default=0)
+    
+    class Meta:
+        unique_together = ['document_type', 'year']
+    
+    def __str__(self):
+        return f"{self.document_type}-{self.year} (last: {self.last_number})"

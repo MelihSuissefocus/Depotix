@@ -2,7 +2,8 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
     Category, Supplier, Customer, InventoryItem, 
-    Expense, InventoryLog, InventoryItemSupplier
+    Expense, InventoryLog, InventoryItemSupplier,
+    StockMovement, SalesOrder, SalesOrderItem, Invoice, DocumentSequence
 )
 
 
@@ -236,4 +237,190 @@ class PasswordChangeSerializer(serializers.Serializer):
         user = self.context['request'].user
         if not user.check_password(value):
             raise serializers.ValidationError("Current password is incorrect")
+        return value
+
+
+class StockMovementSerializer(serializers.ModelSerializer):
+    """Stock movement serializer with UoM support and validations"""
+    item_name = serializers.CharField(source='item.name', read_only=True)
+    supplier_name = serializers.CharField(source='supplier.name', read_only=True)
+    customer_name = serializers.CharField(source='customer.name', read_only=True)
+    created_by_username = serializers.CharField(source='created_by.username', read_only=True)
+
+    class Meta:
+        model = StockMovement
+        fields = [
+            'id', 'item', 'item_name', 'type', 'qty_base', 'qty_pallets',
+            'qty_packages', 'qty_singles', 'created_at', 'note', 'supplier',
+            'supplier_name', 'customer', 'customer_name', 'created_by',
+            'created_by_username'
+        ]
+        read_only_fields = [
+            'id', 'created_at', 'item_name', 'supplier_name', 
+            'customer_name', 'created_by_username'
+        ]
+
+    def create(self, validated_data):
+        # Auto-assign created_by from request user
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)
+
+    def validate(self, data):
+        """Validate UoM calculations and business rules"""
+        item = data.get('item')
+        movement_type = data.get('type')
+        qty_base = data.get('qty_base', 0)
+        qty_pallets = data.get('qty_pallets', 0)
+        qty_packages = data.get('qty_packages', 0)
+        qty_singles = data.get('qty_singles', 0)
+        
+        # Calculate qty_base from UoM inputs if not provided
+        if not qty_base and (qty_pallets or qty_packages or qty_singles):
+            calculated_base = (
+                qty_pallets * item.unit_pallet_factor * item.unit_package_factor +
+                qty_packages * item.unit_package_factor +
+                qty_singles
+            )
+            data['qty_base'] = calculated_base
+            qty_base = calculated_base
+        
+        # Validate stock availability for OUT/DEFECT movements
+        if movement_type in ['OUT', 'DEFECT'] and item:
+            available_qty = item.available_qty
+            if qty_base > available_qty:
+                raise serializers.ValidationError(
+                    f"Cannot {movement_type.lower()} {qty_base} units. "
+                    f"Only {available_qty} units available."
+                )
+        
+        # RETURN should have customer reference
+        if movement_type == 'RETURN' and not data.get('customer'):
+            raise serializers.ValidationError(
+                "RETURN movements should reference a customer."
+            )
+        
+        return data
+
+
+class SalesOrderItemSerializer(serializers.ModelSerializer):
+    """Sales order item serializer with calculated totals"""
+    item_name = serializers.CharField(source='item.name', read_only=True)
+    line_total_net = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    line_tax = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    line_total_gross = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = SalesOrderItem
+        fields = [
+            'id', 'order', 'item', 'item_name', 'qty_base', 'unit_price',
+            'tax_rate', 'line_total_net', 'line_tax', 'line_total_gross'
+        ]
+        read_only_fields = [
+            'id', 'item_name', 'line_total_net', 'line_tax', 'line_total_gross'
+        ]
+
+    def validate_qty_base(self, value):
+        """Ensure positive quantity"""
+        if value <= 0:
+            raise serializers.ValidationError("Quantity must be positive")
+        return value
+
+
+class SalesOrderSerializer(serializers.ModelSerializer):
+    """Sales order serializer with items and totals"""
+    customer_name = serializers.CharField(source='customer.name', read_only=True)
+    created_by_username = serializers.CharField(source='created_by.username', read_only=True)
+    items = SalesOrderItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = SalesOrder
+        fields = [
+            'id', 'order_number', 'customer', 'customer_name', 'status',
+            'order_date', 'delivery_date', 'currency', 'total_net',
+            'total_tax', 'total_gross', 'created_by', 'created_by_username',
+            'items'
+        ]
+        read_only_fields = [
+            'id', 'order_number', 'order_date', 'customer_name',
+            'total_net', 'total_tax', 'total_gross', 'created_by_username',
+            'items'
+        ]
+
+    def create(self, validated_data):
+        # Auto-assign created_by from request user
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)
+
+    def validate_delivery_date(self, value):
+        """Ensure delivery date is not in the past"""
+        if value:
+            from django.utils import timezone
+            if value < timezone.now().date():
+                raise serializers.ValidationError("Delivery date cannot be in the past")
+        return value
+
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    """Invoice serializer with order and customer details"""
+    customer_name = serializers.CharField(source='order.customer.name', read_only=True)
+    order_number = serializers.CharField(source='order.order_number', read_only=True)
+
+    class Meta:
+        model = Invoice
+        fields = [
+            'id', 'invoice_number', 'order', 'order_number', 'customer_name',
+            'issue_date', 'due_date', 'total_net', 'total_tax', 'total_gross',
+            'currency', 'pdf_file'
+        ]
+        read_only_fields = [
+            'id', 'invoice_number', 'issue_date', 'customer_name',
+            'order_number', 'total_net', 'total_tax', 'total_gross'
+        ]
+
+    def validate_order(self, value):
+        """Ensure order doesn't already have an invoice"""
+        if hasattr(value, 'invoice'):
+            raise serializers.ValidationError("This order already has an invoice")
+        return value
+
+
+class DocumentSequenceSerializer(serializers.ModelSerializer):
+    """Document sequence serializer (read-only for monitoring)"""
+    
+    class Meta:
+        model = DocumentSequence
+        fields = ['id', 'document_type', 'year', 'last_number']
+        read_only_fields = ['id', 'document_type', 'year', 'last_number']
+
+
+# Specialized serializers for business operations
+class StockMovementCreateSerializer(serializers.ModelSerializer):
+    """Simplified serializer for creating stock movements via API"""
+    
+    class Meta:
+        model = StockMovement
+        fields = ['item', 'type', 'qty_base', 'note', 'supplier', 'customer']
+
+    def create(self, validated_data):
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class OrderToInvoiceSerializer(serializers.Serializer):
+    """Serializer for converting order to invoice"""
+    order_id = serializers.IntegerField()
+    due_date = serializers.DateField(required=False)
+    
+    def validate_order_id(self, value):
+        try:
+            order = SalesOrder.objects.get(id=value)
+        except SalesOrder.DoesNotExist:
+            raise serializers.ValidationError("Order not found")
+        
+        if order.status != 'DELIVERED':
+            raise serializers.ValidationError("Only delivered orders can be invoiced")
+        
+        if hasattr(order, 'invoice'):
+            raise serializers.ValidationError("Order already has an invoice")
+        
         return value

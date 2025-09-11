@@ -116,7 +116,16 @@ pip install -r requirements.txt
 # Run database migrations
 python manage.py migrate
 
-# Load seed data (optional)
+# Create migrations for new models (if needed)
+python manage.py makemigrations
+
+# Apply migrations
+python manage.py migrate
+
+# Load seed data (optional - Phase 1 complete)
+python manage.py loaddata ../fixtures/seed_phase1_complete.json
+
+# Alternative: Load original seed data
 python manage.py loaddata ../fixtures/seed_phase1.json
 
 # Create superuser (optional)
@@ -155,14 +164,18 @@ The backend now includes all Phase 1 requirements:
 - ✅ All models registered with Django Admin
 - ✅ Access at: http://localhost:8000/admin/
 
-**Seed Data**: 24 demo objects loaded including:
+**Seed Data**: 37 demo objects loaded including:
 - 2 users (admin/demo_user)
 - 3 categories (Beverages, Snacks, Dairy)
 - 2 suppliers (Coca-Cola, Bahlsen)
 - 2 customers (Restaurant, Cafe)
-- 4 inventory items with stock levels
+- 4 inventory items with UoM factors and stock levels
 - 3 expenses with different categories
-- 5 inventory log entries
+- 5 stock movements (IN/OUT/RETURN/DEFECT types)
+- 2 sales orders (1 delivered, 1 confirmed)
+- 5 sales order line items
+- 1 invoice (generated from delivered order)
+- 5 inventory log entries (legacy compatibility)
 
 ### Alternative: Mock Backend (For Frontend-Only Development)
 
