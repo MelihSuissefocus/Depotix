@@ -1,0 +1,11 @@
+{
+  "welcome": "Welcome to Depotix",
+  "dashboard": "Dashboard",
+  "login": "Login",
+  "register": "Register",
+  "inventory": "Inventory",
+  "suppliers": "Suppliers",
+  "customers": "Customers",
+  "reports": "Reports",
+  "settings": "Settings"
+}

@@ -1,3 +1,14 @@
 {
-  "/page": "app/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/categories/page": "app/categories/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/inventory/page": "app/inventory/page.js",
+  "/item-suppliers/page": "app/item-suppliers/page.js",
+  "/login/page": "app/login/page.js",
+  "/logs/page": "app/logs/page.js",
+  "/page": "app/page.js",
+  "/register/page": "app/register/page.js",
+  "/reports/page": "app/reports/page.js",
+  "/settings/page": "app/settings/page.js",
+  "/suppliers/page": "app/suppliers/page.js"
 }

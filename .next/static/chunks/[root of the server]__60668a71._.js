@@ -259,7 +259,10 @@ function AuthProvider({ children }) {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(userData)
+                body: JSON.stringify({
+                    ...userData,
+                    password_confirm: userData.password
+                })
             });
             if (!response.ok) {
                 const errorData = await response.json();
@@ -351,7 +354,7 @@ function AuthProvider({ children }) {
         children: children
     }, void 0, false, {
         fileName: "[project]/lib/auth.tsx",
-        lineNumber: 239,
+        lineNumber: 242,
         columnNumber: 5
     }, this);
 }
