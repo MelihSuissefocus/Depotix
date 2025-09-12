@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE!
 
 // German error messages mapping
 const errorMessages: Record<string, string> = {
@@ -27,7 +27,7 @@ function getGermanErrorMessage(error: string, code?: string): string {
 
 // Helper function for making API requests
 async function fetchAPI(endpoint: string, options: RequestInit = {}) {
-  const url = `${API_BASE_URL}${endpoint}`
+  const url = `${API_BASE}${endpoint}`
 
   // Get auth token from localStorage
   const tokensStr = typeof window !== "undefined" ? localStorage.getItem("auth_tokens") : null
@@ -50,7 +50,7 @@ async function fetchAPI(endpoint: string, options: RequestInit = {}) {
       // Try to refresh the token if we have a refresh token
       if (tokens?.refresh) {
         try {
-          const refreshResponse = await fetch(`${API_BASE_URL}/token/refresh/`, {
+          const refreshResponse = await fetch(`${API_BASE}/token/refresh/`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -416,7 +416,7 @@ export const ordersAPI = {
 
 // Helper function for PDF downloads
 async function downloadPDF(endpoint: string): Promise<void> {
-  const url = `${API_BASE_URL}${endpoint}`
+  const url = `${API_BASE}${endpoint}`
   
   // Get auth token
   const tokensStr = typeof window !== "undefined" ? localStorage.getItem("auth_tokens") : null

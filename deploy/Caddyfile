@@ -1,0 +1,24 @@
+{
+  email you@depotix.ch
+}
+
+api.depotix.ch {
+  encode gzip
+  reverse_proxy backend:8000
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    Referrer-Policy "strict-origin-when-cross-origin"
+  }
+}
+
+app.depotix.ch, depotix.ch, www.depotix.ch {
+  encode gzip
+  reverse_proxy frontend:3000
+  @root path /
+  handle @root {
+    header {
+      Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+      Referrer-Policy "strict-origin-when-cross-origin"
+    }
+  }
+}

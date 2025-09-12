@@ -16,9 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import HttpResponse
+
+def healthz(_): 
+    return HttpResponse("ok")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/inventory/', include('inventory.urls')),
     path('api/', include('inventory.urls')),  # For JWT token endpoints
+    path('healthz', healthz),
 ]
