@@ -153,6 +153,35 @@ erDiagram
 | date_added | DateTime | Auto | Creation timestamp |
 | last_updated | DateTime | Auto | Last update timestamp |
 | is_active | Boolean | Default: True | Active status |
+| **brand** | CharField(120) | Optional | **Brand/manufacturer name** |
+| **beverage_type** | CharField(20) | Optional | **Type of beverage (water, beer, etc.)** |
+| **container_type** | CharField(12) | Optional | **Container type (glass, PET, can, etc.)** |
+| **volume_ml** | PositiveIntegerField | Optional | **Volume per unit in milliliters** |
+| **deposit_chf** | DecimalField(6,2) | Default: 0 | **Deposit amount in CHF** |
+| **is_returnable** | Boolean | Default: False | **Whether item is returnable/reusable** |
+| **is_alcoholic** | Boolean | Default: False | **Whether item contains alcohol** |
+| **abv_percent** | DecimalField(5,2) | Optional | **Alcohol by volume percentage** |
+| **country_of_origin** | CharField(2) | Optional | **ISO-2 country code of origin** |
+| **ean_unit** | CharField(14) | Optional | **EAN barcode for single unit** |
+| **ean_pack** | CharField(14) | Optional | **EAN barcode for package** |
+| **vat_rate** | DecimalField(4,2) | Default: 8.10 | **VAT rate percentage** |
+
+**Beverage Type Choices**:
+- `water` - Wasser
+- `softdrink` - Softdrink  
+- `beer` - Bier
+- `wine` - Wein
+- `spirits` - Spirituose
+- `energy` - Energy Drink
+- `juice` - Saft
+- `other` - Sonstiges
+
+**Container Type Choices**:
+- `glass` - Glasflasche
+- `pet` - PET
+- `can` - Dose
+- `crate` - Kiste/Tray
+- `keg` - Fass/Keg
 
 **Calculated Fields**:
 - `available_qty`: `quantity - defective_qty`

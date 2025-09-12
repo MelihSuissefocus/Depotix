@@ -72,7 +72,7 @@ export default function Dashboard() {
     : 0;
   const totalValue = Array.isArray(inventoryItems)
     ? inventoryItems.reduce(
-        (sum, item) => sum + Number(item.price || 0) * (item.quantity || 0),
+        (sum, item) => sum + Number(item.price || 0) * (item.available_qty || 0),
         0
       )
     : 0;
@@ -87,8 +87,10 @@ export default function Dashboard() {
     .slice(0, 5)
     .map((item) => ({
       name: item.name,
-      Quantity: item.quantity,
-      Threshold: item.low_stock_threshold ?? 10,
+      // ensure Quantity is always a number (fallback to 0 when undefined)
+      Quantity: item.available_qty ?? 0,
+      // prefer unified low_stock_threshold, fall back to legacy min_stock_level, then a sensible default
+      Threshold: item.low_stock_threshold ?? item.min_stock_level ?? 10,
     }));
 
   const { trendData, currentYearValue, currentMonthValue } =

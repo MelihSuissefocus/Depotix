@@ -99,47 +99,56 @@ export default function InventoryItemPage() {
       try {
         setIsLoading(true);
 
-        const [itemData, categoriesData, suppliersData, logsData] =
-          await Promise.all([
-            inventoryAPI.getItem(itemId),
+        // First fetch the item itself. If this fails we cannot edit, so abort.
+        let itemData: any = null
+        try {
+          itemData = await inventoryAPI.getItem(itemId)
+          setItem(itemData)
+          setFormData(itemData)
+        } catch (err) {
+          console.error("Failed to fetch item:", err)
+          setError("Failed to fetch item data")
+          return
+        }
+
+        // Load auxiliary data (categories, suppliers, logs) but don't fail the whole page
+        try {
+          const [categoriesData, suppliersData, logsData] = await Promise.all([
             categoryAPI.getCategories(),
             supplierAPI.getSuppliers(),
             logAPI.getItemLogs(itemId),
-            supplierAPI.getSuppliers(),
-          ]);
+          ])
 
-        setItem(itemData);
-        setFormData(itemData);
+          const suppliersArray = Array.isArray(suppliersData)
+            ? suppliersData
+            : suppliersData.results || []
+          setSuppliers(suppliersArray)
 
-        const suppliersArray = Array.isArray(suppliersData)
-          ? suppliersData
-          : suppliersData.results || [];
-        setSuppliers(suppliersArray);
+          const itemLogs = Array.isArray(logsData) ? logsData : logsData.results || []
+          setLogs(itemLogs)
 
-        const itemLogs = Array.isArray(logsData)
-          ? logsData
-          : logsData.results || [];
-
-        setLogs(itemLogs);
-
-        const categoriesArray = Array.isArray(categoriesData)
-          ? categoriesData
-          : categoriesData.results || [];
-        setCategories(categoriesArray);
+          const categoriesArray = Array.isArray(categoriesData)
+            ? categoriesData
+            : categoriesData.results || []
+          setCategories(categoriesArray)
+        } catch (auxErr) {
+          // Log but don't block editing the item
+          console.error("Failed to load categories/suppliers/logs:", auxErr)
+        }
 
         const itemSuppliersArray = Array.isArray(itemData.suppliers)
           ? itemData.suppliers
-          : itemData.suppliers || [];
-        setItemSuppliers(itemSuppliersArray);
+          : itemData.suppliers || []
+        setItemSuppliers(itemSuppliersArray)
       } catch (err) {
-        setError("Failed to fetch item data");
-        console.error(err);
+        setError("Failed to fetch item data")
+        console.error(err)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    fetchData();
+    fetchData()
   }, [itemId]);
 
   const handleSave = async () => {

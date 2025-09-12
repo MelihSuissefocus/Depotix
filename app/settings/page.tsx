@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,6 +13,7 @@ import { AlertCircle, CheckCircle, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/lib/auth"
 import { toast } from 'react-hot-toast';
+import { companyProfileAPI } from "@/lib/api"
 
 export default function SettingsPage() {
   const { user, isLoading: authLoading, updateProfile, changePassword } = useAuth()
@@ -20,6 +21,23 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
+  // Company profile state
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null)
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false)
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    street: "",
+    postal_code: "",
+    city: "",
+    country: "CH",
+    email: "",
+    phone: "",
+    iban: "",
+    bank_name: "",
+    mwst_number: "",
+    currency: "CHF",
+  })
 
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [lowStockAlerts, setLowStockAlerts] = useState(true)
@@ -42,6 +60,73 @@ export default function SettingsPage() {
     new_password: "",
     confirm_password: "",
   })
+
+  // Load company profile on component mount
+  const loadCompanyProfile = async () => {
+    try {
+      setIsLoadingProfile(true)
+      const profile = await companyProfileAPI.get()
+      setCompanyProfile(profile)
+      setProfileForm({
+        name: profile.name || "",
+        street: profile.street || "",
+        postal_code: profile.postal_code || "",
+        city: profile.city || "",
+        country: profile.country || "CH",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        iban: profile.iban || "",
+        bank_name: profile.bank_name || "",
+        mwst_number: profile.mwst_number || "",
+        currency: profile.currency || "CHF",
+      })
+    } catch (err) {
+      // Profile doesn't exist yet - this is normal for new users
+      console.log("No company profile found, starting fresh")
+    } finally {
+      setIsLoadingProfile(false)
+    }
+  }
+
+  // Load profile on component mount
+  useEffect(() => {
+    loadCompanyProfile()
+  }, [])
+
+  const validateProfileForm = () => {
+    const errors: string[] = []
+    if (!profileForm.name.trim()) {
+      errors.push("Firma ist erforderlich")
+    }
+    if (!profileForm.iban.trim()) {
+      errors.push("IBAN ist erforderlich")
+    }
+    return errors
+  }
+
+  const handleSaveCompanyProfile = async () => {
+    try {
+      setIsSaving(true)
+      
+      // Client-side validation
+      const validationErrors = validateProfileForm()
+      if (validationErrors.length > 0) {
+        toast.error(validationErrors.join(", "))
+        return
+      }
+
+      await companyProfileAPI.patch(profileForm)
+      toast.success("Firmenprofil gespeichert")
+      
+      // Reload to get the updated profile
+      await loadCompanyProfile()
+    } catch (err) {
+      console.error("Failed to save company profile:", err)
+      toast.error("Fehler beim Speichern des Firmenprofils")
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   const handleUpdateProfile = async () => {
     try {
@@ -145,8 +230,9 @@ export default function SettingsPage() {
       )}
 
       <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="profile">Firmenprofil</TabsTrigger>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
@@ -269,6 +355,197 @@ export default function SettingsPage() {
               >
                 {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {isSaving ? "Changing..." : "Change Password"}
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="profile" className="space-y-4 pt-4">
+          {/* Warning banner for missing IBAN */}
+          {companyProfile && !companyProfile.iban && (
+            <Alert className="bg-amber-50 text-amber-700 border-amber-200">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Bitte IBAN hinterlegen, um QR-Rechnungen zu generieren.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Firmenprofil</CardTitle>
+              <CardDescription>Erfassen Sie Ihre Firmendaten für die Rechnungsstellung</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {isLoadingProfile ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-center">
+                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+                    <p className="mt-2">Lade Firmenprofil...</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Firma - Required */}
+                  <div className="space-y-2">
+                    <Label htmlFor="company-name">Firma *</Label>
+                    <Input
+                      id="company-name"
+                      value={profileForm.name}
+                      onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                      placeholder="Firmenname eingeben"
+                      className={!profileForm.name.trim() ? "border-red-300" : ""}
+                    />
+                  </div>
+
+                  {/* Address fields */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="street">Straße</Label>
+                      <Input
+                        id="street"
+                        value={profileForm.street}
+                        onChange={(e) => setProfileForm({ ...profileForm, street: e.target.value })}
+                        placeholder="Straße und Hausnummer"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="postal-code">PLZ</Label>
+                      <Input
+                        id="postal-code"
+                        value={profileForm.postal_code}
+                        onChange={(e) => setProfileForm({ ...profileForm, postal_code: e.target.value })}
+                        placeholder="PLZ"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">Ort</Label>
+                      <Input
+                        id="city"
+                        value={profileForm.city}
+                        onChange={(e) => setProfileForm({ ...profileForm, city: e.target.value })}
+                        placeholder="Ort"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="country">Land</Label>
+                      <Input
+                        id="country"
+                        value={profileForm.country}
+                        onChange={(e) => setProfileForm({ ...profileForm, country: e.target.value })}
+                        placeholder="Land"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Contact information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="company-email">E-Mail</Label>
+                      <Input
+                        id="company-email"
+                        type="email"
+                        value={profileForm.email}
+                        onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                        placeholder="info@firma.ch"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="company-phone">Telefon</Label>
+                      <Input
+                        id="company-phone"
+                        value={profileForm.phone}
+                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                        placeholder="+41 XX XXX XX XX"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Banking information */}
+                  <div className="space-y-2">
+                    <Label htmlFor="iban">IBAN *</Label>
+                    <Input
+                      id="iban"
+                      value={profileForm.iban}
+                      onChange={(e) => setProfileForm({ ...profileForm, iban: e.target.value.toUpperCase() })}
+                      placeholder="CH00 0000 0000 0000 0000 0"
+                      className={!profileForm.iban.trim() ? "border-red-300" : ""}
+                    />
+                    <p className="text-sm text-gray-500">CH/LI-IBAN für QR-Rechnungen erforderlich</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bank-name">Bankname</Label>
+                    <Input
+                      id="bank-name"
+                      value={profileForm.bank_name}
+                      onChange={(e) => setProfileForm({ ...profileForm, bank_name: e.target.value })}
+                      placeholder="Name der Bank"
+                    />
+                  </div>
+
+                  {/* Tax and currency */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="mwst-number">MWST-Nr.</Label>
+                      <Input
+                        id="mwst-number"
+                        value={profileForm.mwst_number}
+                        onChange={(e) => setProfileForm({ ...profileForm, mwst_number: e.target.value })}
+                        placeholder="CHE-XXX.XXX.XXX MWST"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="currency">Währung</Label>
+                      <Input
+                        id="currency"
+                        value={profileForm.currency}
+                        disabled
+                        className="bg-gray-50"
+                      />
+                      <p className="text-sm text-gray-500">Standardwährung (nicht änderbar)</p>
+                    </div>
+                  </div>
+
+                  {/* Logo placeholder */}
+                  <div className="space-y-2">
+                    <Label>Logo (optional)</Label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                      <p className="text-sm text-gray-500">Logo-Upload folgt in einer späteren Version</p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+            <CardFooter className="flex gap-2">
+              <Button 
+                onClick={handleSaveCompanyProfile} 
+                disabled={isSaving || isLoadingProfile}
+              >
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {isSaving ? "Speichere..." : "Speichern"}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setProfileForm({
+                  name: companyProfile?.name || "",
+                  street: companyProfile?.street || "",
+                  postal_code: companyProfile?.postal_code || "",
+                  city: companyProfile?.city || "",
+                  country: companyProfile?.country || "CH",
+                  email: companyProfile?.email || "",
+                  phone: companyProfile?.phone || "",
+                  iban: companyProfile?.iban || "",
+                  bank_name: companyProfile?.bank_name || "",
+                  mwst_number: companyProfile?.mwst_number || "",
+                  currency: companyProfile?.currency || "CHF",
+                })}
+                disabled={isLoadingProfile}
+              >
+                Abbrechen
               </Button>
             </CardFooter>
           </Card>

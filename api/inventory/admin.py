@@ -2,7 +2,8 @@ from django.contrib import admin
 from .models import (
     Category, Supplier, Customer, InventoryItem, 
     Expense, InventoryLog, InventoryItemSupplier,
-    StockMovement, SalesOrder, SalesOrderItem, Invoice, DocumentSequence
+    StockMovement, SalesOrder, SalesOrderItem, Invoice, DocumentSequence,
+    CompanyProfile
 )
 
 
@@ -65,13 +66,15 @@ class CustomerAdmin(admin.ModelAdmin):
 @admin.register(InventoryItem)
 class InventoryItemAdmin(admin.ModelAdmin):
     list_display = [
-        'name', 'sku', 'quantity', 'defective_qty', 'available_qty', 
+        'name', 'sku', 'brand', 'beverage_type', 'container_type', 
+        'volume_ml', 'quantity', 'defective_qty', 'available_qty', 
         'price', 'category', 'is_low_stock', 'owner', 'is_active'
     ]
     list_filter = [
-        'is_active', 'category', 'unit_base', 'owner', 'date_added'
+        'is_active', 'category', 'unit_base', 'beverage_type', 
+        'container_type', 'is_alcoholic', 'is_returnable', 'owner', 'date_added'
     ]
-    search_fields = ['name', 'sku', 'description']
+    search_fields = ['name', 'sku', 'description', 'brand', 'ean_unit', 'ean_pack']
     ordering = ['name']
     readonly_fields = [
         'date_added', 'last_updated', 'available_qty', 'is_low_stock', 
@@ -81,11 +84,23 @@ class InventoryItemAdmin(admin.ModelAdmin):
         ('Basic Information', {
             'fields': ('name', 'description', 'sku', 'category', 'is_active', 'owner')
         }),
+        ('Produkt', {
+            'fields': ('brand', 'beverage_type', 'container_type', 'volume_ml')
+        }),
+        ('Kennzeichnung', {
+            'fields': ('ean_unit', 'ean_pack', 'country_of_origin')
+        }),
         ('Inventory Details', {
             'fields': ('quantity', 'defective_qty', 'available_qty', 'min_stock_level', 'location')
         }),
         ('Pricing', {
             'fields': ('price', 'cost', 'total_value')
+        }),
+        ('Steuern & Pfand', {
+            'fields': ('vat_rate', 'deposit_chf', 'is_returnable')
+        }),
+        ('Alkohol', {
+            'fields': ('is_alcoholic', 'abv_percent')
         }),
         ('Unit Configuration', {
             'fields': ('unit_base', 'unit_package_factor', 'unit_pallet_factor')
@@ -304,3 +319,36 @@ class DocumentSequenceAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         # Sequences should not be manually edited
         return False
+
+
+@admin.register(CompanyProfile)
+class CompanyProfileAdmin(admin.ModelAdmin):
+    list_display = ['name', 'user', 'city', 'country', 'email', 'phone', 'created_at']
+    list_filter = ['country', 'currency', 'created_at']
+    search_fields = ['name', 'email', 'user__username', 'mwst_number']
+    ordering = ['name']
+    readonly_fields = ['created_at', 'updated_at']
+    raw_id_fields = ['user']
+    
+    fieldsets = (
+        ('Company Information', {
+            'fields': ('user', 'name')
+        }),
+        ('Address', {
+            'fields': ('street', 'postal_code', 'city', 'country')
+        }),
+        ('Contact Details', {
+            'fields': ('email', 'phone')
+        }),
+        ('Financial Information', {
+            'fields': ('iban', 'bank_name', 'mwst_number', 'currency')
+        }),
+        ('Branding', {
+            'fields': ('logo',),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )

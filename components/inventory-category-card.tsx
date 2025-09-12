@@ -17,7 +17,7 @@ export const InventoryByCategory: React.FC<InventoryByCategoryProps> = ({
               (item) => item.category === category.id
             );
             const categoryValue = categoryItems.reduce(
-              (sum, item) => sum + Number(item.price) * item.quantity,
+              (sum, item) => sum + Number(item.price) * (item.available_qty ?? 0),
               0
             );
 
@@ -42,7 +42,7 @@ export const InventoryByCategory: React.FC<InventoryByCategoryProps> = ({
                       <p className="text-xs text-gray-500">Quantity</p>
                       <p className="font-medium">
                         {categoryItems.reduce(
-                          (sum, item) => sum + item.quantity,
+                          (sum, item) => sum + (item.available_qty ?? 0),
                           0
                         )}
                       </p>

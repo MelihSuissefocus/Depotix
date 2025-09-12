@@ -41,10 +41,15 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
 
   // dynamic chart data
   const chartData = limitedInventoryItems.map((item) => ({
-    inventoryValue: Number(item.price || 0) * (item.quantity || 0),
-    totalItems: item.quantity || 0,
+    inventoryValue: Number(item.price || 0) * (item.available_qty ?? 0),
+    totalItems: item.available_qty ?? 0,
     name: item.name,
   }));
+
+  const totalAvailableUnits = inventoryItems.reduce(
+    (sum, item) => sum + (item.available_qty ?? 0),
+    0
+  );
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -60,7 +65,7 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
             <CountUp start={0} end={totalItems} />
           </div>
           <p className="text-xs text-gray-500">
-            {inventoryItems.reduce((sum, item) => sum + item.quantity, 0)} units
+            {totalAvailableUnits} units
             in stock
           </p>
           <ChartContainer config={chartConfig} className="h-[80px] w-full">

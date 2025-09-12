@@ -3,7 +3,8 @@ from django.contrib.auth.models import User
 from .models import (
     Category, Supplier, Customer, InventoryItem, 
     Expense, InventoryLog, InventoryItemSupplier,
-    StockMovement, SalesOrder, SalesOrderItem, Invoice, DocumentSequence
+    StockMovement, SalesOrder, SalesOrderItem, Invoice, DocumentSequence,
+    CompanyProfile
 )
 
 
@@ -64,16 +65,22 @@ class InventoryItemSerializer(serializers.ModelSerializer):
     available_qty = serializers.IntegerField(read_only=True)
     is_low_stock = serializers.BooleanField(read_only=True)
     total_value = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    # Provide a front-end friendly alias for min_stock_level
+    low_stock_threshold = serializers.IntegerField(source='min_stock_level', required=False)
 
     class Meta:
         model = InventoryItem
         fields = [
             'id', 'name', 'description', 'sku', 'quantity', 'defective_qty',
-            'price', 'cost', 'min_stock_level', 'location', 'unit_base',
+            'price', 'cost', 'min_stock_level', 'low_stock_threshold', 'location', 'unit_base',
             'unit_package_factor', 'unit_pallet_factor', 'category', 
             'category_name', 'owner', 'owner_username', 'date_added', 
             'last_updated', 'is_active', 'available_qty', 'is_low_stock', 
-            'total_value'
+            'total_value',
+            # Neue Getränke-spezifische Felder
+            'brand', 'beverage_type', 'container_type', 'volume_ml', 
+            'deposit_chf', 'is_returnable', 'is_alcoholic', 'abv_percent',
+            'country_of_origin', 'ean_unit', 'ean_pack', 'vat_rate'
         ]
         read_only_fields = [
             'id', 'owner', 'owner_username', 'date_added', 'last_updated',
@@ -86,13 +93,30 @@ class InventoryItemSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def validate(self, data):
-        """Validate defective quantity doesn't exceed total quantity"""
+        """Validate defective quantity doesn't exceed total quantity and beverage-specific rules"""
+        from decimal import Decimal
+        
         quantity = data.get('quantity', 0)
         defective_qty = data.get('defective_qty', 0)
         
         if defective_qty > quantity:
             raise serializers.ValidationError(
                 "Defective quantity cannot exceed total quantity"
+            )
+        
+        # Getränke-spezifische Validierungen
+        is_alcoholic = data.get('is_alcoholic', False)
+        abv_percent = data.get('abv_percent')
+        vat_rate = data.get('vat_rate', Decimal('8.10'))
+        
+        # Alkoholgehalt prüfen wenn alkoholisch
+        if is_alcoholic and abv_percent is None:
+            data['abv_percent'] = Decimal('0')
+        
+        # MwSt.-Rate prüfen (CH-Bereich)
+        if vat_rate < 0 or vat_rate > 25:
+            raise serializers.ValidationError(
+                "MwSt.-Rate muss zwischen 0% und 25% liegen"
             )
         
         return data
@@ -159,12 +183,14 @@ class InventoryItemListSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     available_qty = serializers.IntegerField(read_only=True)
     is_low_stock = serializers.BooleanField(read_only=True)
+    # expose low_stock_threshold for list views (read-only)
+    low_stock_threshold = serializers.IntegerField(source='min_stock_level', read_only=True)
 
     class Meta:
         model = InventoryItem
         fields = [
             'id', 'name', 'sku', 'quantity', 'available_qty', 'price',
-            'category', 'category_name', 'is_low_stock', 'last_updated'
+            'category', 'category_name', 'is_low_stock', 'last_updated', 'low_stock_threshold'
         ]
 
 
@@ -288,10 +314,10 @@ class StockMovementSerializer(serializers.ModelSerializer):
         if movement_type in ['OUT', 'DEFECT'] and item:
             available_qty = item.available_qty
             if qty_base > available_qty:
-                raise serializers.ValidationError(
-                    f"Cannot {movement_type.lower()} {qty_base} units. "
-                    f"Only {available_qty} units available."
-                )
+                # Import the custom exception here to avoid circular imports
+                from .exceptions import InsufficientStockError
+                error_msg = f"Cannot {movement_type.lower()} {qty_base} units. Only {available_qty} units available."
+                raise InsufficientStockError(error_msg)
         
         # RETURN should have customer reference
         if movement_type == 'RETURN' and not data.get('customer'):
@@ -424,3 +450,16 @@ class OrderToInvoiceSerializer(serializers.Serializer):
             raise serializers.ValidationError("Order already has an invoice")
         
         return value
+
+
+class CompanyProfileSerializer(serializers.ModelSerializer):
+    """Company profile serializer"""
+    
+    class Meta:
+        model = CompanyProfile
+        fields = [
+            'id', 'user', 'name', 'street', 'postal_code', 'city', 'country',
+            'email', 'phone', 'iban', 'bank_name', 'mwst_number', 'currency',
+            'logo', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'user', 'created_at', 'updated_at']

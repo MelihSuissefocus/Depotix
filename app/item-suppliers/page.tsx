@@ -89,10 +89,10 @@ export default function InventorySuppliersPage() {
             itemSupplier.supplier_sku.toLowerCase().includes(searchQuery.toLowerCase()))
 
         // Apply item filter
-        const matchesItem = itemFilter === "all" || itemSupplier.item.toString() === itemFilter
+        const matchesItem = itemFilter === "all" || (itemSupplier.item !== undefined && itemSupplier.item.toString() === itemFilter)
 
         // Apply supplier filter
-        const matchesSupplier = supplierFilter === "all" || itemSupplier.supplier.toString() === supplierFilter
+        const matchesSupplier = supplierFilter === "all" || (itemSupplier.supplier !== undefined && itemSupplier.supplier.toString() === supplierFilter)
 
         return matchesSearch && matchesItem && matchesSupplier
       })
@@ -239,7 +239,7 @@ export default function InventorySuppliersPage() {
                   <SelectContent>
                     <SelectItem value="all">All Items</SelectItem>
                     {inventoryItems.map((item) => (
-                      <SelectItem key={item.id} value={item.id.toString()}>
+                      <SelectItem key={item.id} value={item.id !== undefined ? item.id.toString() : ""}>
                         {item.name}
                       </SelectItem>
                     ))}
@@ -310,8 +310,8 @@ export default function InventorySuppliersPage() {
                               onClick={() => {
                                 setSelectedInventorySupplier(inventorySupplier)
                                 setNewInventorySupplier({
-                                  item: inventorySupplier.item.toString(),
-                                  supplier: inventorySupplier.supplier.toString(),
+                                  item: inventorySupplier.item !== undefined ? inventorySupplier.item.toString() : "",
+                                  supplier: inventorySupplier.supplier !== undefined ? inventorySupplier.supplier.toString() : "",
                                   supplier_sku: inventorySupplier.supplier_sku || "",
                                   supplier_price: inventorySupplier.supplier_price,
                                   lead_time_days: inventorySupplier.lead_time_days?.toString() || "",
@@ -371,7 +371,7 @@ export default function InventorySuppliersPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {inventoryItems.map((item) => (
-                      <SelectItem key={item.id} value={item.id.toString()}>
+                      <SelectItem key={item.id} value={item.id !== undefined ? item.id.toString() : ""}>
                         {item.name}
                       </SelectItem>
                     ))}
@@ -467,7 +467,7 @@ export default function InventorySuppliersPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {inventoryItems.map((item) => (
-                      <SelectItem key={item.id} value={item.id.toString()}>
+                      <SelectItem key={item.id} value={item.id !== undefined ? item.id.toString() : ""}>
                         {item.name}
                       </SelectItem>
                     ))}

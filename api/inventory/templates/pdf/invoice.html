@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rechnung {{ invoice.invoice_number }}</title>
+    <style>
+        {% include "pdf/_styles.css" %}
+    </style>
+</head>
+<body>
+    <!-- Header with supplier and customer information -->
+    <div class="header">
+        <div class="header-row">
+            <div class="header-supplier">
+                {% if supplier.logo %}
+                    <img src="{{ supplier.logo.url }}" alt="{{ supplier.name }}" class="supplier-logo">
+                {% endif %}
+                <div class="supplier-info">
+                    <div class="bold">{{ supplier.name }}</div>
+                    <div>{{ supplier.street }}</div>
+                    <div>{{ supplier.postal_code }} {{ supplier.city }}</div>
+                    {% if supplier.country != "CH" %}
+                        <div>{{ supplier.country }}</div>
+                    {% endif %}
+                    <div style="margin-top: 5px;">
+                        <div>Tel: {{ supplier.phone }}</div>
+                        <div>E-Mail: {{ supplier.email }}</div>
+                    </div>
+                    {% if supplier.mwst_number %}
+                        <div style="margin-top: 5px;">
+                            <div>MWST-Nr: {{ supplier.mwst_number }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="header-customer">
+                <div class="customer-label">Rechnungsadresse:</div>
+                <div class="customer-info">
+                    <div class="bold">{{ customer.name }}</div>
+                    {% if customer.contact_name %}
+                        <div>z.H. {{ customer.contact_name }}</div>
+                    {% endif %}
+                    <div>{{ customer.address|linebreaksbr }}</div>
+                    {% if customer.shipping_address and customer.shipping_address != customer.address %}
+                        <div style="margin-top: 10px;">
+                            <div class="customer-label">Lieferadresse:</div>
+                            <div>{{ customer.shipping_address|linebreaksbr }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Invoice details -->
+        <div class="invoice-details">
+            <div class="invoice-number">Rechnung Nr. {{ invoice.invoice_number }}</div>
+            <div class="invoice-date">Rechnungsdatum: {{ invoice.issue_date|date:"d.m.Y" }}</div>
+            <div class="invoice-date">Fälligkeitsdatum: {{ invoice.due_date|date:"d.m.Y" }}</div>
+            {% if order.order_number %}
+                <div class="invoice-date">Lieferschein: {{ order.order_number }}</div>
+            {% endif %}
+            {% if order.delivery_date %}
+                <div class="invoice-date">Lieferdatum: {{ order.delivery_date|date:"d.m.Y" }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Items table -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th class="center">Pos</th>
+                <th>Artikel</th>
+                <th class="center">Menge</th>
+                <th class="right">Einzelpreis</th>
+                <th class="center">MWST</th>
+                <th class="right">Gesamt</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in lines %}
+            <tr>
+                <td class="center">{{ forloop.counter }}</td>
+                <td>
+                    <div class="bold">{{ line.name }}</div>
+                    {% if line.description %}
+                        <div class="small">{{ line.description }}</div>
+                    {% endif %}
+                    {% if line.sku %}
+                        <div class="small">Art.-Nr: {{ line.sku }}</div>
+                    {% endif %}
+                </td>
+                <td class="center">{{ line.qty_base }}</td>
+                <td class="currency">{{ line.unit_price|floatformat:2 }} {{ invoice.currency }}</td>
+                <td class="center">{{ line.tax_rate|floatformat:1 }}%</td>
+                <td class="currency">{{ line.line_total_gross|floatformat:2 }} {{ invoice.currency }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Totals section -->
+    <div class="totals">
+        <table class="totals-table">
+            <tr>
+                <td class="label">Zwischensumme:</td>
+                <td class="amount currency">{{ invoice.total_net|floatformat:2 }} {{ invoice.currency }}</td>
+            </tr>
+            <tr>
+                <td class="label">MWST:</td>
+                <td class="amount currency">{{ invoice.total_tax|floatformat:2 }} {{ invoice.currency }}</td>
+            </tr>
+            <tr class="total-row">
+                <td class="label">Total {{ invoice.currency }}:</td>
+                <td class="amount currency">{{ invoice.total_gross|floatformat:2 }} {{ invoice.currency }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Payment information -->
+    {% if supplier.iban %}
+    <div style="margin-top: 30px; font-size: 10pt;">
+        <div class="bold">Zahlungsinformationen:</div>
+        <div style="margin-top: 5px;">
+            <div>IBAN: {{ supplier.iban }}</div>
+            {% if supplier.bank_name %}
+                <div>Bank: {{ supplier.bank_name }}</div>
+            {% endif %}
+            <div>Zahlungsziel: {{ invoice.due_date|date:"d.m.Y" }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- QR Bill section -->
+    {% if qr_data_uri %}
+    <div class="qr-section">
+        <div class="qr-title">QR-Rechnung</div>
+        <div class="qr-bill">
+            <img src="{{ qr_data_uri }}" alt="Swiss QR Bill">
+        </div>
+        <div style="margin-top: 10px; font-size: 8pt; color: #666;">
+            Zahlen Sie bequem mit dem QR-Code über Ihre Banking-App oder am Postschalter.
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="footer">
+        Erstellt mit Depotix • {{ today|date:"d.m.Y" }}
+    </div>
+</body>
+</html>

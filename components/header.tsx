@@ -191,7 +191,7 @@ export default function Header() {
                   >
                     <div>
                       <div className="font-medium">{item.name}</div>
-                      <div className="text-xs text-muted-foreground">Schwellenwert: {item.low_stock_threshold || "N/A"}</div>
+                      <div className="text-xs text-muted-foreground">Schwellenwert: {item.min_stock_level || "N/A"}</div>
                     </div>
                     <div className="text-sm">
                       {item.is_low_stock ? (
@@ -199,7 +199,7 @@ export default function Header() {
                         <AlertTriangle/>  Niedrig
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Menge: {item.quantity}</Badge>
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Menge: {item.available_qty}</Badge>
                       )}
                     </div>
                   </div>

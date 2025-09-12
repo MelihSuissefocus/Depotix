@@ -49,6 +49,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "react-hot-toast";
 
 export default function InventoryPage() {
@@ -72,7 +73,99 @@ export default function InventoryPage() {
     sku: "",
     location: "",
     low_stock_threshold: 10,
+    // Neue Getränke-spezifische Felder
+    brand: "",
+    beverage_type: "",
+    container_type: "",
+    volume_ml: "",
+    deposit_chf: "0.00",
+    is_returnable: false,
+    is_alcoholic: false,
+    abv_percent: "",
+    country_of_origin: "",
+    ean_unit: "",
+    ean_pack: "",
+    vat_rate: "8.10",
   });
+  // New: form error state
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // New: helper for conditional input classes
+  const inputClass = (field: string) =>
+    `${errors[field] ? "border-red-500 focus-visible:ring-red-500" : ""}`;
+
+  // New: validation
+  const validateNewItem = () => {
+    const errs: Record<string, string> = {};
+
+    if (!newItem.name.trim()) {
+      errs.name = "Pflichtfeld";
+    }
+
+    if (!newItem.price.toString().trim()) {
+      errs.price = "Pflichtfeld";
+    } else {
+      const p = Number.parseFloat(newItem.price as string);
+      if (Number.isNaN(p) || p <= 0) {
+        errs.price = "Preis muss > 0 sein";
+      }
+    }
+
+    if (!newItem.category) {
+      errs.category = "Pflichtfeld";
+    }
+
+    if (!newItem.vat_rate.toString().trim()) {
+      errs.vat_rate = "Pflichtfeld";
+    } else {
+      const v = Number.parseFloat(newItem.vat_rate as string);
+      if (Number.isNaN(v) || v < 0 || v > 25) {
+        errs.vat_rate = "Ungültige MwSt.";
+      }
+    }
+
+    if (newItem.is_alcoholic) {
+      if (!newItem.abv_percent.toString().trim()) {
+        errs.abv_percent = "Pflichtfeld";
+      } else {
+        const a = Number.parseFloat(newItem.abv_percent as string);
+        if (Number.isNaN(a) || a < 0 || a > 100) {
+          errs.abv_percent = "0–100%";
+        }
+      }
+    }
+
+    if (newItem.volume_ml.toString().trim()) {
+      const vol = Number.parseFloat(newItem.volume_ml as string);
+      if (Number.isNaN(vol) || vol <= 0) {
+        errs.volume_ml = "Muss > 0 sein";
+      }
+    }
+
+    if (newItem.deposit_chf.toString().trim()) {
+      const dep = Number.parseFloat(newItem.deposit_chf as string);
+      if (Number.isNaN(dep) || dep < 0) {
+        errs.deposit_chf = "Nicht negativ";
+      }
+    }
+
+    if (newItem.low_stock_threshold !== undefined) {
+      const lst = Number(newItem.low_stock_threshold);
+      if (Number.isNaN(lst) || lst < 0) {
+        errs.low_stock_threshold = "Nicht negativ";
+      }
+    }
+
+    if (newItem.quantity !== undefined) {
+      const q = Number(newItem.quantity);
+      if (Number.isNaN(q) || q < 0) {
+        errs.quantity = "Nicht negativ";
+      }
+    }
+
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const fetchData = async () => {
     try {
@@ -127,9 +220,10 @@ export default function InventoryPage() {
               ? a.name.localeCompare(b.name)
               : b.name.localeCompare(a.name);
           } else if (sortBy === "quantity") {
-            return sortOrder === "asc"
-              ? a.quantity - b.quantity
-              : b.quantity - a.quantity;
+            // available_qty is optional -> coalesce to 0
+            const aQty = a.available_qty ?? 0;
+            const bQty = b.available_qty ?? 0;
+            return sortOrder === "asc" ? aQty - bQty : bQty - aQty;
           } else if (sortBy === "price") {
             return sortOrder === "asc"
               ? Number.parseFloat(a.price) - Number.parseFloat(b.price)
@@ -140,13 +234,53 @@ export default function InventoryPage() {
     : [];
 
   const handleAddItem = async () => {
+    // New: client-side validation
+    if (!validateNewItem()) {
+      toast.error("Bitte Pflichtfelder korrekt ausfüllen.");
+      return;
+    }
+
     try {
-      const itemData = {
-        ...newItem,
-        quantity: Number(newItem.quantity),
+      const itemData: InventoryItem = {
+        // Required
+        name: newItem.name,
         price: newItem.price.toString(),
         category: newItem.category ? Number(newItem.category) : null,
+        quantity: Number(newItem.quantity),
+        // Optional/others
+        description: newItem.description || null,
+        sku: newItem.sku || null,
+        location: newItem.location || null,
         low_stock_threshold: Number(newItem.low_stock_threshold),
+        brand: newItem.brand || null,
+        beverage_type: newItem.beverage_type || null,
+        container_type: newItem.container_type || null,
+        volume_ml: newItem.volume_ml ? Number(newItem.volume_ml) : null,
+        deposit_chf: newItem.deposit_chf?.toString(),
+        is_returnable: Boolean(newItem.is_returnable),
+        is_alcoholic: Boolean(newItem.is_alcoholic),
+        abv_percent: newItem.abv_percent ? newItem.abv_percent.toString() : null,
+        country_of_origin: newItem.country_of_origin || null,
+        ean_unit: newItem.ean_unit || null,
+        ean_pack: newItem.ean_pack || null,
+        vat_rate: newItem.vat_rate?.toString(),
+        // The following are left to backend defaults
+        owner: undefined,
+        id: undefined,
+        available_qty: undefined,
+        defective_qty: undefined,
+        cost: undefined,
+        category_name: undefined,
+        owner_username: undefined,
+        min_stock_level: undefined,
+        unit_base: undefined,
+        unit_package_factor: undefined,
+        unit_pallet_factor: undefined,
+        date_added: undefined,
+        last_updated: undefined,
+        is_active: undefined,
+        is_low_stock: undefined,
+        total_value: undefined,
       };
 
       await inventoryAPI.createItem(itemData);
@@ -163,7 +297,21 @@ export default function InventoryPage() {
         sku: "",
         location: "",
         low_stock_threshold: 10,
+        // Neue Getränke-spezifische Felder
+        brand: "",
+        beverage_type: "",
+        container_type: "",
+        volume_ml: "",
+        deposit_chf: "0.00",
+        is_returnable: false,
+        is_alcoholic: false,
+        abv_percent: "",
+        country_of_origin: "",
+        ean_unit: "",
+        ean_pack: "",
+        vat_rate: "8.10",
       });
+      setErrors({});
 
       toast.success(`${itemData.name} erfolgreich hinzugefügt`);
     } catch (err) {
@@ -325,7 +473,7 @@ export default function InventoryPage() {
                       <TableCell>{category?.name || "-"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {item.quantity}
+                          {item.available_qty ?? 0}
                           {item.is_low_stock && (
                             <Badge
                               variant="outline"
@@ -388,129 +536,365 @@ export default function InventoryPage() {
       </Card>
 
       {/* Add Item Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+      <Dialog open={isAddDialogOpen} onOpenChange={(open) => { setIsAddDialogOpen(open); if (!open) setErrors({}); }}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Neuen Lagerartikel hinzufügen</DialogTitle>
             <DialogDescription>
               Geben Sie die Details für den neuen Lagerartikel ein.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  value={newItem.name}
-                  onChange={(e) =>
-                    setNewItem({ ...newItem, name: e.target.value })
-                  }
-                  required
-                />
+          <div className="grid gap-6 py-4">
+            {/* Gruppe: Grunddaten */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-gray-900">Grunddaten</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name<span className="text-red-500"> *</span></Label>
+                  <Input
+                    id="name"
+                    value={newItem.name}
+                    onChange={(e) => {
+                      setNewItem({ ...newItem, name: e.target.value });
+                      if (errors.name) setErrors((prev) => ({ ...prev, name: "" }));
+                    }}
+                    className={inputClass("name")}
+                  />
+                  {errors.name && (
+                    <p className="text-xs text-red-600">{errors.name}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sku">SKU</Label>
+                  <Input
+                    id="sku"
+                    value={newItem.sku}
+                    onChange={(e) => setNewItem({ ...newItem, sku: e.target.value })}
+                  />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="sku">SKU</Label>
-                <Input
-                  id="sku"
-                  value={newItem.sku}
-                  onChange={(e) =>
-                    setNewItem({ ...newItem, sku: e.target.value })
-                  }
-                />
-              </div>
-            </div>              <div className="space-y-2">
                 <Label htmlFor="description">Beschreibung</Label>
-              <Textarea
-                id="description"
-                value={newItem.description}
-                onChange={(e) =>
-                  setNewItem({ ...newItem, description: e.target.value })
-                }
-                rows={3}
-              />
+                <Textarea
+                  id="description"
+                  value={newItem.description}
+                  onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+
+            {/* Gruppe: Produkt */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-gray-900">Produkt</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="brand">Marke</Label>
+                  <Input
+                    id="brand"
+                    value={newItem.brand}
+                    onChange={(e) => setNewItem({ ...newItem, brand: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="beverage_type">Getränkeart</Label>
+                  <Select
+                    value={newItem.beverage_type}
+                    onValueChange={(value) => setNewItem({ ...newItem, beverage_type: value })}
+                  >
+                    <SelectTrigger id="beverage_type">
+                      <SelectValue placeholder="Getränkeart wählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="water">Wasser</SelectItem>
+                      <SelectItem value="softdrink">Softdrink</SelectItem>
+                      <SelectItem value="beer">Bier</SelectItem>
+                      <SelectItem value="wine">Wein</SelectItem>
+                      <SelectItem value="spirits">Spirituose</SelectItem>
+                      <SelectItem value="energy">Energy Drink</SelectItem>
+                      <SelectItem value="juice">Saft</SelectItem>
+                      <SelectItem value="other">Sonstiges</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="container_type">Gebindeart</Label>
+                  <Select
+                    value={newItem.container_type}
+                    onValueChange={(value) => setNewItem({ ...newItem, container_type: value })}
+                  >
+                    <SelectTrigger id="container_type">
+                      <SelectValue placeholder="Gebindeart wählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="glass">Glasflasche</SelectItem>
+                      <SelectItem value="pet">PET</SelectItem>
+                      <SelectItem value="can">Dose</SelectItem>
+                      <SelectItem value="crate">Kiste/Tray</SelectItem>
+                      <SelectItem value="keg">Fass/Keg</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="volume_ml">Füllmenge (ml)</Label>
+                  <Input
+                    id="volume_ml"
+                    type="number"
+                    min="0"
+                    value={newItem.volume_ml}
+                    onChange={(e) => {
+                      setNewItem({ ...newItem, volume_ml: e.target.value });
+                      if (errors.volume_ml) setErrors((prev) => ({ ...prev, volume_ml: "" }));
+                    }}
+                    placeholder="500"
+                    className={inputClass("volume_ml")}
+                  />
+                  {errors.volume_ml && (
+                    <p className="text-xs text-red-600">{errors.volume_ml}</p>
+                  )}
+                  <p className="text-xs text-gray-500">Füllmenge je Einheit in ml</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Gruppe: Kennzeichnung */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-gray-900">Kennzeichnung</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="ean_unit">EAN (Einzel)</Label>
+                  <Input
+                    id="ean_unit"
+                    value={newItem.ean_unit}
+                    onChange={(e) => setNewItem({ ...newItem, ean_unit: e.target.value })}
+                    placeholder="7613031234567"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ean_pack">EAN (Pack)</Label>
+                  <Input
+                    id="ean_pack"
+                    value={newItem.ean_pack}
+                    onChange={(e) => setNewItem({ ...newItem, ean_pack: e.target.value })}
+                    placeholder="7613031234574"
+                  />
+                </div>
+              </div>
               <div className="space-y-2">
-                <Label htmlFor="quantity">Menge</Label>
+                <Label htmlFor="country_of_origin">Herkunftsland (ISO-2)</Label>
                 <Input
-                  id="quantity"
+                  id="country_of_origin"
+                  value={newItem.country_of_origin}
+                  onChange={(e) => setNewItem({ ...newItem, country_of_origin: e.target.value })}
+                  placeholder="CH"
+                  maxLength={2}
+                />
+                <p className="text-xs text-gray-500">ISO-2 Landescode, z. B. CH</p>
+              </div>
+            </div>
+
+            {/* Gruppe: Lager & Preis */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-gray-900">Lager & Preis</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">Menge</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="0"
+                    value={newItem.quantity}
+                    onChange={(e) => {
+                      setNewItem({
+                        ...newItem,
+                        quantity: Number.parseInt(e.target.value) || 0,
+                      });
+                      if (errors.quantity) setErrors((prev) => ({ ...prev, quantity: "" }));
+                    }}
+                    className={inputClass("quantity")}
+                  />
+                  {errors.quantity && (
+                    <p className="text-xs text-red-600">{errors.quantity}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="price">Preis (CHF)<span className="text-red-500"> *</span></Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={newItem.price}
+                    onChange={(e) => {
+                      setNewItem({ ...newItem, price: e.target.value });
+                      if (errors.price) setErrors((prev) => ({ ...prev, price: "" }));
+                    }}
+                    className={inputClass("price")}
+                  />
+                  {errors.price && (
+                    <p className="text-xs text-red-600">{errors.price}</p>
+                  )}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category">Kategorie<span className="text-red-500"> *</span></Label>
+                  <Select
+                    value={newItem.category}
+                    onValueChange={(value) => {
+                      setNewItem({ ...newItem, category: value });
+                      if (errors.category) setErrors((prev) => ({ ...prev, category: "" }));
+                    }}
+                  >
+                    <SelectTrigger id="category" className={inputClass("category")}>
+                      <SelectValue placeholder="Kategorie auswählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem
+                          key={category.id}
+                          value={category.id.toString()}
+                        >
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.category && (
+                    <p className="text-xs text-red-600">{errors.category}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="location">Standort</Label>
+                  <Input
+                    id="location"
+                    value={newItem.location}
+                    onChange={(e) => setNewItem({ ...newItem, location: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="low_stock_threshold">Niedriger Lagerbestand Schwellenwert</Label>
+                <Input
+                  id="low_stock_threshold"
                   type="number"
                   min="0"
-                  value={newItem.quantity}
-                  onChange={(e) =>
+                  value={newItem.low_stock_threshold}
+                  onChange={(e) => {
                     setNewItem({
                       ...newItem,
-                      quantity: Number.parseInt(e.target.value) || 0,
-                    })
-                  }
-                  required
+                      low_stock_threshold: Number.parseInt(e.target.value) || 0,
+                    });
+                    if (errors.low_stock_threshold) setErrors((prev) => ({ ...prev, low_stock_threshold: "" }));
+                  }}
+                  className={inputClass("low_stock_threshold")}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="price">Preis ($)</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={newItem.price}
-                  onChange={(e) =>
-                    setNewItem({ ...newItem, price: e.target.value })
-                  }
-                  required
-                />
+                {errors.low_stock_threshold && (
+                  <p className="text-xs text-red-600">{errors.low_stock_threshold}</p>
+                )}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="category">Kategorie</Label>
-                <Select
-                  value={newItem.category}
-                  onValueChange={(value) =>
-                    setNewItem({ ...newItem, category: value })
-                  }
-                >
-                  <SelectTrigger id="category">
-                    <SelectValue placeholder="Kategorie auswählen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem
-                        key={category.id}
-                        value={category.id.toString()}
-                      >
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="location">Standort</Label>
-                <Input
-                  id="location"
-                  value={newItem.location}
-                  onChange={(e) =>
-                    setNewItem({ ...newItem, location: e.target.value })
-                  }
-                />
+
+            {/* Gruppe: Steuern & Pfand */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-gray-900">Steuern & Pfand</h4>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="vat_rate">MwSt. %<span className="text-red-500"> *</span></Label>
+                  <Input
+                    id="vat_rate"
+                    type="number"
+                    min="0"
+                    max="25"
+                    step="0.01"
+                    value={newItem.vat_rate}
+                    onChange={(e) => {
+                      setNewItem({ ...newItem, vat_rate: e.target.value });
+                      if (errors.vat_rate) setErrors((prev) => ({ ...prev, vat_rate: "" }));
+                    }}
+                    className={inputClass("vat_rate")}
+                  />
+                  {errors.vat_rate && (
+                    <p className="text-xs text-red-600">{errors.vat_rate}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="deposit_chf">Pfand (CHF)</Label>
+                  <Input
+                    id="deposit_chf"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={newItem.deposit_chf}
+                    onChange={(e) => {
+                      setNewItem({ ...newItem, deposit_chf: e.target.value });
+                      if (errors.deposit_chf) setErrors((prev) => ({ ...prev, deposit_chf: "" }));
+                    }}
+                    className={inputClass("deposit_chf")}
+                  />
+                  {errors.deposit_chf && (
+                    <p className="text-xs text-red-600">{errors.deposit_chf}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="is_returnable">Mehrweg?</Label>
+                  <div className="flex items-center space-x-2 pt-2">
+                    <Switch
+                      id="is_returnable"
+                      checked={newItem.is_returnable}
+                      onCheckedChange={(checked) => setNewItem({ ...newItem, is_returnable: checked })}
+                    />
+                    <Label htmlFor="is_returnable" className="text-sm">
+                      Mehrweg/Rücknahme
+                    </Label>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="low_stock_threshold">Niedriger Lagerbestand Schwellenwert</Label>
-              <Input
-                id="low_stock_threshold"
-                type="number"
-                min="0"
-                value={newItem.low_stock_threshold}
-                onChange={(e) =>
-                  setNewItem({
-                    ...newItem,
-                    low_stock_threshold: Number.parseInt(e.target.value) || 0,
-                  })
-                }
-              />
+
+            {/* Gruppe: Alkohol */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-gray-900">Alkohol</h4>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="is_alcoholic"
+                    checked={newItem.is_alcoholic}
+                    onCheckedChange={(checked) => {
+                      setNewItem({ ...newItem, is_alcoholic: checked });
+                      if (!checked && errors.abv_percent) setErrors((prev) => ({ ...prev, abv_percent: "" }));
+                    }}
+                  />
+                  <Label htmlFor="is_alcoholic" className="text-sm">
+                    Alkoholisch?
+                  </Label>
+                </div>
+                {newItem.is_alcoholic && (
+                  <div className="space-y-2">
+                    <Label htmlFor="abv_percent">Alkoholgehalt % vol<span className="text-red-500"> *</span></Label>
+                    <Input
+                      id="abv_percent"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      value={newItem.abv_percent}
+                      onChange={(e) => {
+                        setNewItem({ ...newItem, abv_percent: e.target.value });
+                        if (errors.abv_percent) setErrors((prev) => ({ ...prev, abv_percent: "" }));
+                      }}
+                      placeholder="5.0"
+                      className={inputClass("abv_percent")}
+                    />
+                    {errors.abv_percent && (
+                      <p className="text-xs text-red-600">{errors.abv_percent}</p>
+                    )}
+                    <p className="text-xs text-gray-500">Alkoholgehalt in Prozent</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <DialogFooter>

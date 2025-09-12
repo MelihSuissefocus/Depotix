@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Box, ClipboardList, Home, LogOut, Package, Settings, Tag, Truck } from "lucide-react"
+import { Box, ClipboardList, FileText, Home, LogOut, Package, Settings, ShoppingCart, Tag, Truck, Users, Wallet } from "lucide-react"
 import { useAuth } from "@/lib/auth"
 
 const routes = [
@@ -32,10 +32,34 @@ const routes = [
     color: "text-orange-500",
   },
   {
+    label: "Kunden",
+    icon: Users,
+    href: "/customers",
+    color: "text-blue-500",
+  },
+  {
+    label: "Ausgaben",
+    icon: Wallet,
+    href: "/expenses",
+    color: "text-red-500",
+  },
+  {
     label: "Bewegungen",
     icon: ClipboardList,
     href: "/logs",
     color: "text-emerald-500",
+  },
+  {
+    label: "Bestellungen",
+    icon: ShoppingCart,
+    href: "/orders",
+    color: "text-purple-500",
+  },
+  {
+    label: "Rechnungen",
+    icon: FileText,
+    href: "/invoices",
+    color: "text-yellow-500",
   },
   {
     label: "Einstellungen",

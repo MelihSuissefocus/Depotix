@@ -6,9 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { AlertTriangle, Download } from "lucide-react"
-import { inventoryAPI, type InventoryItem, categoryAPI, type Category } from "@/lib/api"
+import { inventoryAPI, categoryAPI } from "@/lib/api"
 import { DateRangePicker } from "@/components/date-range-picker"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import type { DateRange } from "react-day-picker"
 
 export default function ReportsPage() {
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([])
@@ -17,13 +18,7 @@ export default function ReportsPage() {
   const [error, setError] = useState<string | null>(null)
   const [reportType, setReportType] = useState<string>("inventory-value")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
-  const [dateRange, setDateRange] = useState<{
-    from: Date | undefined
-    to: Date | undefined
-  }>({
-    from: undefined,
-    to: undefined,
-  })
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,25 +50,25 @@ export default function ReportsPage() {
   const generateReportData = () => {
     switch (reportType) {
       case "inventory-value":
-        return filteredItems.map((item) => ({
+        return filteredItems.map((item): InventoryValueReportItem => ({
           id: item.id,
           name: item.name,
           sku: item.sku,
-          quantity: item.quantity,
-          price: Number.parseFloat(item.price),
-          value: item.quantity * Number.parseFloat(item.price),
+          quantity: item.available_qty ?? 0,
+          price: Number.parseFloat(item.price) || 0,
+          value: (item.available_qty ?? 0) * (Number.parseFloat(item.price) || 0),
           category: categories.find((c) => c.id === item.category)?.name || "-",
         }))
       case "low-stock":
         return filteredItems
           .filter((item) => item.is_low_stock)
-          .map((item) => ({
+          .map((item): LowStockReportItem => ({
             id: item.id,
             name: item.name,
             sku: item.sku,
-            quantity: item.quantity,
-            threshold: item.low_stock_threshold,
-            needed: item.low_stock_threshold - item.quantity,
+            quantity: item.available_qty ?? 0,
+            threshold: item.low_stock_threshold ?? item.min_stock_level ?? 10,
+            needed: (item.low_stock_threshold ?? item.min_stock_level ?? 10) - (item.available_qty ?? 0),
             category: categories.find((c) => c.id === item.category)?.name || "-",
           }))
       case "category-summary":
@@ -91,7 +86,7 @@ export default function ReportsPage() {
           }
 
           categorySummary[categoryName].count += 1
-          categorySummary[categoryName].totalValue += item.quantity * Number.parseFloat(item.price)
+          categorySummary[categoryName].totalValue += (item.available_qty ?? 0) * (Number.parseFloat(item.price) || 0)
         })
 
         // Calculate average price
@@ -99,7 +94,7 @@ export default function ReportsPage() {
           categorySummary[key].avgPrice = categorySummary[key].totalValue / categorySummary[key].count
         })
 
-        return Object.entries(categorySummary).map(([category, data]) => ({
+        return Object.entries(categorySummary).map(([category, data]): CategorySummaryReportItem => ({
           category,
           itemCount: data.count,
           totalValue: data.totalValue,
@@ -112,26 +107,31 @@ export default function ReportsPage() {
 
   const reportData = generateReportData()
 
+  // Type-safe report data based on report type
+  const inventoryValueData = reportType === "inventory-value" ? reportData as InventoryValueReportItem[] : []
+  const lowStockData = reportType === "low-stock" ? reportData as LowStockReportItem[] : []
+  const categorySummaryData = reportType === "category-summary" ? reportData as CategorySummaryReportItem[] : []
+
   // Calculate totals for inventory value report
-  const calculateTotals = () => {
+  const calculateTotals = (): ReportTotals => {
     if (reportType === "inventory-value") {
       return {
-        totalItems: reportData.length,
-        totalQuantity: reportData.reduce((sum, item) => sum + item.quantity, 0),
-        totalValue: reportData.reduce((sum, item) => sum + item.value, 0),
+        totalItems: inventoryValueData.length,
+        totalQuantity: inventoryValueData.reduce((sum, item) => sum + item.quantity, 0),
+        totalValue: inventoryValueData.reduce((sum, item) => sum + item.value, 0),
       }
     }
     if (reportType === "low-stock") {
       return {
-        totalItems: reportData.length,
-        totalNeeded: reportData.reduce((sum, item) => sum + item.needed, 0),
+        totalItems: lowStockData.length,
+        totalNeeded: lowStockData.reduce((sum, item) => sum + item.needed, 0),
       }
     }
     if (reportType === "category-summary") {
       return {
-        totalCategories: reportData.length,
-        totalItems: reportData.reduce((sum, item) => sum + item.itemCount, 0),
-        totalValue: reportData.reduce((sum, item) => sum + item.totalValue, 0),
+        totalCategories: categorySummaryData.length,
+        totalItems: categorySummaryData.reduce((sum, item) => sum + item.itemCount, 0),
+        totalValue: categorySummaryData.reduce((sum, item) => sum + item.totalValue, 0),
       }
     }
     return {}
@@ -146,17 +146,17 @@ export default function ReportsPage() {
     // Add headers
     if (reportType === "inventory-value") {
       csvContent = "ID,Name,SKU,Category,Quantity,Price,Total Value\n"
-      reportData.forEach((item) => {
+      inventoryValueData.forEach((item) => {
         csvContent += `${item.id},"${item.name}",${item.sku || ""},"${item.category}",${item.quantity},${item.price.toFixed(2)},${item.value.toFixed(2)}\n`
       })
     } else if (reportType === "low-stock") {
       csvContent = "ID,Name,SKU,Category,Current Quantity,Threshold,Needed\n"
-      reportData.forEach((item) => {
+      lowStockData.forEach((item) => {
         csvContent += `${item.id},"${item.name}",${item.sku || ""},"${item.category}",${item.quantity},${item.threshold},${item.needed}\n`
       })
     } else if (reportType === "category-summary") {
       csvContent = "Category,Item Count,Total Value,Average Price\n"
-      reportData.forEach((item) => {
+      categorySummaryData.forEach((item) => {
         csvContent += `"${item.category}",${item.itemCount},${item.totalValue.toFixed(2)},${item.avgPrice.toFixed(2)}\n`
       })
     }
@@ -272,8 +272,8 @@ export default function ReportsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reportData.length > 0 ? (
-                    reportData.map((item) => (
+                  {inventoryValueData.length > 0 ? (
+                    inventoryValueData.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.name}</TableCell>
                         <TableCell>{item.sku || "-"}</TableCell>
@@ -292,12 +292,12 @@ export default function ReportsPage() {
                   )}
                 </TableBody>
               </Table>
-              {reportData.length > 0 && (
+              {inventoryValueData.length > 0 && (
                 <div className="mt-4 flex justify-end">
                   <div className="space-y-1 text-right">
                     <p className="text-sm text-gray-500">Total Items: {totals.totalItems}</p>
                     <p className="text-sm text-gray-500">Total Quantity: {totals.totalQuantity}</p>
-                    <p className="text-base font-medium">Total Value: ${totals.totalValue.toFixed(2)}</p>
+                    <p className="text-base font-medium">Total Value: ${(totals.totalValue ?? 0).toFixed(2)}</p>
                   </div>
                 </div>
               )}
@@ -318,8 +318,8 @@ export default function ReportsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reportData.length > 0 ? (
-                    reportData.map((item) => (
+                  {lowStockData.length > 0 ? (
+                    lowStockData.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.name}</TableCell>
                         <TableCell>{item.sku || "-"}</TableCell>
@@ -338,7 +338,7 @@ export default function ReportsPage() {
                   )}
                 </TableBody>
               </Table>
-              {reportData.length > 0 && (
+              {lowStockData.length > 0 && (
                 <div className="mt-4 flex justify-end">
                   <div className="space-y-1 text-right">
                     <p className="text-sm text-gray-500">Total Low Stock Items: {totals.totalItems}</p>
@@ -361,8 +361,8 @@ export default function ReportsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reportData.length > 0 ? (
-                    reportData.map((item, index) => (
+                  {categorySummaryData.length > 0 ? (
+                    categorySummaryData.map((item, index) => (
                       <TableRow key={index}>
                         <TableCell className="font-medium">{item.category}</TableCell>
                         <TableCell className="text-right">{item.itemCount}</TableCell>
@@ -379,12 +379,12 @@ export default function ReportsPage() {
                   )}
                 </TableBody>
               </Table>
-              {reportData.length > 0 && (
+              {categorySummaryData.length > 0 && (
                 <div className="mt-4 flex justify-end">
                   <div className="space-y-1 text-right">
                     <p className="text-sm text-gray-500">Total Categories: {totals.totalCategories}</p>
                     <p className="text-sm text-gray-500">Total Items: {totals.totalItems}</p>
-                    <p className="text-base font-medium">Total Value: ${totals.totalValue.toFixed(2)}</p>
+                    <p className="text-base font-medium">Total Value: ${(totals.totalValue ?? 0).toFixed(2)}</p>
                   </div>
                 </div>
               )}

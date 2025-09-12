@@ -5,12 +5,14 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { AlertTriangle, ArrowDown, ArrowUp, Box, Search } from "lucide-react"
+import { AlertTriangle, ArrowDown, ArrowUp, Box, Search, TrendingUp, TrendingDown, RotateCcw } from "lucide-react"
 import { logAPI} from "@/lib/api"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { DateRangePicker } from "@/components/date-range-picker"
+import { MovementModal } from "@/components/movement-modal"
+import type { DateRange } from "react-day-picker"
 
 export default function LogsPage() {
   const [logs, setLogs] = useState<InventoryLog[]>([])
@@ -18,13 +20,9 @@ export default function LogsPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [actionFilter, setActionFilter] = useState<string>("all")
-  const [dateRange, setDateRange] = useState<{
-    from: Date | undefined
-    to: Date | undefined
-  }>({
-    from: undefined,
-    to: undefined,
-  })
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
+  const [isMovementModalOpen, setIsMovementModalOpen] = useState(false)
+  const [movementMode, setMovementMode] = useState<"IN" | "OUT" | "RETURN">("IN")
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -44,6 +42,37 @@ export default function LogsPage() {
     fetchLogs()
   }, [])
 
+  const handleMovementSuccess = () => {
+    const fetchLogs = async () => {
+      try {
+        setIsLoading(true)
+        const data = await logAPI.getLogs()
+        setLogs(Array.isArray(data.results) ? data.results : [])
+      } catch (err) {
+        setError("Failed to fetch logs")
+        console.error(err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchLogs()
+  }
+
+  const openWareneingangModal = () => {
+    setMovementMode("IN")
+    setIsMovementModalOpen(true)
+  }
+
+  const openWarenausgangModal = () => {
+    setMovementMode("OUT")
+    setIsMovementModalOpen(true)
+  }
+
+  const openRetourModal = () => {
+    setMovementMode("RETURN")
+    setIsMovementModalOpen(true)
+  }
+
 
   // Filter logs based on search query, action filter, and date range
   const filteredLogs = Array.isArray(logs) 
@@ -61,7 +90,7 @@ export default function LogsPage() {
         // Apply date range filter
         const logDate = new Date(log.timestamp)
         const matchesDateRange =
-          (!dateRange.from || logDate >= dateRange.from) && (!dateRange.to || logDate <= dateRange.to)
+          (!dateRange?.from || logDate >= dateRange.from) && (!dateRange?.to || logDate <= dateRange.to)
 
         return matchesSearch && matchesAction && matchesDateRange
       })
@@ -103,6 +132,20 @@ export default function LogsPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+        <div className="flex gap-2">
+          <Button onClick={openWareneingangModal} className="bg-green-600 hover:bg-green-700">
+            <TrendingUp className="h-4 w-4 mr-2" />
+            + Wareneingang
+          </Button>
+          <Button onClick={openWarenausgangModal} className="bg-red-600 hover:bg-red-700">
+            <TrendingDown className="h-4 w-4 mr-2" />
+            + Warenausgang
+          </Button>
+          <Button onClick={openRetourModal} className="bg-orange-600 hover:bg-orange-700">
+            <RotateCcw className="h-4 w-4 mr-2" />
+            + Retoure
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -128,7 +171,7 @@ export default function LogsPage() {
               <Label htmlFor="date-range" className="whitespace-nowrap">
                 Date Range:
               </Label>
-              <DateRangePicker date={dateRange} onDateChange={(date) => setDateRange({ from: date.from, to: date.to })} />
+              <DateRangePicker date={dateRange} onDateChange={setDateRange} />
             </div>
             <div className="ml-auto">
               <Button
@@ -203,6 +246,14 @@ export default function LogsPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Movement Modal */}
+      <MovementModal 
+        isOpen={isMovementModalOpen}
+        onClose={() => setIsMovementModalOpen(false)}
+        mode={movementMode}
+        onSuccess={handleMovementSuccess}
+      />
     </div>
   )
 }

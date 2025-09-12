@@ -32,7 +32,7 @@ export const getInventoryTrendData = (inventoryItems: InventoryItem[]) => {
     );
 
     const totalStock = monthlyItems.reduce(
-      (sum, item) => sum + (item.quantity || 0),
+      (sum, item) => sum + (item.available_qty || 0),
       0
     );
 
@@ -50,7 +50,7 @@ export const getInventoryTrendData = (inventoryItems: InventoryItem[]) => {
       (item) => new Date(item.last_updated || "").getFullYear() === currentYear
     )
     .reduce(
-      (sum, item) => sum + Number(item.price || 0) * (item.quantity || 0),
+      (sum, item) => sum + Number(item.price || 0) * (item.available_qty || 0),
       0
     );
 
@@ -62,7 +62,7 @@ export const getInventoryTrendData = (inventoryItems: InventoryItem[]) => {
         new Date(item.last_updated || "").getFullYear() === currentYear
     )
     .reduce(
-      (sum, item) => sum + Number(item.price || 0) * (item.quantity || 0),
+      (sum, item) => sum + Number(item.price || 0) * (item.available_qty || 0),
       0
     );
 

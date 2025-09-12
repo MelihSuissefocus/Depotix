@@ -93,6 +93,31 @@ class InventoryItem(models.Model):
         ('METER', 'Meter'),
     ]
     
+    # Getränke-spezifische Konstanten
+    BRAND_MAXLEN = 120
+    COUNTRY_MAXLEN = 2  # ISO-3166-1 alpha-2 (z.B. 'CH','DE')
+    EAN_MAXLEN = 14
+    
+    BEVERAGE_TYPE_CHOICES = [
+        ("water", "Wasser"),
+        ("softdrink", "Softdrink"),
+        ("beer", "Bier"),
+        ("wine", "Wein"),
+        ("spirits", "Spirituose"),
+        ("energy", "Energy Drink"),
+        ("juice", "Saft"),
+        ("other", "Sonstiges"),
+    ]
+    
+    CONTAINER_TYPE_CHOICES = [
+        ("glass", "Glasflasche"),
+        ("pet", "PET"),
+        ("can", "Dose"),
+        ("crate", "Kiste/Tray"),
+        ("keg", "Fass/Keg"),
+    ]
+    
+    # Bestehende Felder
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     sku = models.CharField(max_length=100, unique=True, blank=True, null=True)
@@ -121,6 +146,25 @@ class InventoryItem(models.Model):
         default=1, 
         validators=[MinValueValidator(1)]
     )
+    
+    # Neue Getränke-spezifische Felder
+    brand = models.CharField(max_length=BRAND_MAXLEN, blank=True, null=True)
+    beverage_type = models.CharField(max_length=20, choices=BEVERAGE_TYPE_CHOICES, blank=True, null=True)
+    container_type = models.CharField(max_length=12, choices=CONTAINER_TYPE_CHOICES, blank=True, null=True)
+    
+    volume_ml = models.PositiveIntegerField(blank=True, null=True, help_text="Füllmenge je Einheit in ml")
+    deposit_chf = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="Pfand in CHF")
+    is_returnable = models.BooleanField(default=False, help_text="Mehrweg/Rücknahme")
+    
+    is_alcoholic = models.BooleanField(default=False)
+    abv_percent = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, help_text="Alkoholgehalt % vol")
+    
+    country_of_origin = models.CharField(max_length=COUNTRY_MAXLEN, blank=True, null=True, help_text="ISO-2 Landescode, z. B. CH")
+    ean_unit = models.CharField(max_length=EAN_MAXLEN, blank=True, null=True)
+    ean_pack = models.CharField(max_length=EAN_MAXLEN, blank=True, null=True)
+    
+    vat_rate = models.DecimalField(max_digits=4, decimal_places=2, default=8.10, help_text="MwSt. %")
+    
     category = models.ForeignKey(
         Category, 
         on_delete=models.SET_NULL, 
@@ -338,25 +382,56 @@ class StockMovement(models.Model):
 
     def save(self, *args, **kwargs):
         self.clean()
+        
+        # Store previous quantity for logging
+        previous_qty = self.item.quantity
+        
+        # Save the movement first
         super().save(*args, **kwargs)
         
         # Update item quantities based on movement type
+        new_qty = previous_qty
+        quantity_change = 0
+        
         if self.type == 'IN':
-            self.item.quantity += self.qty_base
+            new_qty = self.item.quantity + self.qty_base
+            quantity_change = self.qty_base
+            log_action = 'ADD'
         elif self.type == 'OUT':
-            self.item.quantity = max(0, self.item.quantity - self.qty_base)
+            new_qty = max(0, self.item.quantity - self.qty_base)
+            quantity_change = -self.qty_base
+            log_action = 'REMOVE'
         elif self.type == 'RETURN':
-            self.item.quantity += self.qty_base
+            new_qty = self.item.quantity + self.qty_base
+            quantity_change = self.qty_base
+            log_action = 'ADD'
         elif self.type == 'DEFECT':
             # Move from available to defective
             transfer_qty = min(self.qty_base, self.item.available_qty)
-            self.item.quantity -= transfer_qty
+            new_qty = self.item.quantity - transfer_qty
             self.item.defective_qty += transfer_qty
+            quantity_change = -transfer_qty
+            log_action = 'REMOVE'
         elif self.type == 'ADJUST':
             # Direct adjustment to quantity
-            self.item.quantity = max(0, self.qty_base)
+            new_qty = max(0, self.qty_base)
+            quantity_change = new_qty - previous_qty
+            log_action = 'UPDATE'
         
+        # Update item quantity
+        self.item.quantity = new_qty
         self.item.save()
+        
+        # Create corresponding InventoryLog entry for backward compatibility
+        InventoryLog.objects.create(
+            item=self.item,
+            user=self.created_by,
+            action=log_action,
+            quantity_change=abs(quantity_change),
+            previous_quantity=previous_qty,
+            new_quantity=new_qty,
+            notes=f"{self.get_type_display()}: {self.note}" if self.note else self.get_type_display()
+        )
 
     def __str__(self):
         return f"{self.type} - {self.item.name} - {self.qty_base} units"
@@ -546,3 +621,31 @@ class DocumentSequence(models.Model):
     
     def __str__(self):
         return f"{self.document_type}-{self.year} (last: {self.last_number})"
+
+
+class CompanyProfile(models.Model):
+    """Company profile for supplier firm data"""
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='company_profile')
+    name = models.CharField(max_length=200)
+    street = models.CharField(max_length=200)
+    postal_code = models.CharField(max_length=20)
+    city = models.CharField(max_length=100)
+    country = models.CharField(max_length=2, default='CH')
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    iban = models.CharField(max_length=34, blank=True, null=True)
+    bank_name = models.CharField(max_length=200, blank=True, null=True)
+    mwst_number = models.CharField(max_length=50, blank=True, null=True)
+    currency = models.CharField(max_length=3, default='CHF')
+    logo = models.ImageField(upload_to='company_logos/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user']),
+        ]
+
+    def __str__(self):
+        return self.name
