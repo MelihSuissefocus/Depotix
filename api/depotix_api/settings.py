@@ -30,6 +30,10 @@ DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = [h for h in os.getenv("DJANGO_ALLOWED_HOSTS","").split(",") if h]
 
+# Environment variables for production
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+CORS_ALLOWED_ORIGINS_ENV = os.getenv("CORS_ALLOWED_ORIGINS", "")
+
 
 # Application definition
 
@@ -50,19 +54,6 @@ INSTALLED_APPS = [
     # Local apps
     'inventory',
 ]
-
-
-MIDDLEWARE = [
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
-
-INSTALLED_APPS += ["corsheaders"]
-MIDDLEWARE = ["corsheaders.middleware.CorsMiddleware", "django.middleware.security.SecurityMiddleware", "whitenoise.middleware.WhiteNoiseMiddleware", *MIDDLEWARE]
 
 ROOT_URLCONF = 'depotix_api.urls'
 
@@ -134,7 +125,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
+# WhiteNoise static files configuration
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    }
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -197,9 +196,11 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only in development
 
-# Static files configuration
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Derive CSRF_TRUSTED_ORIGINS from CORS_ALLOWED_ORIGINS (Django 5 syntax)
+CSRF_TRUSTED_ORIGINS = [
+    origin for origin in CORS_ALLOWED_ORIGINS 
+    if origin.startswith(('http://', 'https://'))
+]
 
 # Media files
 MEDIA_URL = '/media/'
@@ -235,9 +236,9 @@ LOGGING = {
 }
 
 CSRF_TRUSTED_ORIGINS = [o for o in os.getenv("CSRF_TRUSTED_ORIGINS","").split(",") if o]
-SECURE_PROXY_SSL_HEADER = tuple(os.getenv("SECURE_PROXY_SSL_HEADER","").split(",")) if os.getenv("SECURE_PROXY_SSL_HEADER") else None
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# Security flags for prod
+# Security settings for production
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
@@ -245,3 +246,14 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
