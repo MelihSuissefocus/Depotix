@@ -99,34 +99,3 @@ Backend
 
 ![iventory management ](https://github.com/user-attachments/assets/4244519b-2845-4cee-9eec-26e490f391f5)
 
-## Deployment Checklist
-
-Follow these steps to deploy the application to your Hetzner server:
-
-1. **Setup environment configuration**:
-   ```bash
-   cp server/.env.example server/.env
-   ```
-   Fill in all required secrets in the `.env` file.
-
-2. **Configure DNS**:
-   Set up an A-Record pointing to your VM's IP address. Use the domain specified in your `Caddyfile`.
-
-3. **Deploy on VM**:
-   SSH into your virtual machine and run:
-   ```bash
-   cd ~/server
-   docker compose up -d --build
-   ```
-
-4. **Health check**:
-   Verify the deployment by checking the health endpoint:
-   ```
-   https://<DOMAIN>/healthz → { "ok": true }
-   ```
-
-5. **Functional testing**:
-   - Open the frontend application
-   - Test the login functionality
-   - Verify CRUD operations are working correctly
-

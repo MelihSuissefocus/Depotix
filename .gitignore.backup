@@ -59,18 +59,3 @@ dist/
 
 # Vercel
 .vercel
-
-# Infra
-/server/.env
-/server/caddy_data/
-/server/caddy_config/
-
-# Python (additional)
-/staticfiles/
-
-# Node (specific paths)
-ui/.next/
-ui/node_modules/
-
-# Backups
-*.bak-infra
