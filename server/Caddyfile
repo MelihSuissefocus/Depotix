@@ -1,0 +1,8 @@
+depotix.example.com {
+  encode gzip
+  tls you@example.com
+
+  @api path /api* /admin* /static* /media* /healthz
+  reverse_proxy @api api:8000
+  reverse_proxy / web:3000
+}
