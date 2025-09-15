@@ -36,7 +36,7 @@ class DepotixTester:
         status_symbol = "✓" if status == "PASS" else "✗" if status == "FAIL" else "⚠"
         print(f"{status_symbol} {test_name}: {details}")
 
-    def authenticate(self, username="admin", password="admin123"):
+    def authenticate(self, username="admin", password="XXX"):
         """Authenticate with the API"""
         try:
             response = self.session.post(
