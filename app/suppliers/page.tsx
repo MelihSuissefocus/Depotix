@@ -39,8 +39,11 @@ import {
 } from "lucide-react";
 import { supplierAPI } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "@/lib/i18n";
+import { notify } from "@/lib/notify";
 
 export default function SuppliersPage() {
+  const { t } = useTranslation();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +70,7 @@ export default function SuppliersPage() {
         // Ensure data is an array
         setSuppliers(Array.isArray(data.results) ? data.results : []);
       } catch (err) {
-        setError("Failed to fetch suppliers");
+        notify.error(t('common.loadError'));
         console.error(err);
       } finally {
         setIsLoading(false);
@@ -122,10 +125,6 @@ export default function SuppliersPage() {
     try {
       await supplierAPI.updateSupplier(selectedSupplier.id, {
         ...newSupplier,
-        owner: selectedSupplier.owner,
-        id: 0,
-        created_at: "",
-        updated_at: "",
       });
       const updatedSuppliers = await supplierAPI.getSuppliers();
       setSuppliers(Array.isArray(updatedSuppliers.results) ? updatedSuppliers.results : []);
@@ -162,7 +161,7 @@ export default function SuppliersPage() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
-          <p className="mt-2">Loading suppliers...</p>
+          <p className="mt-2">{t('suppliers.loading')}</p>
         </div>
       </div>
     );
@@ -189,7 +188,7 @@ export default function SuppliersPage() {
           <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search suppliers..."
+            placeholder={t('suppliers.searchPlaceholder')}
             className="pl-8 w-full sm:w-[300px]"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -197,7 +196,7 @@ export default function SuppliersPage() {
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Supplier
+          {t('suppliers.addSupplier')}
         </Button>
       </div>
 
@@ -206,13 +205,13 @@ export default function SuppliersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Contact Person</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Owner</TableHead>
-                <TableHead>Address</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('table.nameColumn')}</TableHead>
+                <TableHead>{t('table.contactPersonColumn')}</TableHead>
+                <TableHead>{t('table.emailColumn')}</TableHead>
+                <TableHead>{t('table.phoneColumn')}</TableHead>
+                <TableHead>{t('table.ownerColumn')}</TableHead>
+                <TableHead>{t('table.addressColumn')}</TableHead>
+                <TableHead className="text-right">{t('table.actionsColumn')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -225,18 +224,25 @@ export default function SuppliersPage() {
                     <TableCell>{supplier.contact_name || "-"}</TableCell>
                     <TableCell>{supplier.email || "-"}</TableCell>
                     <TableCell>{supplier.phone || "-"}</TableCell>
-                    <TableCell>{supplier.owner || "-"}</TableCell>
+                    <TableCell>
+                      {supplier.owner ?
+                        (supplier.owner.first_name && supplier.owner.last_name ?
+                          `${supplier.owner.first_name} ${supplier.owner.last_name}` :
+                          supplier.owner.username || supplier.owner.email || "-"
+                        ) : "-"
+                      }
+                    </TableCell>
                     <TableCell>{supplier.address || "-"}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon">
                             <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Actions</span>
+                            <span className="sr-only">{t('common.actions')}</span>
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuLabel>{t('common.actions')}</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => {

@@ -1,8 +1,12 @@
-depotix.example.com {
-  encode gzip
-  tls you@example.com
+depotix.ch {
+	encode gzip
+	tls melih.oezkan@suissefocus.ch
 
-  @api path /api* /admin* /static* /media* /healthz
-  reverse_proxy @api api:8000
-  reverse_proxy / web:3000
+	@api path /api* /admin* /static* /media* /healthz
+	reverse_proxy @api api:8000
+	reverse_proxy web:3000
+}
+
+www.depotix.ch {
+	redir https://depotix.ch{uri} permanent
 }

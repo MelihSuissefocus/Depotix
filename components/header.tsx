@@ -21,11 +21,13 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { inventoryAPI } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"
+import { useTranslation } from "@/lib/i18n"
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const { user, logout } = useAuth()
+  const { t, formatCurrency } = useTranslation()
 
   const router = useRouter()
 
@@ -39,8 +41,25 @@ export default function Header() {
   // Get page title based on current path
   const getPageTitle = () => {
     const path = pathname.split("/")[1]
-    if (path === "") return "Dashboard"
-    return path.charAt(0).toUpperCase() + path.slice(1)
+    if (path === "") return t('nav.dashboard')
+
+    // Map path segments to translation keys
+    const pathMap: Record<string, string> = {
+      'inventory': t('nav.inventory'),
+      'categories': t('nav.categories'),
+      'suppliers': t('nav.suppliers'),
+      'item-suppliers': t('nav.itemSuppliers'),
+      'customers': t('nav.customers'),
+      'expenses': t('nav.expenses'),
+      'movements': t('nav.movements'),
+      'orders': t('nav.orders'),
+      'invoices': t('nav.invoices'),
+      'logs': t('nav.logs'),
+      'reports': t('nav.reports'),
+      'settings': t('nav.settings')
+    }
+
+    return pathMap[path] || path.charAt(0).toUpperCase() + path.slice(1)
   }
 
   // Get user initials for avatar
@@ -114,27 +133,27 @@ export default function Header() {
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
       <Button variant="outline" size="icon" className="md:hidden" onClick={() => setIsMobileMenuOpen(true)}>
         <Menu className="h-5 w-5" />
-        <span className="sr-only">Toggle menu</span>
+        <span className="sr-only">{t('mobile.toggleMenu')}</span>
       </Button>
       <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
         <SheetContent side="left" className="w-60 p-0">
           <div className="p-6 border-b">
             <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-xl">Inventory</span>
+                <span className="font-bold text-xl">{t('mobile.appName')}</span>
               </div>
             </Link>
           </div>
           <nav className="flex flex-col gap-1 p-4">
             {[
-              { name: "Dashboard", path: "/" },
-              { name: "Inventory", path: "/inventory" },
-              { name: "Categories", path: "/categories" },
-              { name: "Suppliers", path: "/suppliers" },
-              { name: "Item Suppliers", path: "/item-suppliers" },
-              { name: "Logs", path: "/logs" },
-              { name: "Reports", path: "/reports" },
-              { name: "Settings", path: "/settings" },
+              { name: t('nav.dashboard'), path: "/" },
+              { name: t('nav.inventory'), path: "/inventory" },
+              { name: t('nav.categories'), path: "/categories" },
+              { name: t('nav.suppliers'), path: "/suppliers" },
+              { name: t('nav.itemSuppliers'), path: "/item-suppliers" },
+              { name: t('nav.logs'), path: "/logs" },
+              { name: t('nav.reports'), path: "/reports" },
+              { name: t('nav.settings'), path: "/settings" },
             ].map((item) => (
               <Link
                 key={item.path}
@@ -161,7 +180,7 @@ export default function Header() {
           <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground z-10" />
           <Input
             type="search"
-            placeholder="Lagerartikel suchen..."
+            placeholder={t('search.placeholder')}
             className="w-64 pl-8 bg-background"
             value={searchQuery}
             onChange={handleSearchChange}
@@ -180,7 +199,7 @@ export default function Header() {
               {isSearching ? (
                 <div className="p-4 text-center">
                   <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
-                  <p className="text-sm text-muted-foreground">Suche läuft...</p>
+                  <p className="text-sm text-muted-foreground">{t('search.searching')}</p>
                 </div>
               ) : searchResults.length > 0 ? (
                 searchResults.map((item) => (
@@ -191,21 +210,21 @@ export default function Header() {
                   >
                     <div>
                       <div className="font-medium">{item.name}</div>
-                      <div className="text-xs text-muted-foreground">Schwellenwert: {item.min_stock_level || "N/A"}</div>
+                      <div className="text-xs text-muted-foreground">{t('search.threshold')}: {item.min_stock_level || "N/A"}</div>
                     </div>
                     <div className="text-sm">
                       {item.is_low_stock ? (
                         <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                        <AlertTriangle/>  Niedrig
+                        <AlertTriangle/>  {t('inventory.lowStock')}
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Menge: {item.available_qty}</Badge>
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{t('common.quantity')}: {item.available_qty}</Badge>
                       )}
                     </div>
                   </div>
                 ))
               ) : searchQuery ? (
-                <div className="p-4 text-center text-muted-foreground">Keine Artikel gefunden für &quot;{searchQuery}&quot;</div>
+                <div className="p-4 text-center text-muted-foreground">{t('search.noResults', { query: searchQuery })}</div>
               ) : null}
             </div>
           )}
@@ -214,24 +233,24 @@ export default function Header() {
         <Button variant="outline" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-600"></span>
-          <span className="sr-only">Benachrichtigungen</span>
+          <span className="sr-only">{t('notifications.bell')}</span>
         </Button>
         <ModeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Avatar className="cursor-pointer">
-              <AvatarImage src="/placeholder.svg?height=32&width=32" alt={user?.username || "User"} />
+              <AvatarImage src="/placeholder.svg?height=32&width=32" alt={user?.username || t('common.user')} />
               <AvatarFallback>{getUserInitials()}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('auth.myAccount')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/settings">Profile Settings</Link>
+              <Link href="/settings">{t('auth.profileSettings')}</Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={logout} className="text-red-600 cursor-pointer">
-              Logout
+              {t('auth.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

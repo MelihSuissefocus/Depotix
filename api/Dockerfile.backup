@@ -1,0 +1,58 @@
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential libpq-dev curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# setuptools liefert pkg_resources
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel gunicorn
+
+# Code rein
+COPY . .
+
+# Requirements installieren, wenn vorhanden
+RUN bash -lc '[[ -f requirements.txt ]] && pip install --no-cache-dir -r requirements.txt || true'
+RUN bash -lc '[[ -f requirements-prod.txt ]] && pip install --no-cache-dir -r requirements-prod.txt || true'
+
+# Build-Check: pkg_resources MUSS vorhanden sein
+RUN python - <<'PY'
+import pkg_resources; print("pkg_resources OK:", pkg_resources.__file__)
+PY
+
+# Entrypoint: migrate/static (best effort) + WSGI-Autodetect + Gunicorn
+RUN cat > /entrypoint.sh <<'SH'
+#!/bin/sh
+set -e
+python manage.py migrate --noinput || true
+python manage.py collectstatic --noinput || true
+APP="$(python - <<'PY'
+import os, importlib
+cands=[]
+for root,dirs,files in os.walk("."):
+    if "wsgi.py" in files:
+        pkg=os.path.relpath(root,".").replace(os.sep,".")
+        if pkg!=".":
+            cands.append(pkg)
+app="wsgi:application"
+for pkg in sorted(set(cands)):
+    try:
+        importlib.import_module(f"{pkg}.wsgi")
+        app=f"{pkg}.wsgi:application"
+        break
+    except Exception:
+        pass
+print(app)
+PY
+)"
+echo "Using Gunicorn app: $APP"
+exec gunicorn --bind 0.0.0.0:8000 --workers 3 --threads 2 --timeout 60 "$APP"
+SH
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 8000
+CMD ["/entrypoint.sh"]

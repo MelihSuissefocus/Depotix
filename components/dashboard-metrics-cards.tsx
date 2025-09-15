@@ -145,7 +145,7 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
             />
           </div>
           <p className="text-xs text-gray-500">
-            Avg. ${totalItems > 0 ? (totalValue / totalItems).toFixed(2) : 0}{" "}
+            Avg. CHF {totalItems > 0 ? (totalValue / totalItems).toFixed(2) : 0}{" "}
             per item
           </p>
           <ChartContainer config={chartConfig} className="h-[80px] w-full">

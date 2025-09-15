@@ -5,7 +5,7 @@ import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+const API_BASE_URL = 'https://depotix.ch/api'
 
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -17,42 +17,85 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
+  // Clean all auth data
+  const cleanAuthData = () => {
+    localStorage.removeItem("auth_tokens")
+    localStorage.removeItem("auth_user")
+    setTokens(null)
+    setUser(null)
+    setIsLoading(false)
+  }
+
   // Initialize auth state from localStorage on component mount
   useEffect(() => {
+    // Absolute failsafe: force loading to false after 15 seconds
+    const maxLoadingTimeout = setTimeout(() => {
+      console.warn("Auth initialization taking too long, forcing loading to false")
+      setIsLoading(false)
+    }, 15000)
+
     const storedTokens = localStorage.getItem("auth_tokens")
 
     if (storedTokens) {
-      const parsedTokens = JSON.parse(storedTokens) as AuthTokens
-      setTokens(parsedTokens)
+      try {
+        const parsedTokens = JSON.parse(storedTokens) as AuthTokens
 
-      // Fetch user profile with the token
-      fetchUserProfile(parsedTokens.access)
+        // Check if tokens seem valid (basic structure check)
+        if (!parsedTokens.access || !parsedTokens.refresh) {
+          console.warn("Invalid token structure, clearing storage")
+          cleanAuthData()
+          clearTimeout(maxLoadingTimeout)
+          return
+        }
+
+        setTokens(parsedTokens)
+
+        // Fetch user profile with the token
+        fetchUserProfile(parsedTokens.access).finally(() => {
+          clearTimeout(maxLoadingTimeout)
+        })
+      } catch (error) {
+        console.error("Invalid tokens in localStorage, clearing:", error)
+        cleanAuthData()
+        clearTimeout(maxLoadingTimeout)
+      }
     } else {
       setIsLoading(false)
-    }  
+      clearTimeout(maxLoadingTimeout)
+    }
+
+    return () => clearTimeout(maxLoadingTimeout)
   }, [])
 
   // Fetch user profile
   const fetchUserProfile = async (token: string) => {
     try {
+      // Add timeout to prevent hanging
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
       const response = await fetch(`${API_BASE_URL}/inventory/users/me/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        signal: controller.signal,
       })
+
+      clearTimeout(timeoutId)
 
       if (response.ok) {
         const userData = await response.json()
         setUser(userData)
       } else {
-        // If token is invalid, clear storage
-        localStorage.removeItem("auth_tokens")
-        setTokens(null)
+        // If token is invalid, clear all auth data
+        console.error(`Failed to fetch user profile: ${response.status} ${response.statusText}`)
+        cleanAuthData()
+        return
       }
     } catch (error) {
       console.error("Error fetching user profile:", error)
-      localStorage.removeItem("auth_tokens")
-      setTokens(null)
+      cleanAuthData()
+      return
     } finally {
       setIsLoading(false)
     }

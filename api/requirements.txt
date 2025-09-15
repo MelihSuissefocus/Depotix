@@ -13,4 +13,4 @@ gunicorn>=21.2.0
 weasyprint>=60.0
 qrbill>=1.1.0
 cairosvg>=2.7.0
-swissqrbill>=1.0.0
+swiss-qr-bill>=0.0.31

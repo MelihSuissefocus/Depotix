@@ -407,7 +407,7 @@ export default function InventoryItemPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="price">Preis ($)</Label>
+                  <Label htmlFor="price">Preis (CHF)</Label>
                   <Input
                     id="price"
                     type="number"
@@ -717,7 +717,7 @@ export default function InventoryItemPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="supplier_price">Price ($)</Label>
+                <Label htmlFor="supplier_price">Price (CHF)</Label>
                 <Input
                   id="supplier_price"
                   type="number"
@@ -830,7 +830,7 @@ export default function InventoryItemPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-supplier_price">Price ($)</Label>
+                <Label htmlFor="edit-supplier_price">Price (CHF)</Label>
                 <Input
                   id="edit-supplier_price"
                   type="number"

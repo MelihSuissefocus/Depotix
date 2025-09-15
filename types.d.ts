@@ -45,9 +45,21 @@ interface Supplier {
     email: string | null;
     phone: string | null;
     address: string | null;
-    owner: number;
+    owner: User;
     created_at: string;
     updated_at: string;
+  }
+
+interface CreateSupplierData {
+    name: string;
+    contact_name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    address?: string | null;
+    tax_id?: string | null;
+    payment_terms?: string | null;
+    notes?: string | null;
+    is_active?: boolean;
   }
 
 interface Customer {

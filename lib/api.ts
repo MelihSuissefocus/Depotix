@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE!
+const API_BASE = 'https://depotix.ch/api'
 
 // German error messages mapping
 const errorMessages: Record<string, string> = {
@@ -224,12 +224,12 @@ export const supplierAPI = {
     return fetchAPI(`/inventory/suppliers/${queryString}`);
   },
   getSupplier: (id: number) => fetchAPI(`/inventory/suppliers/${id}/`),
-  createSupplier: (data: Supplier) =>
+  createSupplier: (data: CreateSupplierData) =>
     fetchAPI("/inventory/suppliers/", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  updateSupplier: (id: number, data: Supplier) =>
+  updateSupplier: (id: number, data: CreateSupplierData) =>
     fetchAPI(`/inventory/suppliers/${id}/`, {
       method: "PUT",
       body: JSON.stringify(data),

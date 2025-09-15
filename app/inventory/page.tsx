@@ -50,9 +50,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { toast } from "react-hot-toast";
+import { useTranslation } from "@/lib/i18n";
+import { notify } from "@/lib/notify";
 
 export default function InventoryPage() {
+  const { t, formatCurrency } = useTranslation();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -99,38 +101,38 @@ export default function InventoryPage() {
     const errs: Record<string, string> = {};
 
     if (!newItem.name.trim()) {
-      errs.name = "Pflichtfeld";
+      errs.name = t('inventory.validation.nameRequired');
     }
 
     if (!newItem.price.toString().trim()) {
-      errs.price = "Pflichtfeld";
+      errs.price = t('inventory.validation.priceRequired');
     } else {
       const p = Number.parseFloat(newItem.price as string);
       if (Number.isNaN(p) || p <= 0) {
-        errs.price = "Preis muss > 0 sein";
+        errs.price = t('inventory.validation.pricePositive');
       }
     }
 
     if (!newItem.category) {
-      errs.category = "Pflichtfeld";
+      errs.category = t('inventory.validation.categoryRequired');
     }
 
     if (!newItem.vat_rate.toString().trim()) {
-      errs.vat_rate = "Pflichtfeld";
+      errs.vat_rate = t('inventory.validation.vatRateRequired');
     } else {
       const v = Number.parseFloat(newItem.vat_rate as string);
       if (Number.isNaN(v) || v < 0 || v > 25) {
-        errs.vat_rate = "Ungültige MwSt.";
+        errs.vat_rate = t('inventory.validation.invalidVat');
       }
     }
 
     if (newItem.is_alcoholic) {
       if (!newItem.abv_percent.toString().trim()) {
-        errs.abv_percent = "Pflichtfeld";
+        errs.abv_percent = t('inventory.validation.abvRequired');
       } else {
         const a = Number.parseFloat(newItem.abv_percent as string);
         if (Number.isNaN(a) || a < 0 || a > 100) {
-          errs.abv_percent = "0–100%";
+          errs.abv_percent = t('inventory.validation.invalidAbv');
         }
       }
     }
@@ -138,28 +140,28 @@ export default function InventoryPage() {
     if (newItem.volume_ml.toString().trim()) {
       const vol = Number.parseFloat(newItem.volume_ml as string);
       if (Number.isNaN(vol) || vol <= 0) {
-        errs.volume_ml = "Muss > 0 sein";
+        errs.volume_ml = t('inventory.validation.volumePositive');
       }
     }
 
     if (newItem.deposit_chf.toString().trim()) {
       const dep = Number.parseFloat(newItem.deposit_chf as string);
       if (Number.isNaN(dep) || dep < 0) {
-        errs.deposit_chf = "Nicht negativ";
+        errs.deposit_chf = t('inventory.validation.depositNonNegative');
       }
     }
 
     if (newItem.low_stock_threshold !== undefined) {
       const lst = Number(newItem.low_stock_threshold);
       if (Number.isNaN(lst) || lst < 0) {
-        errs.low_stock_threshold = "Nicht negativ";
+        errs.low_stock_threshold = t('inventory.validation.thresholdNonNegative');
       }
     }
 
     if (newItem.quantity !== undefined) {
       const q = Number(newItem.quantity);
       if (Number.isNaN(q) || q < 0) {
-        errs.quantity = "Nicht negativ";
+        errs.quantity = t('inventory.validation.quantityNonNegative');
       }
     }
 
@@ -185,7 +187,7 @@ export default function InventoryPage() {
         : categoriesData.results || [];
       setCategories(categoriesArray);
     } catch (err) {
-      toast.error("Inventardaten konnten nicht geladen werden");
+      notify.error(t('inventory.loadError'));
       console.error("Failed to fetch inventory data:", err);
     } finally {
       setIsLoading(false);
@@ -236,7 +238,7 @@ export default function InventoryPage() {
   const handleAddItem = async () => {
     // New: client-side validation
     if (!validateNewItem()) {
-      toast.error("Bitte Pflichtfelder korrekt ausfüllen.");
+      notify.validationError();
       return;
     }
 
@@ -313,10 +315,10 @@ export default function InventoryPage() {
       });
       setErrors({});
 
-      toast.success(`${itemData.name} erfolgreich hinzugefügt`);
+      notify.success(t('inventory.addSuccess', { name: itemData.name }));
     } catch (err) {
       console.error("Failed to add item:", err);
-      toast.error("Artikel konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut.");
+      notify.error(t('inventory.saveError'));
     }
   };
 
@@ -333,7 +335,7 @@ export default function InventoryPage() {
       setIsDeleteDialogOpen(false);
       setSelectedItem(null);
 
-      toast.success(`${selectedItem.name} erfolgreich gelöscht`);
+      notify.deleteSuccess(selectedItem.name);
     } catch (err) {
       console.error("Failed to delete item:", err);
     }
@@ -344,7 +346,7 @@ export default function InventoryPage() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
-          <p className="mt-2">Inventardaten werden geladen...</p>
+          <p className="mt-2">{t('inventory.loading')}</p>
         </div>
       </div>
     );
@@ -357,7 +359,7 @@ export default function InventoryPage() {
           <AlertTriangle className="h-8 w-8 mx-auto" />
           <p className="mt-2">{error}</p>
           <p className="text-sm text-gray-500 mt-1">
-            Bitte überprüfen Sie Ihre API-Verbindung
+            {t('inventory.connectionError')}
           </p>
         </div>
       </div>
@@ -371,7 +373,7 @@ export default function InventoryPage() {
           <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Nach Name oder SKU suchen..."
+            placeholder={t('inventory.searchPlaceholder')}
             className="pl-8 w-full sm:w-[300px]"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -379,7 +381,7 @@ export default function InventoryPage() {
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Artikel hinzufügen
+          {t('inventory.addItem')}
         </Button>
       </div>
 
@@ -389,17 +391,17 @@ export default function InventoryPage() {
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
               <div className="flex items-center gap-2">
                 <Label htmlFor="category-filter" className="whitespace-nowrap">
-                  Category:
+                  {t('common.category')}:
                 </Label>
                 <Select
                   value={categoryFilter}
                   onValueChange={setCategoryFilter}
                 >
                   <SelectTrigger id="category-filter" className="w-[180px]">
-                    <SelectValue placeholder="All Categories" />
+                    <SelectValue placeholder={t('table.allCategories')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="all">{t('table.allCategories')}</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.name} value={category.name}>
                         {category.name}
@@ -411,16 +413,16 @@ export default function InventoryPage() {
 
               <div className="flex items-center gap-2">
                 <Label htmlFor="sort-by" className="whitespace-nowrap">
-                  Sort by:
+                  {t('table.sortBy')}:
                 </Label>
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger id="sort-by" className="w-[180px]">
-                    <SelectValue placeholder="Sort by" />
+                    <SelectValue placeholder={t('table.sortBy')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="name">Name</SelectItem>
-                    <SelectItem value="quantity">Quantity</SelectItem>
-                    <SelectItem value="price">Price</SelectItem>
+                    <SelectItem value="name">{t('table.nameColumn')}</SelectItem>
+                    <SelectItem value="quantity">{t('table.quantityColumn')}</SelectItem>
+                    <SelectItem value="price">{t('table.priceColumn')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button
@@ -443,13 +445,13 @@ export default function InventoryPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Eigentümer</TableHead>
-                <TableHead>Kategorie</TableHead>
-                <TableHead className="text-right">Menge</TableHead>
-                <TableHead className="text-right">Preis</TableHead>
-                <TableHead className="text-right">Aktionen</TableHead>
+                <TableHead>{t('table.nameColumn')}</TableHead>
+                <TableHead>{t('table.skuColumn')}</TableHead>
+                <TableHead>{t('table.ownerColumn')}</TableHead>
+                <TableHead>{t('table.categoryColumn')}</TableHead>
+                <TableHead className="text-right">{t('table.quantityColumn')}</TableHead>
+                <TableHead className="text-right">{t('table.priceColumn')}</TableHead>
+                <TableHead className="text-right">{t('table.actionsColumn')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -479,29 +481,29 @@ export default function InventoryPage() {
                               variant="outline"
                               className="bg-red-50 text-red-700 border-red-200"
                             >
-                              Niedrig
+                              {t('inventory.lowStock')}
                             </Badge>
                           )}
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        ${Number.parseFloat(item.price).toFixed(2)}
+                        {formatCurrency(item.price)}
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon">
                               <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Aktionen</span>
+                              <span className="sr-only">{t('common.actions')}</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Aktionen</DropdownMenuLabel>
+                            <DropdownMenuLabel>{t('common.actions')}</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem asChild>
                               <Link href={`/inventory/${item.id}`}>
                                 <Edit className="h-4 w-4 mr-2" />
-                                Bearbeiten
+                                {t('common.edit')}
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -512,7 +514,7 @@ export default function InventoryPage() {
                               }}
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
-                              Löschen
+                              {t('common.delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -526,7 +528,7 @@ export default function InventoryPage() {
                     colSpan={6}
                     className="h-24 text-center text-muted-foreground"
                   >
-                    Keine Lagerartikel gefunden.
+                    {t('inventory.noItemsFound')}
                   </TableCell>
                 </TableRow>
               )}
@@ -539,18 +541,18 @@ export default function InventoryPage() {
       <Dialog open={isAddDialogOpen} onOpenChange={(open) => { setIsAddDialogOpen(open); if (!open) setErrors({}); }}>
         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Neuen Lagerartikel hinzufügen</DialogTitle>
+            <DialogTitle>{t('inventory.addItemTitle')}</DialogTitle>
             <DialogDescription>
-              Geben Sie die Details für den neuen Lagerartikel ein.
+              {t('inventory.addItemDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-6 py-4">
             {/* Gruppe: Grunddaten */}
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-gray-900">Grunddaten</h4>
+              <h4 className="text-sm font-medium text-gray-900">{t('inventory.basicInfo')}</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Name<span className="text-red-500"> *</span></Label>
+                  <Label htmlFor="name">{t('common.name')}<span className="text-red-500"> *</span></Label>
                   <Input
                     id="name"
                     value={newItem.name}
@@ -565,7 +567,7 @@ export default function InventoryPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="sku">SKU</Label>
+                  <Label htmlFor="sku">{t('common.sku')}</Label>
                   <Input
                     id="sku"
                     value={newItem.sku}
@@ -574,7 +576,7 @@ export default function InventoryPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description">Beschreibung</Label>
+                <Label htmlFor="description">{t('common.description')}</Label>
                 <Textarea
                   id="description"
                   value={newItem.description}
@@ -586,7 +588,7 @@ export default function InventoryPage() {
 
             {/* Gruppe: Produkt */}
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-gray-900">Produkt</h4>
+              <h4 className="text-sm font-medium text-gray-900">{t('inventory.productInfo')}</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="brand">Marke</Label>
@@ -899,9 +901,9 @@ export default function InventoryPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Abbrechen
+              {t('common.cancel')}
             </Button>
-            <Button onClick={handleAddItem}>Artikel hinzufügen</Button>
+            <Button onClick={handleAddItem}>{t('inventory.addItem')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -910,11 +912,9 @@ export default function InventoryPage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Löschung bestätigen</DialogTitle>
+            <DialogTitle>{t('common.confirm')} {t('common.delete')}</DialogTitle>
             <DialogDescription>
-              Sind Sie sicher, dass Sie{" "}
-              <span className="font-semibold">{selectedItem?.name}</span> löschen möchten? Diese
-              Aktion kann nicht rückgängig gemacht werden.
+              {t('inventory.confirmDelete')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -922,10 +922,10 @@ export default function InventoryPage() {
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
             >
-              Abbrechen
+              {t('common.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleDeleteItem}>
-              Löschen
+              {t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

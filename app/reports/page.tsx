@@ -7,11 +7,13 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { AlertTriangle, Download } from "lucide-react"
 import { inventoryAPI, categoryAPI } from "@/lib/api"
+import { useTranslation } from "@/lib/i18n"
 import { DateRangePicker } from "@/components/date-range-picker"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { DateRange } from "react-day-picker"
 
 export default function ReportsPage() {
+  const { t, formatCurrency } = useTranslation()
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -29,7 +31,7 @@ export default function ReportsPage() {
         setInventoryItems(Array.isArray(itemsData) ? itemsData : [])
         setCategories(Array.isArray(categoriesData) ? categoriesData : [])
       } catch (err) {
-        setError("Failed to fetch data for reports")
+        setError(t('reports.loadError'))
         console.error(err)
       } finally {
         setIsLoading(false)
@@ -208,7 +210,7 @@ export default function ReportsPage() {
               <Label htmlFor="report-type">Report Type</Label>
               <Select value={reportType} onValueChange={setReportType}>
                 <SelectTrigger id="report-type">
-                  <SelectValue placeholder="Select report type" />
+                  <SelectValue placeholder={t('reports.selectReportType')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="inventory-value">Inventory Value</SelectItem>
@@ -251,7 +253,7 @@ export default function ReportsPage() {
         <CardHeader>
           <CardTitle>
             {reportType === "inventory-value"
-              ? "Inventory Value Report"
+              ? t('reports.inventoryValueReport')
               : reportType === "low-stock"
                 ? "Low Stock Items Report"
                 : "Category Summary Report"}
@@ -279,8 +281,8 @@ export default function ReportsPage() {
                         <TableCell>{item.sku || "-"}</TableCell>
                         <TableCell>{item.category}</TableCell>
                         <TableCell className="text-right">{item.quantity}</TableCell>
-                        <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
-                        <TableCell className="text-right">${item.value.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">CHF {item.price.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">CHF {item.value.toFixed(2)}</TableCell>
                       </TableRow>
                     ))
                   ) : (
@@ -297,7 +299,7 @@ export default function ReportsPage() {
                   <div className="space-y-1 text-right">
                     <p className="text-sm text-gray-500">Total Items: {totals.totalItems}</p>
                     <p className="text-sm text-gray-500">Total Quantity: {totals.totalQuantity}</p>
-                    <p className="text-base font-medium">Total Value: ${(totals.totalValue ?? 0).toFixed(2)}</p>
+                    <p className="text-base font-medium">Total Value: CHF {(totals.totalValue ?? 0).toFixed(2)}</p>
                   </div>
                 </div>
               )}
@@ -366,8 +368,8 @@ export default function ReportsPage() {
                       <TableRow key={index}>
                         <TableCell className="font-medium">{item.category}</TableCell>
                         <TableCell className="text-right">{item.itemCount}</TableCell>
-                        <TableCell className="text-right">${item.totalValue.toFixed(2)}</TableCell>
-                        <TableCell className="text-right">${item.avgPrice.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">CHF {item.totalValue.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">CHF {item.avgPrice.toFixed(2)}</TableCell>
                       </TableRow>
                     ))
                   ) : (
@@ -384,7 +386,7 @@ export default function ReportsPage() {
                   <div className="space-y-1 text-right">
                     <p className="text-sm text-gray-500">Total Categories: {totals.totalCategories}</p>
                     <p className="text-sm text-gray-500">Total Items: {totals.totalItems}</p>
-                    <p className="text-base font-medium">Total Value: ${(totals.totalValue ?? 0).toFixed(2)}</p>
+                    <p className="text-base font-medium">Total Value: CHF {(totals.totalValue ?? 0).toFixed(2)}</p>
                   </div>
                 </div>
               )}

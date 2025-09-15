@@ -1,20 +1,26 @@
-FROM python:3.11-slim
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-
-# System deps for WeasyPrint/QR rendering
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential libcairo2 libpango-1.0-0 libgdk-pixbuf2.0-0 libffi-dev \
-    libjpeg62-turbo zlib1g fonts-dejavu-core curl && \
-    rm -rf /var/lib/apt/lists/*
-
+FROM node:20-alpine AS build
 WORKDIR /app
-COPY api/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-COPY api/ .
+# häufig benötigte Libs auf Alpine (z.B. sharp)
+RUN apk add --no-cache libc6-compat python3 make g++
 
-# Collect static if WhiteNoise is used (safe if absent)
-RUN python manage.py collectstatic --noinput || true
+# Quellcode rein (der Build-Kontext ist bereits der UI-Ordner)
+COPY . .
 
-EXPOSE 8000
-CMD ["gunicorn", "depotix_api.wsgi:application", "--bind", "0.0.0.0:8000", "--timeout", "120"]
+# npm/pnpm/yarn – ohne Lockfile: npm install mit legacy-peer-deps
+ENV NPM_CONFIG_LEGACY_PEER_DEPS=true
+RUN corepack enable && \
+    if [ -f package-lock.json ]; then npm ci; \
+    elif [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; \
+    elif [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
+    else npm install --legacy-peer-deps; fi
+
+# Build mit Fallback
+RUN npm run build || (yarn build || pnpm build)
+
+FROM node:20-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app ./
+EXPOSE 3000
+CMD ["npm","run","start"]

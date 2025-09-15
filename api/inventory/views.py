@@ -20,6 +20,7 @@ from .serializers import (
     StockMovementSerializer, SupplierSerializer, CustomerSerializer, ExpenseSerializer,
     CompanyProfileSerializer, SalesOrderSerializer, SalesOrderItemSerializer, InvoiceSerializer
 )
+from .services import book_stock_change, validate_stock_movement_data, StockOperationError
 from .utils.pdf import render_invoice_pdf, _qr_svg_data_uri
 
 
@@ -153,29 +154,44 @@ class StockMovementViewSet(viewsets.ModelViewSet):
         ).select_related('item', 'supplier', 'customer', 'created_by')
     
     def perform_create(self, serializer):
-        """Create stock movement with atomic transaction"""
-        try:
-            with transaction.atomic():
-                serializer.save()
-        except ValidationError as e:
-            # Convert Django ValidationError to DRF ValidationError with 422 status
-            error_message = str(e)
-            
-            # Check if it's a stock availability error for 422 response
-            if "Only" in error_message and "units available" in error_message:
-                # Create custom response for 422
-                from rest_framework.response import Response
-                error_data = {
-                    'error': {
-                        'code': 'INSUFFICIENT_STOCK',
-                        'message': error_message
-                    }
-                }
-                # Use custom exception that we can catch in exception handler
-                raise InsufficientStockError(error_message)
-            else:
-                # Other validation errors as 400
-                raise rf_serializers.ValidationError({"detail": error_message})
+        """Create stock movement and update inventory quantity atomically"""
+        from django.db import transaction
+        from decimal import Decimal
+
+        with transaction.atomic():
+            # Get the validated data
+            item = serializer.validated_data['item']
+            movement_type = serializer.validated_data['type']
+            qty_base = serializer.validated_data['qty_base']
+
+            # Calculate delta based on movement type
+            if movement_type in ['IN', 'RETURN']:
+                delta = qty_base  # Positive for incoming stock
+            else:  # OUT, DEFECT
+                delta = -qty_base  # Negative for outgoing stock
+
+            # Lock item and update quantity
+            from .models import InventoryItem
+            item = InventoryItem.objects.select_for_update().get(id=item.id)
+            previous_qty = item.quantity or Decimal('0')
+            new_qty = previous_qty + delta
+
+            # Validate that quantity doesn't go negative for outgoing movements
+            if new_qty < 0 and movement_type in ['OUT', 'DEFECT']:
+                from .exceptions import InsufficientStockError
+                raise InsufficientStockError(
+                    f"Nicht genügend Lagerbestand. Verfügbar: {previous_qty}, Angefordert: {qty_base}"
+                )
+
+            # Update item quantity
+            item.quantity = new_qty
+            item.save(update_fields=['quantity', 'last_updated'])
+
+            # Set created_by from request user
+            serializer.validated_data['created_by'] = self.request.user
+
+            # Save the movement normally
+            serializer.save()
     
     @action(detail=False, methods=['post'], url_path='in')
     def stock_in(self, request):
@@ -184,16 +200,15 @@ class StockMovementViewSet(viewsets.ModelViewSet):
         data['type'] = 'IN'
         # Remove customer if provided (not allowed for IN movements)
         data.pop('customer', None)
-        
+
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        
+
         try:
-            with transaction.atomic():
-                self.perform_create(serializer)
-        except rf_serializers.ValidationError:
+            self.perform_create(serializer)
+        except (rf_serializers.ValidationError, InsufficientStockError):
             raise
-        
+
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
@@ -204,16 +219,15 @@ class StockMovementViewSet(viewsets.ModelViewSet):
         data['type'] = 'OUT'
         # Remove supplier if provided (not allowed for OUT movements)
         data.pop('supplier', None)
-        
+
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        
+
         try:
-            with transaction.atomic():
-                self.perform_create(serializer)
-        except rf_serializers.ValidationError:
+            self.perform_create(serializer)
+        except (rf_serializers.ValidationError, InsufficientStockError):
             raise
-        
+
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
@@ -222,16 +236,15 @@ class StockMovementViewSet(viewsets.ModelViewSet):
         """Convenient endpoint for stock RETURN movements"""
         data = request.data.copy()
         data['type'] = 'RETURN'
-        
+
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        
+
         try:
-            with transaction.atomic():
-                self.perform_create(serializer)
-        except rf_serializers.ValidationError:
+            self.perform_create(serializer)
+        except (rf_serializers.ValidationError, InsufficientStockError):
             raise
-        
+
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

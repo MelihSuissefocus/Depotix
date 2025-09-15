@@ -26,11 +26,13 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class SupplierSerializer(serializers.ModelSerializer):
     """Supplier serializer with owner auto-assignment"""
+    owner = UserSerializer(read_only=True)
+
     class Meta:
         model = Supplier
         fields = [
             'id', 'name', 'contact_name', 'email', 'phone', 'address',
-            'tax_id', 'payment_terms', 'notes', 'owner', 'created_at', 
+            'tax_id', 'payment_terms', 'notes', 'owner', 'created_at',
             'updated_at', 'is_active'
         ]
         read_only_fields = ['id', 'owner', 'created_at', 'updated_at']
@@ -39,6 +41,11 @@ class SupplierSerializer(serializers.ModelSerializer):
         # Auto-assign owner from request user
         validated_data['owner'] = self.context['request'].user
         return super().create(validated_data)
+
+    def to_representation(self, instance):
+        """Always return owner as User object for reads"""
+        data = super().to_representation(instance)
+        return data
 
 
 class CustomerSerializer(serializers.ModelSerializer):

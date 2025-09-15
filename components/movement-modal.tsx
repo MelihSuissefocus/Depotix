@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { toast } from "react-hot-toast"
 import { stockMovementAPI, inventoryAPI, supplierAPI, customerAPI } from "@/lib/api"
+import { useTranslation } from "@/lib/i18n"
+import { notify } from "@/lib/notify"
 
 interface MovementModalProps {
   isOpen: boolean
@@ -19,6 +20,7 @@ interface MovementModalProps {
 }
 
 export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModalProps) {
+  const { t } = useTranslation()
   const [items, setItems] = useState<InventoryItem[]>([])
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
@@ -59,7 +61,7 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
       setCustomers(customersArray)
     } catch (err) {
       console.error("Failed to load form data:", err)
-      toast.error("Fehler beim Laden der Formulardaten")
+      notify.error(t('movement.loadFormDataError'))
     }
   }
 
@@ -117,7 +119,7 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
   const handleSubmit = async () => {
     // Validate inputs
     if (!formData.item) {
-      toast.error("Bitte wählen Sie einen Artikel aus")
+      notify.error(t('movement.itemRequired'))
       return
     }
 
@@ -128,12 +130,12 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
 
     if (quantityInputMode === "total") {
       if (!formData.qty_base) {
-        toast.error("Bitte geben Sie eine Gesamtmenge ein")
+        notify.error(t('movement.totalQuantityRequired'))
         return
       }
       qty_base = parseInt(formData.qty_base)
       if (isNaN(qty_base) || qty_base <= 0) {
-        toast.error("Bitte geben Sie eine gültige Gesamtmenge größer als 0 ein")
+        notify.error(t('movement.invalidTotalQuantity'))
         return
       }
     } else {
@@ -142,12 +144,12 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
       qty_singles = parseInt(formData.qty_singles) || 0
 
       if (qty_pallets < 0 || qty_packages < 0 || qty_singles < 0) {
-        toast.error("Mengen dürfen nicht negativ sein")
+        notify.error(t('movement.negativeQuantities'))
         return
       }
 
       if (qty_pallets === 0 && qty_packages === 0 && qty_singles === 0) {
-        toast.error("Mindestens eine Menge muss größer als 0 sein")
+        notify.error(t('movement.minOneQuantity'))
         return
       }
 
@@ -156,7 +158,7 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
 
     // Validate customer for RETURN movements
     if (mode === "RETURN" && !formData.customer) {
-      toast.error("Bitte wählen Sie einen Kunden für die Retoure aus")
+      notify.error(t('movement.customerRequiredForReturn'))
       return
     }
 
@@ -189,8 +191,8 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
       console.log("Sending movement data:", movementData)
       await stockMovementAPI.createMovement(movementData)
 
-      const movementType = mode === "IN" ? "Wareneingang" : mode === "OUT" ? "Warenausgang" : "Retoure"
-      toast.success(`${movementType} erfolgreich gebucht`)
+      const successKey = mode === "IN" ? 'movement.stockInSuccess' : mode === "OUT" ? 'movement.stockOutSuccess' : 'movement.returnSuccess'
+      notify.success(t(successKey))
       
       resetForm()
       onClose()
@@ -199,11 +201,11 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
       console.error("Movement submission failed:", err)
       
       if (err.message.includes("422")) {
-        toast.error("Buchung abgelehnt: Bestand würde negativ werden.")
+        notify.error(t('movement.insufficientStock'))
       } else if (err.message.includes("400")) {
-        toast.error("Ungültige Eingaben. Bitte überprüfen Sie Ihre Angaben.")
+        notify.error(t('movement.invalidInputs'))
       } else {
-        toast.error("Fehler beim Buchen der Bewegung. Bitte versuchen Sie es erneut.")
+        notify.error(t('movement.submitError'))
       }
     } finally {
       setIsSubmitting(false)
@@ -222,7 +224,7 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
-            {mode === "IN" ? "Wareneingang buchen" : mode === "OUT" ? "Warenausgang buchen" : "Retoure buchen"}
+            {t(mode === "IN" ? 'movement.stockIn' : mode === "OUT" ? 'movement.stockOut' : 'movement.return')}
           </DialogTitle>
         </DialogHeader>
         
@@ -235,12 +237,12 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
               onValueChange={(value) => setFormData(prev => ({ ...prev, item: value }))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Artikel auswählen" />
+                <SelectValue placeholder={t('placeholders.selectItem')} />
               </SelectTrigger>
               <SelectContent>
                 {items.map((item) => (
                   <SelectItem key={item.id} value={String(item.id)}>
-                    {item.name} (Verfügbar: {item.available_qty})
+                    {item.name} ({t('movement.available')}: {item.available_qty})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -249,21 +251,21 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
 
           {/* Quantity Input Mode Selection */}
           <div>
-            <Label>Menge eingeben als:</Label>
+            <Label>{t('movement.quantityLabel')}</Label>
             <Tabs value={quantityInputMode} onValueChange={(value) => setQuantityInputMode(value as "total" | "uom")}>
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="total">Gesamtmenge</TabsTrigger>
-                <TabsTrigger value="uom">Pal/Pack/Einzel</TabsTrigger>
+                <TabsTrigger value="total">{t('movement.totalQuantityTab')}</TabsTrigger>
+                <TabsTrigger value="uom">{t('movement.uomTab')}</TabsTrigger>
               </TabsList>
               
               <TabsContent value="total" className="space-y-4 mt-4">
                 <div>
-                  <Label htmlFor="qty_base">Gesamtmenge *</Label>
+                  <Label htmlFor="qty_base">{t('movement.totalQuantityLabel')} *</Label>
                   <Input
                     id="qty_base"
                     type="number"
                     min="1"
-                    placeholder="Anzahl eingeben"
+                    placeholder={t('movement.totalQuantityPlaceholder')}
                     value={formData.qty_base}
                     onChange={(e) => setFormData(prev => ({ ...prev, qty_base: e.target.value }))}
                   />
@@ -277,16 +279,16 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
                     <div className="space-y-4">
                       {/* UoM Factors Info */}
                       <div className="bg-gray-50 p-3 rounded-md text-sm">
-                        <div className="font-medium mb-1">Umrechnungsfaktoren:</div>
+                        <div className="font-medium mb-1">{t('movement.conversionFactors')}</div>
                         <div>• 1 Palette = {selectedItem.unit_pallet_factor || 1} Packungen</div>
                         <div>• 1 Packung = {selectedItem.unit_package_factor || 1} Einzelteile</div>
-                        <div>• Basis-Einheit: {selectedItem.unit_base || "Stück"}</div>
+                        <div>• {t('movement.baseUnitLabel')}: {selectedItem.unit_base || "Stück"}</div>
                       </div>
 
                       {/* UoM Input Fields */}
                       <div className="grid grid-cols-3 gap-4">
                         <div>
-                          <Label htmlFor="qty_pallets">Paletten</Label>
+                          <Label htmlFor="qty_pallets">{t('movement.palletsLabel')}</Label>
                           <Input
                             id="qty_pallets"
                             type="number"
@@ -297,7 +299,7 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
                           />
                         </div>
                         <div>
-                          <Label htmlFor="qty_packages">Packungen</Label>
+                          <Label htmlFor="qty_packages">{t('movement.packagesLabel')}</Label>
                           <Input
                             id="qty_packages"
                             type="number"
@@ -308,7 +310,7 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
                           />
                         </div>
                         <div>
-                          <Label htmlFor="qty_singles">Einzelteile</Label>
+                          <Label htmlFor="qty_singles">{t('movement.singlesLabel')}</Label>
                           <Input
                             id="qty_singles"
                             type="number"
@@ -345,13 +347,13 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
           {/* Supplier (for IN) or Customer (for OUT/RETURN) */}
           {mode === "IN" && (
             <div>
-              <Label htmlFor="supplier">Lieferant (optional)</Label>
+              <Label htmlFor="supplier">{t('movement.supplierOptional')}</Label>
               <Select
                 value={formData.supplier}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, supplier: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Lieferant auswählen" />
+                  <SelectValue placeholder={t('placeholders.selectSupplier')} />
                 </SelectTrigger>
                 <SelectContent>
                   {suppliers.map((supplier) => (
@@ -367,14 +369,14 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
           {(mode === "OUT" || mode === "RETURN") && (
             <div>
               <Label htmlFor="customer">
-                Kunde {mode === "RETURN" ? "*" : "(optional)"}
+                {mode === "RETURN" ? t('movement.customerRequired') + ' *' : t('movement.customerOptional')}
               </Label>
               <Select
                 value={formData.customer}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, customer: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Kunde auswählen" />
+                  <SelectValue placeholder={t('placeholders.selectCustomer')} />
                 </SelectTrigger>
                 <SelectContent>
                   {customers.map((customer) => (
@@ -389,10 +391,10 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
 
           {/* Notes */}
           <div>
-            <Label htmlFor="note">Notiz (optional)</Label>
+            <Label htmlFor="note">{t('movement.noteOptional')}</Label>
             <Textarea
               id="note"
-              placeholder="Zusätzliche Bemerkungen"
+              placeholder={t('movement.additionalRemarks')}
               value={formData.note}
               onChange={(e) => setFormData(prev => ({ ...prev, note: e.target.value }))}
             />
@@ -405,7 +407,7 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
             onClick={handleClose}
             disabled={isSubmitting}
           >
-            Abbrechen
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleSubmit}
@@ -418,7 +420,7 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
                 : "bg-orange-600 hover:bg-orange-700"
             }
           >
-            {isSubmitting ? "Wird gebucht..." : (mode === "IN" ? "Wareneingang buchen" : mode === "OUT" ? "Warenausgang buchen" : "Retoure buchen")}
+            {isSubmitting ? t('movement.submitting') : t(mode === "IN" ? 'movement.submitStockIn' : mode === "OUT" ? 'movement.submitStockOut' : 'movement.submitReturn')}
           </Button>
         </DialogFooter>
       </DialogContent>

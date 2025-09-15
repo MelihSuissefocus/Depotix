@@ -43,7 +43,7 @@ export default function SettingsPage() {
   const [lowStockAlerts, setLowStockAlerts] = useState(true)
   const [activitySummary, setActivitySummary] = useState(true)
   const [defaultLowStockThreshold, setDefaultLowStockThreshold] = useState(10)
-  const [defaultCurrency, setDefaultCurrency] = useState("USD")
+  const [defaultCurrency, setDefaultCurrency] = useState("CHF")
   const [defaultDateFormat, setDefaultDateFormat] = useState("MM/DD/YYYY")
 
   // User form state
@@ -577,10 +577,10 @@ export default function SettingsPage() {
                     <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="USD">USD ($)</SelectItem>
+                    <SelectItem value="CHF">CHF (Fr.)</SelectItem>
                     <SelectItem value="EUR">EUR (€)</SelectItem>
+                    <SelectItem value="USD">USD ($)</SelectItem>
                     <SelectItem value="GBP">GBP (£)</SelectItem>
-                    <SelectItem value="NGN">NGN (₦)</SelectItem>
                     <SelectItem value="JPY">JPY (¥)</SelectItem>
                     <SelectItem value="CAD">CAD ($)</SelectItem>
                   </SelectContent>

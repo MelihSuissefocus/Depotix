@@ -292,7 +292,7 @@ export default function InventorySuppliersPage() {
                       </TableCell>
                       <TableCell>{supplier ? supplier.name : `${inventorySupplier.supplier_name}`}</TableCell>
                       <TableCell>{inventorySupplier.supplier_sku || "-"}</TableCell>
-                      <TableCell>${inventorySupplier.supplier_price}</TableCell>
+                      <TableCell>CHF {inventorySupplier.supplier_price}</TableCell>
                       <TableCell>{inventorySupplier.lead_time_days || "-"}</TableCell>
                       <TableCell>{inventorySupplier.notes || "-"}</TableCell>
                       <TableCell className="text-right">
@@ -407,7 +407,7 @@ export default function InventorySuppliersPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="supplier_price">Supplier Price ($)</Label>
+                <Label htmlFor="supplier_price">Supplier Price (CHF)</Label>
                 <Input
                   id="supplier_price"
                   type="number"
@@ -503,7 +503,7 @@ export default function InventorySuppliersPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-supplier_price">Supplier Price ($)</Label>
+                <Label htmlFor="edit-supplier_price">Supplier Price (CHF)</Label>
                 <Input
                   id="edit-supplier_price"
                   type="number"
