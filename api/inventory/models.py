@@ -1,8 +1,18 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from decimal import Decimal
+
+def validate_customer_number(value):
+    """Custom validator for customer number"""
+    if not value.isdigit() or len(value) != 4:
+        raise ValidationError('Kundennummer muss genau 4 Ziffern haben.')
+
+    customer_num = int(value)
+    if customer_num < 1000:
+        raise ValidationError('Kundennummer muss mindestens 1000 sein.')
 
 
 class Category(models.Model):
@@ -52,6 +62,14 @@ class Supplier(models.Model):
 class Customer(models.Model):
     """Customer management"""
     name = models.CharField(max_length=200)
+    customer_number = models.CharField(
+        max_length=4,
+        unique=True,
+        null=False,
+        blank=False,
+        help_text="4-stellige Kundennummer (ab 1000)",
+        validators=[validate_customer_number]
+    )
     contact_name = models.CharField(max_length=200, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
@@ -59,7 +77,7 @@ class Customer(models.Model):
     shipping_address = models.TextField(blank=True, null=True)
     tax_id = models.CharField(max_length=50, blank=True, null=True)
     credit_limit = models.DecimalField(
-        max_digits=10, decimal_places=2, 
+        max_digits=10, decimal_places=2,
         blank=True, null=True,
         validators=[MinValueValidator(Decimal('0.00'))]
     )
@@ -76,6 +94,10 @@ class Customer(models.Model):
             models.Index(fields=['name', 'owner']),
             models.Index(fields=['owner']),
         ]
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

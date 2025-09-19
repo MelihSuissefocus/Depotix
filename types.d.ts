@@ -65,6 +65,7 @@ interface CreateSupplierData {
 interface Customer {
     id?: number;
     name: string;
+    customer_number: string;
     contact_name?: string | null;
     email?: string | null;
     phone?: string | null;

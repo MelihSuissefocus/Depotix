@@ -72,6 +72,7 @@ export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [formData, setFormData] = useState<Customer>({
     name: "",
+    customer_number: "",
     contact_name: "",
     email: "",
     phone: "",
@@ -135,6 +136,7 @@ export default function CustomersPage() {
   const resetForm = () => {
     setFormData({
       name: "",
+      customer_number: "",
       contact_name: "",
       email: "",
       phone: "",
@@ -166,6 +168,23 @@ export default function CustomersPage() {
       errors.name = "Firmenname ist erforderlich";
     }
 
+    if (!formData.customer_number?.trim()) {
+      errors.customer_number = "Kundennummer ist erforderlich";
+    } else {
+      const customerNum = formData.customer_number.trim();
+
+      // Check if it's exactly 4 digits
+      if (!/^\d{4}$/.test(customerNum)) {
+        errors.customer_number = "Kundennummer muss genau 4 Ziffern haben";
+      } else {
+        // Check if it's >= 1000
+        const num = parseInt(customerNum, 10);
+        if (num < 1000) {
+          errors.customer_number = "Kundennummer muss mindestens 1000 sein";
+        }
+      }
+    }
+
     if (formData.email && formData.email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
@@ -190,10 +209,18 @@ export default function CustomersPage() {
       loadCustomers();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Fehler beim Erstellen des Kunden";
-      
+
       // Handle validation errors from backend
       if (errorMessage.includes("400")) {
-        toast.error("Überprüfen Sie Ihre Eingaben");
+        if (errorMessage.includes("customer_number")) {
+          if (errorMessage.includes("bereits vergeben")) {
+            setFormErrors(prev => ({ ...prev, customer_number: "Diese Kundennummer ist bereits vergeben" }));
+          } else {
+            setFormErrors(prev => ({ ...prev, customer_number: "Ungültige Kundennummer" }));
+          }
+        } else {
+          toast.error("Überprüfen Sie Ihre Eingaben");
+        }
       } else if (errorMessage.includes("409") || errorMessage.includes("422")) {
         toast.error("Ein Kunde mit diesen Daten existiert bereits");
       } else {
@@ -217,10 +244,18 @@ export default function CustomersPage() {
       loadCustomers();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Fehler beim Aktualisieren des Kunden";
-      
+
       // Handle validation errors from backend
       if (errorMessage.includes("400")) {
-        toast.error("Überprüfen Sie Ihre Eingaben");
+        if (errorMessage.includes("customer_number")) {
+          if (errorMessage.includes("bereits vergeben")) {
+            setFormErrors(prev => ({ ...prev, customer_number: "Diese Kundennummer ist bereits vergeben" }));
+          } else {
+            setFormErrors(prev => ({ ...prev, customer_number: "Ungültige Kundennummer" }));
+          }
+        } else {
+          toast.error("Überprüfen Sie Ihre Eingaben");
+        }
       } else if (errorMessage.includes("409") || errorMessage.includes("422")) {
         toast.error("Ein Kunde mit diesen Daten existiert bereits");
       } else {
@@ -260,6 +295,7 @@ export default function CustomersPage() {
     setSelectedCustomer(customer);
     setFormData({
       name: customer.name || "",
+      customer_number: customer.customer_number || "",
       contact_name: customer.contact_name || "",
       email: customer.email || "",
       phone: customer.phone || "",
@@ -339,6 +375,7 @@ export default function CustomersPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Kundennummer</TableHead>
                 <TableHead>Firmenname</TableHead>
                 <TableHead>Ansprechperson</TableHead>
                 <TableHead>E-Mail</TableHead>
@@ -350,13 +387,13 @@ export default function CustomersPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     Lade Kunden...
                   </TableCell>
                 </TableRow>
               ) : customers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                     {debouncedSearch
                       ? "Keine Kunden gefunden für Ihre Suche"
                       : "Noch keine Kunden vorhanden"}
@@ -365,6 +402,11 @@ export default function CustomersPage() {
               ) : (
                 customers.map((customer) => (
                   <TableRow key={customer.id}>
+                    <TableCell className="font-mono text-sm">
+                      {customer.customer_number || (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </TableCell>
                     <TableCell className="font-medium">{customer.name}</TableCell>
                     <TableCell>
                       {customer.contact_name || (
@@ -474,28 +516,30 @@ export default function CustomersPage() {
                 )}
               </div>
               <div>
+                <Label htmlFor="customer_number">Kundennummer *</Label>
+                <Input
+                  id="customer_number"
+                  value={formData.customer_number || ""}
+                  onChange={(e) => handleFieldChange("customer_number", e.target.value)}
+                  placeholder="4-stellige Nummer (ab 1000)"
+                  maxLength={4}
+                  pattern="\d{4}"
+                  className={formErrors.customer_number ? "border-red-500" : ""}
+                />
+                {formErrors.customer_number && (
+                  <p className="text-sm text-red-500 mt-1">{formErrors.customer_number}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
                 <Label htmlFor="contact_name">Ansprechperson</Label>
                 <Input
                   id="contact_name"
                   value={formData.contact_name || ""}
                   onChange={(e) => handleFieldChange("contact_name", e.target.value)}
                 />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="email">E-Mail</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email || ""}
-                  onChange={(e) => handleFieldChange("email", e.target.value)}
-                  className={formErrors.email ? "border-red-500" : ""}
-                />
-                {formErrors.email && (
-                  <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
-                )}
               </div>
               <div>
                 <Label htmlFor="phone">Telefon</Label>
@@ -505,6 +549,20 @@ export default function CustomersPage() {
                   onChange={(e) => handleFieldChange("phone", e.target.value)}
                 />
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="email">E-Mail</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email || ""}
+                onChange={(e) => handleFieldChange("email", e.target.value)}
+                className={formErrors.email ? "border-red-500" : ""}
+              />
+              {formErrors.email && (
+                <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
+              )}
             </div>
 
             <div>
@@ -608,28 +666,30 @@ export default function CustomersPage() {
                 )}
               </div>
               <div>
+                <Label htmlFor="edit_customer_number">Kundennummer *</Label>
+                <Input
+                  id="edit_customer_number"
+                  value={formData.customer_number || ""}
+                  onChange={(e) => handleFieldChange("customer_number", e.target.value)}
+                  placeholder="4-stellige Nummer (ab 1000)"
+                  maxLength={4}
+                  pattern="\d{4}"
+                  className={formErrors.customer_number ? "border-red-500" : ""}
+                />
+                {formErrors.customer_number && (
+                  <p className="text-sm text-red-500 mt-1">{formErrors.customer_number}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
                 <Label htmlFor="edit_contact_name">Ansprechperson</Label>
                 <Input
                   id="edit_contact_name"
                   value={formData.contact_name || ""}
                   onChange={(e) => handleFieldChange("contact_name", e.target.value)}
                 />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit_email">E-Mail</Label>
-                <Input
-                  id="edit_email"
-                  type="email"
-                  value={formData.email || ""}
-                  onChange={(e) => handleFieldChange("email", e.target.value)}
-                  className={formErrors.email ? "border-red-500" : ""}
-                />
-                {formErrors.email && (
-                  <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
-                )}
               </div>
               <div>
                 <Label htmlFor="edit_phone">Telefon</Label>
@@ -639,6 +699,20 @@ export default function CustomersPage() {
                   onChange={(e) => handleFieldChange("phone", e.target.value)}
                 />
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit_email">E-Mail</Label>
+              <Input
+                id="edit_email"
+                type="email"
+                value={formData.email || ""}
+                onChange={(e) => handleFieldChange("email", e.target.value)}
+                className={formErrors.email ? "border-red-500" : ""}
+              />
+              {formErrors.email && (
+                <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
+              )}
             </div>
 
             <div>
