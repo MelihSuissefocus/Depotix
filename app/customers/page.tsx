@@ -502,34 +502,33 @@ export default function CustomersPage() {
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="name">Firmenname *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleFieldChange("name", e.target.value)}
-                  className={formErrors.name ? "border-red-500" : ""}
-                />
-                {formErrors.name && (
-                  <p className="text-sm text-red-500 mt-1">{formErrors.name}</p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="customer_number">Kundennummer *</Label>
-                <Input
-                  id="customer_number"
-                  value={formData.customer_number || ""}
-                  onChange={(e) => handleFieldChange("customer_number", e.target.value)}
-                  placeholder="4-stellige Nummer (ab 1000)"
-                  maxLength={4}
-                  pattern="\d{4}"
-                  className={formErrors.customer_number ? "border-red-500" : ""}
-                />
-                {formErrors.customer_number && (
-                  <p className="text-sm text-red-500 mt-1">{formErrors.customer_number}</p>
-                )}
-              </div>
+            <div>
+              <Label htmlFor="name">Firmenname *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => handleFieldChange("name", e.target.value)}
+                className={formErrors.name ? "border-red-500" : ""}
+              />
+              {formErrors.name && (
+                <p className="text-sm text-red-500 mt-1">{formErrors.name}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="customer_number">Kundennummer *</Label>
+              <Input
+                id="customer_number"
+                value={formData.customer_number || ""}
+                onChange={(e) => handleFieldChange("customer_number", e.target.value)}
+                placeholder="4-stellige Nummer (ab 1000)"
+                maxLength={4}
+                pattern="\d{4}"
+                className={formErrors.customer_number ? "border-red-500" : ""}
+              />
+              {formErrors.customer_number && (
+                <p className="text-sm text-red-500 mt-1">{formErrors.customer_number}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -652,34 +651,33 @@ export default function CustomersPage() {
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit_name">Firmenname *</Label>
-                <Input
-                  id="edit_name"
-                  value={formData.name}
-                  onChange={(e) => handleFieldChange("name", e.target.value)}
-                  className={formErrors.name ? "border-red-500" : ""}
-                />
-                {formErrors.name && (
-                  <p className="text-sm text-red-500 mt-1">{formErrors.name}</p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="edit_customer_number">Kundennummer *</Label>
-                <Input
-                  id="edit_customer_number"
-                  value={formData.customer_number || ""}
-                  onChange={(e) => handleFieldChange("customer_number", e.target.value)}
-                  placeholder="4-stellige Nummer (ab 1000)"
-                  maxLength={4}
-                  pattern="\d{4}"
-                  className={formErrors.customer_number ? "border-red-500" : ""}
-                />
-                {formErrors.customer_number && (
-                  <p className="text-sm text-red-500 mt-1">{formErrors.customer_number}</p>
-                )}
-              </div>
+            <div>
+              <Label htmlFor="edit_name">Firmenname *</Label>
+              <Input
+                id="edit_name"
+                value={formData.name}
+                onChange={(e) => handleFieldChange("name", e.target.value)}
+                className={formErrors.name ? "border-red-500" : ""}
+              />
+              {formErrors.name && (
+                <p className="text-sm text-red-500 mt-1">{formErrors.name}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="edit_customer_number">Kundennummer *</Label>
+              <Input
+                id="edit_customer_number"
+                value={formData.customer_number || ""}
+                onChange={(e) => handleFieldChange("customer_number", e.target.value)}
+                placeholder="4-stellige Nummer (ab 1000)"
+                maxLength={4}
+                pattern="\d{4}"
+                className={formErrors.customer_number ? "border-red-500" : ""}
+              />
+              {formErrors.customer_number && (
+                <p className="text-sm text-red-500 mt-1">{formErrors.customer_number}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
