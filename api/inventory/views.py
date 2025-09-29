@@ -486,8 +486,8 @@ class SalesOrderItemViewSet(viewsets.ModelViewSet):
             return SalesOrderItem.objects.filter(order__created_by=user).select_related('order', 'item')
 
 
-class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
-    """Invoice management viewset (read-only)"""
+class InvoiceViewSet(viewsets.ModelViewSet):
+    """Invoice management viewset"""
     serializer_class = InvoiceSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
@@ -601,5 +601,151 @@ class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
         except Exception as e:
             return Response(
                 {'error': {'code': 'PDF_GENERATION_FAILED', 'message': f'Fehler bei der PDF-Erstellung: {str(e)}'}},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=True, methods=['post'], url_path='archive')
+    def archive_invoice(self, request, pk=None):
+        """Archive an invoice with comprehensive error handling"""
+        import logging
+        logger = logging.getLogger(__name__)
+
+        try:
+            # Log the operation attempt
+            logger.info(f"Attempting to archive invoice {pk} for user {request.user}")
+
+            # This will raise 404 if invoice doesn't exist
+            invoice = self.get_object()
+
+            # Additional validation - ensure the invoice can be archived
+            if invoice.is_archived:
+                logger.warning(f"Invoice {pk} is already archived")
+                return Response(
+                    {'message': 'Rechnung ist bereits archiviert', 'is_archived': True},
+                    status=status.HTTP_200_OK
+                )
+
+            # Perform the archive operation
+            invoice.is_archived = True
+            invoice.save(update_fields=['is_archived'])
+
+            logger.info(f"Successfully archived invoice {pk}")
+            return Response(
+                {'message': 'Rechnung erfolgreich archiviert', 'is_archived': True},
+                status=status.HTTP_200_OK
+            )
+
+        except Invoice.DoesNotExist:
+            logger.error(f"Invoice {pk} does not exist for archive operation")
+            return Response(
+                {'error': {'code': 'INVOICE_NOT_FOUND', 'message': f'Rechnung mit ID {pk} nicht gefunden'}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            logger.error(f"Failed to archive invoice {pk}: {str(e)}", exc_info=True)
+            return Response(
+                {'error': {'code': 'ARCHIVE_FAILED', 'message': f'Fehler beim Archivieren: {str(e)}'}},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=True, methods=['post'], url_path='unarchive')
+    def unarchive_invoice(self, request, pk=None):
+        """Unarchive an invoice with comprehensive error handling"""
+        import logging
+        logger = logging.getLogger(__name__)
+
+        try:
+            # Log the operation attempt
+            logger.info(f"Attempting to unarchive invoice {pk} for user {request.user}")
+
+            # This will raise 404 if invoice doesn't exist
+            invoice = self.get_object()
+
+            # Additional validation - ensure the invoice can be unarchived
+            if not invoice.is_archived:
+                logger.warning(f"Invoice {pk} is not archived")
+                return Response(
+                    {'message': 'Rechnung ist nicht archiviert', 'is_archived': False},
+                    status=status.HTTP_200_OK
+                )
+
+            # Perform the unarchive operation
+            invoice.is_archived = False
+            invoice.save(update_fields=['is_archived'])
+
+            logger.info(f"Successfully unarchived invoice {pk}")
+            return Response(
+                {'message': 'Rechnung erfolgreich dearchiviert', 'is_archived': False},
+                status=status.HTTP_200_OK
+            )
+
+        except Invoice.DoesNotExist:
+            logger.error(f"Invoice {pk} does not exist for unarchive operation")
+            return Response(
+                {'error': {'code': 'INVOICE_NOT_FOUND', 'message': f'Rechnung mit ID {pk} nicht gefunden'}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            logger.error(f"Failed to unarchive invoice {pk}: {str(e)}", exc_info=True)
+            return Response(
+                {'error': {'code': 'UNARCHIVE_FAILED', 'message': f'Fehler beim Dearchivieren: {str(e)}'}},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=True, methods=['post'], url_path='delete')
+    def delete_invoice(self, request, pk=None):
+        """Delete an invoice via POST action with comprehensive error handling"""
+        import logging
+        logger = logging.getLogger(__name__)
+
+        try:
+            # Log the operation attempt
+            logger.info(f"Attempting to delete invoice {pk} for user {request.user}")
+
+            # This will raise 404 if invoice doesn't exist
+            invoice = self.get_object()
+
+            # Store invoice info for logging before deletion
+            invoice_number = invoice.invoice_number
+            customer_name = invoice.order.customer.name if invoice.order and invoice.order.customer else "Unknown"
+
+            # Optional: Add additional checks here (e.g., prevent deletion of paid invoices)
+            # You can add business logic validation here
+
+            # Perform the delete operation
+            invoice.delete()
+
+            logger.info(f"Successfully deleted invoice {invoice_number} (ID: {pk}) for customer {customer_name}")
+            return Response(
+                {'message': f'Rechnung {invoice_number} erfolgreich gelöscht'},
+                status=status.HTTP_204_NO_CONTENT
+            )
+
+        except Invoice.DoesNotExist:
+            logger.error(f"Invoice {pk} does not exist for delete operation")
+            return Response(
+                {'error': {'code': 'INVOICE_NOT_FOUND', 'message': f'Rechnung mit ID {pk} nicht gefunden'}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            logger.error(f"Failed to delete invoice {pk}: {str(e)}", exc_info=True)
+            return Response(
+                {'error': {'code': 'DELETE_FAILED', 'message': f'Fehler beim Löschen: {str(e)}'}},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def destroy(self, request, *args, **kwargs):
+        """Delete an invoice with proper authorization"""
+        try:
+            instance = self.get_object()
+            # Optional: Add additional checks here (e.g., prevent deletion of paid invoices)
+            instance.delete()
+            return Response(
+                {'message': 'Rechnung erfolgreich gelöscht'},
+                status=status.HTTP_204_NO_CONTENT
+            )
+        except Exception as e:
+            return Response(
+                {'error': {'code': 'DELETE_FAILED', 'message': f'Fehler beim Löschen: {str(e)}'}},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

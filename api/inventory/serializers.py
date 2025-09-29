@@ -403,7 +403,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'invoice_number', 'order', 'order_number', 'customer_name',
             'issue_date', 'due_date', 'total_net', 'total_tax', 'total_gross',
-            'currency', 'pdf_file'
+            'currency', 'pdf_file', 'is_archived'
         ]
         read_only_fields = [
             'id', 'invoice_number', 'issue_date', 'customer_name',

@@ -582,12 +582,16 @@ class Invoice(models.Model):
     # Optional PDF file path
     pdf_file = models.TextField(blank=True, help_text="Path to generated PDF file")
 
+    # Archive status
+    is_archived = models.BooleanField(default=False, help_text="Whether this invoice is archived")
+
     class Meta:
         ordering = ['-issue_date']
         indexes = [
             models.Index(fields=['invoice_number']),
             models.Index(fields=['issue_date']),
             models.Index(fields=['due_date']),
+            models.Index(fields=['is_archived']),
         ]
 
     def save(self, *args, **kwargs):

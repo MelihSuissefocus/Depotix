@@ -305,6 +305,7 @@ interface Invoice {
   total_gross: string;
   currency: string;
   pdf_file?: string;
+  is_archived?: boolean;
   created_at?: string;
   updated_at?: string;
 }

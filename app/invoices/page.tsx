@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { AlertCircle, Download, FileText, Loader2, Plus, Search, Settings, Trash2, X } from "lucide-react"
+import { AlertCircle, Archive, ArchiveRestore, Download, FileText, Loader2, MoreVertical, Plus, Search, Settings, Trash2, X } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { toast } from 'react-hot-toast'
 import { invoicesAPI, customerAPI, inventoryAPI, ordersAPI } from "@/lib/api"
@@ -38,6 +39,10 @@ export default function InvoicesPage() {
   const [totalCount, setTotalCount] = useState(0)
   const [hasNextPage, setHasNextPage] = useState(false)
   const [isDownloading, setIsDownloading] = useState<number | null>(null)
+  const [isArchiving, setIsArchiving] = useState<number | null>(null)
+  const [isDeleting, setIsDeleting] = useState<number | null>(null)
+  const [deleteInvoiceId, setDeleteInvoiceId] = useState<number | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   // Wizard state
   const [isWizardOpen, setIsWizardOpen] = useState(false)
@@ -66,22 +71,42 @@ export default function InvoicesPage() {
     }).format(num)
   }
 
-  const loadInvoices = async () => {
+  const loadInvoices = async (showLoadingIndicator = true) => {
     try {
-      setIsLoading(true)
+      if (showLoadingIndicator) {
+        setIsLoading(true)
+      }
+
+      console.log(`[${new Date().toISOString()}] Loading invoices - page: ${currentPage}, search: "${searchTerm}"`)
+
       const response = await invoicesAPI.list({
         page: currentPage,
         search: searchTerm || undefined,
       })
-      
-      setInvoices(response.results || [])
+
+      const loadedInvoices = response.results || []
+      setInvoices(loadedInvoices)
       setTotalCount(response.count || 0)
       setHasNextPage(!!response.next)
-    } catch (err) {
-      console.error("Failed to load invoices:", err)
-      toast.error("Fehler beim Laden der Rechnungen")
+
+      console.log(`[${new Date().toISOString()}] Successfully loaded ${loadedInvoices.length} invoices`)
+
+    } catch (err: any) {
+      console.error(`[${new Date().toISOString()}] Failed to load invoices:`, {
+        error: err.message,
+        page: currentPage,
+        search: searchTerm,
+        timestamp: new Date().toISOString()
+      })
+
+      // Don't show error toast if this is a background refresh
+      if (showLoadingIndicator) {
+        toast.error("Fehler beim Laden der Rechnungen")
+      }
     } finally {
-      setIsLoading(false)
+      if (showLoadingIndicator) {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -97,6 +122,48 @@ export default function InvoicesPage() {
   useEffect(() => {
     loadInvoices()
   }, [currentPage, searchTerm])
+
+  // Periodic synchronization to detect stale data
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout
+
+    // Only set up periodic sync if we have invoices and aren't currently loading
+    if (invoices.length > 0 && !isLoading) {
+      intervalId = setInterval(() => {
+        console.log(`[${new Date().toISOString()}] Performing background sync...`)
+        loadInvoices(false) // Background refresh without loading indicator
+      }, 30000) // Sync every 30 seconds
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId)
+      }
+    }
+  }, [invoices.length, isLoading, currentPage, searchTerm])
+
+  // Focus-based refresh to sync when user returns to tab
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log(`[${new Date().toISOString()}] Tab focused - performing sync...`)
+      loadInvoices(false)
+    }
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log(`[${new Date().toISOString()}] Tab visible - performing sync...`)
+        loadInvoices(false)
+      }
+    }
+
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
 
   useEffect(() => {
     if (isWizardOpen && currentStep === 2) {
@@ -124,6 +191,150 @@ export default function InvoicesPage() {
     } finally {
       setIsDownloading(null)
     }
+  }
+
+  const handleArchiveInvoice = async (invoiceId: number, isCurrentlyArchived: boolean) => {
+    // Pre-validate that the invoice exists
+    const invoice = validateInvoiceExists(invoiceId)
+    if (!invoice) return
+
+    // Optimistic update: immediately update the UI
+    const originalInvoices = [...invoices]
+    const optimisticInvoices = invoices.map(invoice =>
+      invoice.id === invoiceId
+        ? { ...invoice, is_archived: !isCurrentlyArchived }
+        : invoice
+    )
+
+    // Apply optimistic update
+    setInvoices(optimisticInvoices)
+    setIsArchiving(invoiceId)
+
+    try {
+      console.log(`[${new Date().toISOString()}] Attempting to ${isCurrentlyArchived ? 'unarchive' : 'archive'} invoice ${invoiceId}`)
+
+      if (isCurrentlyArchived) {
+        await invoicesAPI.unarchive(invoiceId)
+        toast.success("Rechnung erfolgreich dearchiviert")
+        console.log(`[${new Date().toISOString()}] Successfully unarchived invoice ${invoiceId}`)
+      } else {
+        await invoicesAPI.archive(invoiceId)
+        toast.success("Rechnung erfolgreich archiviert")
+        console.log(`[${new Date().toISOString()}] Successfully archived invoice ${invoiceId}`)
+      }
+
+      // Refresh the list to ensure consistency (this will overwrite our optimistic update with server truth)
+      loadInvoices()
+    } catch (err: any) {
+      console.error(`[${new Date().toISOString()}] Failed to archive/unarchive invoice ${invoiceId}:`, {
+        error: err.message,
+        invoiceId,
+        isCurrentlyArchived,
+        timestamp: new Date().toISOString()
+      })
+
+      // Rollback optimistic update on error
+      setInvoices(originalInvoices)
+
+      const action = isCurrentlyArchived ? "Dearchivieren" : "Archivieren"
+
+      // Enhanced error messages
+      if (err.message.includes('nicht gefunden') || err.message.includes('not found')) {
+        toast.error(`Rechnung nicht gefunden. Sie wurde möglicherweise bereits gelöscht. Die Liste wird aktualisiert.`)
+        // Force refresh to sync with server state
+        loadInvoices()
+      } else if (err.message.includes('bereits archiviert') || err.message.includes('nicht archiviert')) {
+        toast.warning(err.message)
+        // Refresh to get current state
+        loadInvoices()
+      } else {
+        toast.error(`Fehler beim ${action} der Rechnung: ${err.message}`)
+      }
+    } finally {
+      setIsArchiving(null)
+    }
+  }
+
+  const handleDeleteInvoice = async () => {
+    if (!deleteInvoiceId) return
+
+    // Store original state for potential rollback
+    const originalInvoices = [...invoices]
+    const invoiceToDelete = invoices.find(inv => inv.id === deleteInvoiceId)
+
+    // Optimistic update: remove invoice from UI immediately
+    const optimisticInvoices = invoices.filter(invoice => invoice.id !== deleteInvoiceId)
+    setInvoices(optimisticInvoices)
+    setIsDeleting(deleteInvoiceId)
+
+    try {
+      console.log(`[${new Date().toISOString()}] Attempting to delete invoice ${deleteInvoiceId} (${invoiceToDelete?.invoice_number || 'Unknown'})`)
+
+      await invoicesAPI.delete(deleteInvoiceId)
+      toast.success(`Rechnung ${invoiceToDelete?.invoice_number || deleteInvoiceId} erfolgreich gelöscht`)
+
+      console.log(`[${new Date().toISOString()}] Successfully deleted invoice ${deleteInvoiceId}`)
+
+      // Close dialog
+      setShowDeleteDialog(false)
+      setDeleteInvoiceId(null)
+
+      // Refresh list to ensure consistency with server
+      loadInvoices()
+
+    } catch (err: any) {
+      console.error(`[${new Date().toISOString()}] Failed to delete invoice ${deleteInvoiceId}:`, {
+        error: err.message,
+        invoiceId: deleteInvoiceId,
+        invoiceNumber: invoiceToDelete?.invoice_number,
+        timestamp: new Date().toISOString()
+      })
+
+      // Rollback optimistic update on error
+      setInvoices(originalInvoices)
+
+      // Enhanced error messages
+      if (err.message.includes('nicht gefunden') || err.message.includes('not found')) {
+        toast.error(`Rechnung nicht gefunden. Sie wurde möglicherweise bereits gelöscht. Die Liste wird aktualisiert.`)
+        // Close dialog since the invoice doesn't exist anyway
+        setShowDeleteDialog(false)
+        setDeleteInvoiceId(null)
+        // Force refresh to sync with server state
+        loadInvoices()
+      } else {
+        toast.error(`Fehler beim Löschen der Rechnung: ${err.message}`)
+      }
+    } finally {
+      setIsDeleting(null)
+    }
+  }
+
+  const openDeleteDialog = (invoiceId: number) => {
+    // Validate that the invoice still exists in our current list
+    const invoiceExists = invoices.find(inv => inv.id === invoiceId)
+
+    if (!invoiceExists) {
+      console.warn(`[${new Date().toISOString()}] Attempted to delete non-existent invoice ${invoiceId}`)
+      toast.error("Rechnung nicht gefunden. Die Liste wird aktualisiert.")
+      loadInvoices()
+      return
+    }
+
+    console.log(`[${new Date().toISOString()}] Opening delete dialog for invoice ${invoiceId} (${invoiceExists.invoice_number})`)
+    setDeleteInvoiceId(invoiceId)
+    setShowDeleteDialog(true)
+  }
+
+  // Add validation helper for archive operations
+  const validateInvoiceExists = (invoiceId: number): Invoice | null => {
+    const invoice = invoices.find(inv => inv.id === invoiceId)
+    if (!invoice) {
+      console.warn(`[${new Date().toISOString()}] Attempted operation on non-existent invoice ${invoiceId}`)
+      toast.error("Rechnung nicht gefunden. Die Liste wird aktualisiert.")
+      loadInvoices()
+      return null
+    }
+    return invoice
   }
 
   const resetWizard = () => {
@@ -776,7 +987,14 @@ export default function InvoicesPage() {
                   {invoices.map((invoice) => (
                     <TableRow key={invoice.id}>
                       <TableCell className="font-medium">
-                        {invoice.invoice_number}
+                        <div className="flex items-center gap-2">
+                          {invoice.invoice_number}
+                          {invoice.is_archived && (
+                            <Badge variant="secondary" className="text-xs">
+                              Archiviert
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>{invoice.customer_name}</TableCell>
                       <TableCell>
@@ -786,18 +1004,55 @@ export default function InvoicesPage() {
                         {formatCurrency(invoice.total_gross)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownloadPDF(invoice.id!)}
-                          disabled={isDownloading === invoice.id}
-                        >
-                          {isDownloading === invoice.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Download className="h-4 w-4" />
-                          )}
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleDownloadPDF(invoice.id!)}
+                              disabled={isDownloading === invoice.id}
+                            >
+                              {isDownloading === invoice.id ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              ) : (
+                                <Download className="h-4 w-4 mr-2" />
+                              )}
+                              PDF herunterladen
+                            </DropdownMenuItem>
+
+                            <DropdownMenuSeparator />
+
+                            <DropdownMenuItem
+                              onClick={() => handleArchiveInvoice(invoice.id!, invoice.is_archived || false)}
+                              disabled={isArchiving === invoice.id}
+                            >
+                              {isArchiving === invoice.id ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              ) : invoice.is_archived ? (
+                                <ArchiveRestore className="h-4 w-4 mr-2" />
+                              ) : (
+                                <Archive className="h-4 w-4 mr-2" />
+                              )}
+                              {invoice.is_archived ? 'Dearchivieren' : 'Archivieren'}
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                              onClick={() => openDeleteDialog(invoice.id!)}
+                              disabled={isDeleting === invoice.id}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              {isDeleting === invoice.id ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4 mr-2" />
+                              )}
+                              Löschen
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -832,6 +1087,45 @@ export default function InvoicesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rechnung löschen</DialogTitle>
+            <DialogDescription>
+              Sind Sie sicher, dass Sie diese Rechnung unwiderruflich löschen möchten?
+              Diese Aktion kann nicht rückgängig gemacht werden.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={isDeleting !== null}
+            >
+              Abbrechen
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteInvoice}
+              disabled={isDeleting !== null}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Wird gelöscht...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Löschen
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

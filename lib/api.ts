@@ -477,6 +477,93 @@ export const invoicesAPI = {
   },
   get: (id: number): Promise<Invoice> => fetchAPI(`/inventory/invoices/${id}/`),
   pdf: (id: number): Promise<void> => downloadPDF(`/inventory/invoices/${id}/pdf/`),
+
+  // Enhanced archive function with existence validation
+  archive: async (id: number): Promise<{message: string, is_archived: boolean}> => {
+    try {
+      // First verify the invoice exists
+      await fetchAPI(`/inventory/invoices/${id}/`);
+
+      // Proceed with archive operation
+      const result = await fetchAPI(`/inventory/invoices/${id}/archive/`, { method: 'POST' });
+
+      // Log successful operation
+      console.log(`Invoice ${id} successfully archived`);
+      return result;
+    } catch (error: any) {
+      // Enhanced error logging
+      console.error(`Failed to archive invoice ${id}:`, {
+        error: error.message,
+        status: error.status || 'unknown',
+        timestamp: new Date().toISOString(),
+        invoiceId: id
+      });
+
+      // Provide user-friendly error messages
+      if (error.message.includes('404') || error.message.includes('Not found')) {
+        throw new Error(`Rechnung mit ID ${id} nicht gefunden. Die Rechnung wurde möglicherweise bereits gelöscht oder existiert nicht.`);
+      }
+      throw error;
+    }
+  },
+
+  // Enhanced unarchive function with existence validation
+  unarchive: async (id: number): Promise<{message: string, is_archived: boolean}> => {
+    try {
+      // First verify the invoice exists
+      await fetchAPI(`/inventory/invoices/${id}/`);
+
+      // Proceed with unarchive operation
+      const result = await fetchAPI(`/inventory/invoices/${id}/unarchive/`, { method: 'POST' });
+
+      // Log successful operation
+      console.log(`Invoice ${id} successfully unarchived`);
+      return result;
+    } catch (error: any) {
+      // Enhanced error logging
+      console.error(`Failed to unarchive invoice ${id}:`, {
+        error: error.message,
+        status: error.status || 'unknown',
+        timestamp: new Date().toISOString(),
+        invoiceId: id
+      });
+
+      // Provide user-friendly error messages
+      if (error.message.includes('404') || error.message.includes('Not found')) {
+        throw new Error(`Rechnung mit ID ${id} nicht gefunden. Die Rechnung wurde möglicherweise bereits gelöscht oder existiert nicht.`);
+      }
+      throw error;
+    }
+  },
+
+  // Enhanced delete function with existence validation
+  delete: async (id: number): Promise<{message: string}> => {
+    try {
+      // First verify the invoice exists
+      await fetchAPI(`/inventory/invoices/${id}/`);
+
+      // Proceed with delete operation
+      const result = await fetchAPI(`/inventory/invoices/${id}/delete/`, { method: 'POST' });
+
+      // Log successful operation
+      console.log(`Invoice ${id} successfully deleted`);
+      return result;
+    } catch (error: any) {
+      // Enhanced error logging
+      console.error(`Failed to delete invoice ${id}:`, {
+        error: error.message,
+        status: error.status || 'unknown',
+        timestamp: new Date().toISOString(),
+        invoiceId: id
+      });
+
+      // Provide user-friendly error messages
+      if (error.message.includes('404') || error.message.includes('Not found')) {
+        throw new Error(`Rechnung mit ID ${id} nicht gefunden. Die Rechnung wurde möglicherweise bereits gelöscht oder existiert nicht.`);
+      }
+      throw error;
+    }
+  },
 }
 
 // Export useful hooks
