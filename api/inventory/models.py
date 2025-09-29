@@ -65,8 +65,8 @@ class Customer(models.Model):
     customer_number = models.CharField(
         max_length=4,
         unique=True,
-        null=False,
-        blank=False,
+        null=True,
+        blank=True,
         help_text="4-stellige Kundennummer (ab 1000)",
         validators=[validate_customer_number]
     )

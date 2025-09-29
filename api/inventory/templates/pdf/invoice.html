@@ -1,3 +1,4 @@
+{% load invoice_extras %}
 <!DOCTYPE html>
 <html lang="de-CH">
 <head>
@@ -9,146 +10,263 @@
     </style>
 </head>
 <body>
-    <!-- Header with supplier and customer information -->
+    <!-- Header -->
     <div class="header">
         <div class="header-row">
-            <div class="header-supplier">
-                {% if supplier.logo %}
-                    <img src="{{ supplier.logo.url }}" alt="{{ supplier.name }}" class="supplier-logo">
+            <!-- Supplier info left -->
+            <div class="supplier-info">
+                <div>{{ supplier.name|default:"Bi-Swiss GmbH" }}</div>
+                <div>{{ supplier.street|default:"Eichengasse 3" }}</div>
+                <div>{{ supplier.postal_code|default:"CH-4702" }} {{ supplier.city|default:"Oensingen" }}</div>
+            </div>
+
+            <!-- Logo placeholder right -->
+            <div class="logo-placeholder">
+                Logo
+            </div>
+        </div>
+
+        <!-- Header line -->
+        <div class="header-line"></div>
+    </div>
+
+    <!-- Address and meta columns -->
+    <div class="address-meta-section">
+        <!-- Left column - Address -->
+        <div class="left-column">
+            <div class="section-title">Adresse</div>
+            <div class="address-lines">
+                <div>{{ customer.name }}</div>
+                {% if customer.contact_name %}
+                <div>{{ customer.contact_name }}</div>
                 {% endif %}
-                <div class="supplier-info">
-                    <div class="bold">{{ supplier.name }}</div>
-                    <div>{{ supplier.street }}</div>
-                    <div>{{ supplier.postal_code }} {{ supplier.city }}</div>
-                    {% if supplier.country != "CH" %}
-                        <div>{{ supplier.country }}</div>
-                    {% endif %}
-                    <div style="margin-top: 5px;">
-                        <div>Tel: {{ supplier.phone }}</div>
-                        <div>E-Mail: {{ supplier.email }}</div>
-                    </div>
-                    {% if supplier.mwst_number %}
-                        <div style="margin-top: 5px;">
-                            <div>MWST-Nr: {{ supplier.mwst_number }}</div>
-                        </div>
-                    {% endif %}
-                </div>
+                {{ customer.address|linebreaksbr }}
             </div>
-            
-            <div class="header-customer">
-                <div class="customer-label">Rechnungsadresse:</div>
-                <div class="customer-info">
-                    <div class="bold">{{ customer.name }}</div>
+
+            <div class="section-title delivery-address">Lieferadresse</div>
+            <div class="address-lines">
+                {% if customer.shipping_address %}
+                    {{ customer.shipping_address|linebreaksbr }}
+                {% else %}
+                    <div>{{ customer.name }}</div>
                     {% if customer.contact_name %}
-                        <div>z.H. {{ customer.contact_name }}</div>
+                    <div>{{ customer.contact_name }}</div>
                     {% endif %}
-                    <div>{{ customer.address|linebreaksbr }}</div>
-                    {% if customer.shipping_address and customer.shipping_address != customer.address %}
-                        <div style="margin-top: 10px;">
-                            <div class="customer-label">Lieferadresse:</div>
-                            <div>{{ customer.shipping_address|linebreaksbr }}</div>
-                        </div>
-                    {% endif %}
-                </div>
+                    {{ customer.address|linebreaksbr }}
+                {% endif %}
             </div>
         </div>
-        
-        <!-- Invoice details -->
-        <div class="invoice-details">
-            <div class="invoice-number">Rechnung Nr. {{ invoice.invoice_number }}</div>
-            <div class="invoice-date">Rechnungsdatum: {{ invoice.issue_date|date:"d.m.Y" }}</div>
-            <div class="invoice-date">Fälligkeitsdatum: {{ invoice.due_date|date:"d.m.Y" }}</div>
-            {% if order.order_number %}
-                <div class="invoice-date">Lieferschein: {{ order.order_number }}</div>
-            {% endif %}
-            {% if order.delivery_date %}
-                <div class="invoice-date">Lieferdatum: {{ order.delivery_date|date:"d.m.Y" }}</div>
-            {% endif %}
+
+        <!-- Right column - Document info -->
+        <div class="right-column">
+            <div class="meta-line">
+                <span class="meta-label">Dokument Nr.:</span>
+                <span class="meta-value">{{ invoice.invoice_number }}</span>
+            </div>
+            <div class="meta-line">
+                <span class="meta-label">Dokument Datum:</span>
+                <span class="meta-value">{{ invoice.issue_date|date:"d.m.Y" }}</span>
+            </div>
+            <div class="meta-line">
+                <span class="meta-label">Ihre Kundennr.:</span>
+                <span class="meta-value">{{ customer.customer_number }}</span>
+            </div>
+            <div class="meta-line">
+                <span class="meta-label">Lieferdatum:</span>
+                <span class="meta-value">{% if order.delivery_date %}{{ order.delivery_date|date:"d.m.Y" }}{% endif %}</span>
+            </div>
+            <div class="meta-line">
+                <span class="meta-label">Zahlungsmethode:</span>
+                <span class="meta-value">Rechnung</span>
+            </div>
+            <div class="meta-line">
+                <span class="meta-label">Zahlbar bis:</span>
+                <span class="meta-value">{{ invoice.due_date|date:"d.m.Y" }}</span>
+            </div>
+            <div class="meta-line">
+                <span class="meta-label">MwSt-Nr:</span>
+                <span class="meta-value">{{ supplier.vat_id|default:"CHE-390.391.667 MWST" }}</span>
+            </div>
         </div>
+    </div>
+
+    <!-- Invoice title -->
+    <div class="invoice-title-section">
+        <div class="title-left">Rechnung {{ invoice.invoice_number }}</div>
+        <div class="title-right">Oensingen  /  {{ invoice.issue_date|swiss_date_format }}</div>
+    </div>
+
+    <div class="title-line"></div>
+
+    <div class="thank-you-text">
+        Wir danken für ihren Auftrag und stellen Ihnen folgende Positionen in Rechnung:
     </div>
 
     <!-- Items table -->
     <table class="items-table">
         <thead>
             <tr>
-                <th class="center">Pos</th>
-                <th>Artikel</th>
-                <th class="center">Menge</th>
-                <th class="right">Einzelpreis</th>
-                <th class="center">MWST</th>
-                <th class="right">Gesamt</th>
+                <th class="col-bezeichnung">Bezeichnung</th>
+                <th class="col-menge">Menge</th>
+                <th class="col-einheit">Einheit</th>
+                <th class="col-mwst">MwSt</th>
+                <th class="col-preis">Preis</th>
+                <th class="col-betrag">Betrag CHF</th>
             </tr>
         </thead>
         <tbody>
             {% for line in lines %}
             <tr>
-                <td class="center">{{ forloop.counter }}</td>
-                <td>
-                    <div class="bold">{{ line.name }}</div>
-                    {% if line.description %}
-                        <div class="small">{{ line.description }}</div>
-                    {% endif %}
-                    {% if line.sku %}
-                        <div class="small">Art.-Nr: {{ line.sku }}</div>
-                    {% endif %}
-                </td>
-                <td class="center">{{ line.qty_base }}</td>
-                <td class="currency">{{ line.unit_price|floatformat:2 }} {{ invoice.currency }}</td>
-                <td class="center">{{ line.tax_rate|floatformat:1 }}%</td>
-                <td class="currency">{{ line.line_total_gross|floatformat:2 }} {{ invoice.currency }}</td>
+                <td class="col-bezeichnung">{{ line.name }}</td>
+                <td class="col-menge">{{ line.qty_base|floatformat:0 }}</td>
+                <td class="col-einheit">Verpackung</td>
+                <td class="col-mwst">{{ line.tax_rate|floatformat:2 }} %</td>
+                <td class="col-preis">{{ line.unit_price|swiss_currency }} CHF</td>
+                <td class="col-betrag">{{ line.line_total_net|swiss_currency }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
+    <div class="table-bottom-line"></div>
+
+    <!-- Info Palette section -->
+    <div class="info-palette-section">
+        <div class="info-title">Info Palette</div>
+        {% for line in lines %}
+        <div class="info-text">{{ line.qty_base }} × {{ line.name }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="info-bottom-line"></div>
+
     <!-- Totals section -->
-    <div class="totals">
-        <table class="totals-table">
-            <tr>
-                <td class="label">Zwischensumme:</td>
-                <td class="amount currency">{{ invoice.total_net|floatformat:2 }} {{ invoice.currency }}</td>
-            </tr>
-            <tr>
-                <td class="label">MWST:</td>
-                <td class="amount currency">{{ invoice.total_tax|floatformat:2 }} {{ invoice.currency }}</td>
-            </tr>
-            <tr class="total-row">
-                <td class="label">Total {{ invoice.currency }}:</td>
-                <td class="amount currency">{{ invoice.total_gross|floatformat:2 }} {{ invoice.currency }}</td>
-            </tr>
-        </table>
+    <div class="totals-section">
+        <div class="totals-line">
+            <span class="total-label">Total CHF</span>
+            <span class="total-value">{{ invoice.total_net|swiss_currency }}</span>
+        </div>
+        <div class="totals-line">
+            <span class="total-label">Total MwSt 2.60% Von CHF</span>
+            <span class="total-value">{{ invoice.total_tax|swiss_currency }}</span>
+        </div>
+        <div class="totals-line">
+            <span class="total-label">Total inkl. MwSt CHF</span>
+            <span class="total-value">{{ invoice.total_gross|swiss_currency }}</span>
+        </div>
     </div>
 
     <!-- Payment information -->
-    {% if supplier.iban %}
-    <div style="margin-top: 30px; font-size: 10pt;">
-        <div class="bold">Zahlungsinformationen:</div>
-        <div style="margin-top: 5px;">
-            <div>IBAN: {{ supplier.iban }}</div>
-            {% if supplier.bank_name %}
-                <div>Bank: {{ supplier.bank_name }}</div>
-            {% endif %}
-            <div>Zahlungsziel: {{ invoice.due_date|date:"d.m.Y" }}</div>
+    <div class="payment-section">
+        <div class="payment-title">Zahlung Bitte an:</div>
+        <div class="payment-info">
+            <div>{{ supplier.bank_name|default:"Basellandschaftliche Kantonalbank, Liestal" }}</div>
+            <div>{{ supplier.iban|default:"CH06 0076 9442 3946 4200 2" }}</div>
         </div>
-    </div>
-    {% endif %}
 
-    <!-- QR Bill section -->
-    {% if qr_data_uri %}
-    <div class="qr-section">
-        <div class="qr-title">QR-Rechnung</div>
-        <div class="qr-bill">
-            <img src="{{ qr_data_uri }}" alt="Swiss QR Bill">
-        </div>
-        <div style="margin-top: 10px; font-size: 8pt; color: #666;">
-            Zahlen Sie bequem mit dem QR-Code über Ihre Banking-App oder am Postschalter.
-        </div>
     </div>
-    {% endif %}
+
+    <!-- Greeting -->
+    <div class="greeting-section">
+        <div>Für ihr Vertrauen danken wir Ihnen</div>
+        <div>Freundliche Grüsse</div>
+        <div>{{ supplier.name|default:"Bi-Swiss GmbH" }}</div>
+    </div>
 
     <!-- Footer -->
     <div class="footer">
-        Erstellt mit Depotix • {{ today|date:"d.m.Y" }}
+        <div class="footer-left">{{ supplier.name|default:"Bi-Swiss GmbH" }}  /  {{ supplier.street|default:"Eichengasse 3" }}  /  {{ supplier.postal_code|default:"4207" }} {{ supplier.city|default:"Oensingen" }}</div>
+        <div class="footer-center">Telefon {{ supplier.phone|default:"+41 76 840 55 40" }}</div>
+        <div class="footer-right">UID MwSt.: {{ supplier.vat_id|default:"CHE-390.391.667 MWST" }}</div>
     </div>
+
+    {% if qr_data_uri %}
+    <!-- Page 2 - Swiss QR Bill -->
+    <div class="page-break"></div>
+
+    <div class="qr-page">
+        <div class="qr-header">
+            <h2>QR-Rechnung</h2>
+            <p>Schweizer QR-Code nach Standard ISO 20022</p>
+        </div>
+
+        <div class="qr-content">
+            <div class="qr-section-left">
+                <div class="qr-title">Empfangsschein</div>
+
+                <div class="qr-field">
+                    <div class="qr-label">Konto / Zahlbar an</div>
+                    <div class="qr-value">{{ supplier.iban }}</div>
+                    <div class="qr-value">{{ supplier.name }}</div>
+                    <div class="qr-value">{{ supplier.street }}</div>
+                    <div class="qr-value">{{ supplier.postal_code }} {{ supplier.city }}</div>
+                </div>
+
+                <div class="qr-field">
+                    <div class="qr-label">Zahlbar durch</div>
+                    <div class="qr-value">{{ customer.name }}</div>
+                    {% if customer.contact_name %}
+                    <div class="qr-value">{{ customer.contact_name }}</div>
+                    {% endif %}
+                    {{ customer.address|linebreaksbr }}
+                </div>
+
+                <div class="qr-field">
+                    <div class="qr-label">Währung</div>
+                    <div class="qr-value">{{ invoice.currency }}</div>
+                </div>
+
+                <div class="qr-field">
+                    <div class="qr-label">Betrag</div>
+                    <div class="qr-amount">{{ invoice.total_gross|swiss_currency }}</div>
+                </div>
+            </div>
+
+            <div class="qr-section-center">
+                <div class="qr-code-large">
+                    <img src="{{ qr_data_uri }}" alt="Swiss QR Bill Code">
+                </div>
+            </div>
+
+            <div class="qr-section-right">
+                <div class="qr-title">Zahlteil</div>
+
+                <div class="qr-field">
+                    <div class="qr-label">Währung</div>
+                    <div class="qr-value">{{ invoice.currency }}</div>
+                </div>
+
+                <div class="qr-field">
+                    <div class="qr-label">Betrag</div>
+                    <div class="qr-amount">{{ invoice.total_gross|swiss_currency }}</div>
+                </div>
+
+                <div class="qr-field">
+                    <div class="qr-label">Konto / Zahlbar an</div>
+                    <div class="qr-value">{{ supplier.iban }}</div>
+                    <div class="qr-value">{{ supplier.name }}</div>
+                    <div class="qr-value">{{ supplier.street }}</div>
+                    <div class="qr-value">{{ supplier.postal_code }} {{ supplier.city }}</div>
+                </div>
+
+                <div class="qr-field">
+                    <div class="qr-label">Zusätzliche Informationen</div>
+                    <div class="qr-value">Rechnung {{ invoice.invoice_number }}</div>
+                    <div class="qr-value">Fälligkeitsdatum: {{ invoice.due_date|date:"d.m.Y" }}</div>
+                </div>
+
+                <div class="qr-field">
+                    <div class="qr-label">Zahlbar durch</div>
+                    <div class="qr-value">{{ customer.name }}</div>
+                    {% if customer.contact_name %}
+                    <div class="qr-value">{{ customer.contact_name }}</div>
+                    {% endif %}
+                    {{ customer.address|linebreaksbr }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
 </body>
 </html>

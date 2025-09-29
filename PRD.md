@@ -21,16 +21,29 @@ Depotix is an inventory management system running at `depotix.ch` with a complet
   - `types.d.ts` - TypeScript definitions
   - `package.json` - Dependencies and build scripts
 
-### 2. Backend (Django)
-- **Technology**: Django with Python
-- **Container**: `server-api-1`
+### 2. Backend (Django API)
+- **Technology**: Django 5.0.8 with Django REST Framework
+- **Source Code**: `/home/deploy/Depotix/api/` directory
+- **Build File**: `/home/deploy/Depotix/api/Dockerfile`
+- **Container Image**: `server-api`
+- **Container Name**: `api` (running container)
 - **Port**: 8000 (internal)
-- **Database Models**: Located in `api/inventory/models.py`
+- **Database**: PostgreSQL (via DATABASE_URL environment variable)
+- **Key Files**:
+  - `api/inventory/models.py` - Database models (Customer, Invoice, etc.)
+  - `api/inventory/views.py` - API endpoints and business logic
+  - `api/inventory/serializers.py` - API data serialization
+  - `api/inventory/templates/pdf/` - PDF invoice templates
+  - `api/depotix_api/settings.py` - Django configuration
 
 ### 3. Database
 - **Technology**: PostgreSQL 16
 - **Container**: `server-postgres-1`
 - **Port**: 5432 (internal)
+- **Database Name**: `depotix`
+- **Username**: `depotix`
+- **Password**: `4Y__dBU85RFg1EnsPPJCjFSY-8D0zQv4UY9qDUcHYY0` (from container env)
+- **Network**: `server_appnet`
 
 ### 4. Reverse Proxy (Caddy)
 - **Container**: `server-caddy-1`
@@ -51,16 +64,60 @@ depotix.ch (Caddy) → web:3000 (Frontend)
 ```
 
 ### Build Process
-1. **Frontend Build**:
+
+#### Frontend Build
+1. **Build Image**:
    ```bash
    docker build -f Dockerfile.frontend -t server-web .
    ```
 
-2. **Container Replacement**:
+2. **Replace Container**:
    ```bash
    docker stop web && docker rm web
    docker run -d --name web --network server_appnet server-web
    ```
+
+#### Backend Build
+1. **Build API Image**:
+   ```bash
+   docker build -t server-api /home/deploy/Depotix/api/
+   ```
+
+2. **Replace API Container**:
+   ```bash
+   docker stop api && docker rm api
+   docker run -d --name api --network server_appnet -p 8000:8000 \
+     -e DJANGO_SETTINGS_MODULE=depotix_api.settings \
+     -e DATABASE_URL="postgres://depotix:4Y__dBU85RFg1EnsPPJCjFSY-8D0zQv4UY9qDUcHYY0@server-postgres-1:5432/depotix" \
+     server-api
+   ```
+
+#### ⚠️ CRITICAL DEPLOYMENT ERRORS TO AVOID ⚠️
+
+**WRONG DEPLOYMENT PATTERN** (what Claude often does incorrectly):
+```bash
+# ❌ WRONG - Uses docker-compose (development only)
+docker-compose up -d
+
+# ❌ WRONG - Wrong network name
+docker run --network depotix_default ...
+
+# ❌ WRONG - Missing DATABASE_URL
+docker run -e DB_HOST=db -e DB_PASSWORD=defaultpass ...
+
+# ❌ WRONG - Wrong database password
+docker run -e DATABASE_URL="postgres://depotix:defaultpass@..."
+```
+
+**CORRECT DEPLOYMENT PATTERN** (production):
+```bash
+# ✅ CORRECT - Manual container with correct network
+docker stop api && docker rm api
+docker run -d --name api --network server_appnet -p 8000:8000 \
+  -e DJANGO_SETTINGS_MODULE=depotix_api.settings \
+  -e DATABASE_URL="postgres://depotix:4Y__dBU85RFg1EnsPPJCjFSY-8D0zQv4UY9qDUcHYY0@server-postgres-1:5432/depotix" \
+  server-api
+```
 
 ### Cache Management
 - **Critical**: Always use `--no-cache` for production builds
@@ -83,7 +140,16 @@ depotix.ch (Caddy) → web:3000 (Frontend)
 ### Making Backend Changes
 1. **Edit source files** in `/home/deploy/Depotix/api/`
 2. **Commit changes** to Git
-3. **Rebuild backend container** (similar process)
+3. **Build API image**: `docker build -t server-api /home/deploy/Depotix/api/`
+4. **Replace container**:
+   ```bash
+   docker stop api && docker rm api
+   docker run -d --name api --network server_appnet -p 8000:8000 \
+     -e DJANGO_SETTINGS_MODULE=depotix_api.settings \
+     -e DATABASE_URL="postgres://depotix:4Y__dBU85RFg1EnsPPJCjFSY-8D0zQv4UY9qDUcHYY0@server-postgres-1:5432/depotix" \
+     server-api
+   ```
+5. **Verify**: Check API endpoints and logs: `docker logs api`
 
 ## Troubleshooting
 
@@ -136,6 +202,9 @@ docker exec web grep -r "search_term" .next/
 - **Customer Interface**: `/home/deploy/Depotix/app/customers/page.tsx`
 - **Type Definitions**: `/home/deploy/Depotix/types.d.ts`
 - **Backend Models**: `/home/deploy/Depotix/api/inventory/models.py`
+- **Invoice PDF Templates**: `/home/deploy/Depotix/api/inventory/templates/pdf/`
+- **API Views**: `/home/deploy/Depotix/api/inventory/views.py`
+- **Swiss Currency Formatting**: `/home/deploy/Depotix/api/inventory/templatetags/invoice_extras.py`
 
 ### Docker Compose
 - **File Location**: `/home/deploy/Depotix/docker-compose.yml` (development)
@@ -169,23 +238,77 @@ docker exec web grep -r "search_term" .next/
 - **Container Status**: `docker ps`
 - **Logs**: `docker logs [container-name]`
 
+## Critical Deployment Mistakes & Solutions
+
+### ⚠️ Most Common Claude Deployment Error ⚠️
+
+**THE MISTAKE**: Claude repeatedly tries to use docker-compose or wrong environment variables, ignoring production setup.
+
+**WHY IT HAPPENS**: Claude confuses development vs production patterns and doesn't read the existing container configuration.
+
+**THE SOLUTION**: Always check existing containers first, then use the EXACT production pattern below:
+
+```bash
+# 1. ALWAYS check what's currently running first
+docker ps
+
+# 2. Build the new image
+docker build -t server-api /home/deploy/Depotix/api/
+
+# 3. Replace container with EXACT production config
+docker stop api && docker rm api
+docker run -d --name api --network server_appnet -p 8000:8000 \
+  -e DJANGO_SETTINGS_MODULE=depotix_api.settings \
+  -e DATABASE_URL="postgres://depotix:4Y__dBU85RFg1EnsPPJCjFSY-8D0zQv4UY9qDUcHYY0@server-postgres-1:5432/depotix" \
+  server-api
+```
+
+### Database Connection Issues
+
+**PROBLEM**: API connects to SQLite instead of PostgreSQL
+**CAUSE**: Missing or incorrect DATABASE_URL environment variable
+**SOLUTION**: Always use the complete DATABASE_URL with correct password
+
+### Invoice System & PDF Generation
+
+**KEY FEATURES IMPLEMENTED**:
+- Swiss QR bill generation with QR code on page 2
+- Swiss currency formatting (7'688,60 format)
+- Swiss date formatting (05. Sept. 2025 format)
+- Real customer data in PDF templates
+- Invoice deletion functionality (DELETE /api/inventory/invoices/{id}/)
+- All invoices visible (including archived)
+
+**TEMPLATE LOCATIONS**:
+- Main template: `api/inventory/templates/pdf/invoice.html`
+- Styles: `api/inventory/templates/pdf/_styles.css`
+- Swiss filters: `api/inventory/templatetags/invoice_extras.py`
+
+### Customer Number Validation
+
+**IMPLEMENTED**: 4-digit customer numbers starting from 1000
+**VALIDATION**: Custom validator in `api/inventory/models.py`
+**UNIQUENESS**: Enforced per user in serializer
+
 ## Lessons Learned
 
 ### Critical Points
-1. **Always verify which containers are actually serving the domain**
-2. **Old containers may continue running even after new builds**
-3. **Container naming is crucial** - Caddy looks for specific container names
-4. **Network isolation** - All containers must be in the same Docker network
-5. **Build cache can be persistent** - use `--no-cache` for critical updates
+1. **NEVER use docker-compose in production** - This system uses manual container management
+2. **Always verify which containers are actually running** - `docker ps` before any changes
+3. **Use the EXACT database password from container env** - Not `defaultpass`
+4. **Network name is `server_appnet`** - Not `depotix_default` or any other name
+5. **Container naming is crucial** - `api` container name, `server-api` image name
+6. **DATABASE_URL is required** - Settings.py falls back to SQLite without it
 
 ### Best Practices
-1. **Commit before building** - Ensure all changes are in Git
-2. **Verify build contents** - Check that changes appear in built files
-3. **Test immediately** - Verify website functionality after deployment
-4. **Monitor logs** - Watch container logs during deployment
-5. **Document changes** - Keep this PRD updated with new insights
+1. **Read existing container config first** - `docker inspect [container]` to see environment
+2. **Commit before building** - Ensure all changes are in Git
+3. **Verify database connection** - Check logs show PostgreSQL, not SQLite
+4. **Test API endpoints** - Verify CRUD operations work after deployment
+5. **Update this PRD** - Document new features and deployment patterns
 
 ---
 
-*Last Updated: 2025-09-22*
+*Last Updated: 2025-09-29*
 *System Status: Production Ready*
+*Recent Updates: Added invoice deletion, Swiss PDF templates, deployment error documentation*

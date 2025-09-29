@@ -28,7 +28,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-%0%d@i^j7*g6zbd5#g4e0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = [h for h in os.getenv("DJANGO_ALLOWED_HOSTS","").split(",") if h]
+ALLOWED_HOSTS = [h for h in os.getenv("DJANGO_ALLOWED_HOSTS","depotix.ch,localhost,127.0.0.1").split(",") if h]
 
 # Environment variables for production
 DATABASE_URL = os.getenv("DATABASE_URL", "")

@@ -1,224 +1,390 @@
-/* Basic A4 PDF styles for Swiss invoices */
+/* A4 PDF styles for Swiss invoice - exact layout specification */
 
 @page {
     size: A4;
-    margin: 15mm;
-    @bottom-center {
-        content: "Seite " counter(page) " von " counter(pages);
-        font-size: 9pt;
-        color: #666;
-    }
+    margin: 18mm 18mm 18mm 18mm;
 }
 
 body {
-    font-family: 'Arial', 'Helvetica', sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 10pt;
-    line-height: 1.4;
-    color: #333;
+    line-height: 1.2;
+    color: #000;
     margin: 0;
     padding: 0;
 }
 
-/* Header styles */
+/* Header section */
 .header {
-    margin-bottom: 30px;
+    margin-bottom: 20mm;
 }
 
 .header-row {
-    display: table;
-    width: 100%;
-    margin-bottom: 20px;
-}
-
-.header-supplier, .header-customer {
-    display: table-cell;
-    vertical-align: top;
-    width: 50%;
-}
-
-.header-customer {
-    text-align: left;
-    padding-left: 20px;
-}
-
-.supplier-logo {
-    max-height: 60px;
-    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8mm;
 }
 
 .supplier-info {
-    font-size: 9pt;
-    line-height: 1.3;
-}
-
-.customer-label {
-    font-weight: bold;
-    font-size: 9pt;
-    color: #666;
-    margin-bottom: 5px;
-}
-
-.customer-info {
     font-size: 10pt;
-    line-height: 1.3;
+    line-height: 1.2;
 }
 
-/* Invoice details */
-.invoice-details {
-    margin: 30px 0;
+.logo-placeholder {
+    width: 45mm;
+    height: 25mm;
+    border: 1pt solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10pt;
+}
+
+.header-line {
+    border-bottom: 0.5pt solid #CCC;
+    margin-bottom: 8mm;
+}
+
+/* Address and meta columns */
+.address-meta-section {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15mm;
+}
+
+.left-column {
+    width: 50%;
+}
+
+.right-column {
+    width: 45%;
     text-align: right;
 }
 
-.invoice-number {
-    font-size: 14pt;
+.section-title {
+    font-size: 10pt;
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: 3mm;
 }
 
-.invoice-date {
+.delivery-address {
+    margin-top: 8mm;
+}
+
+.address-lines {
     font-size: 10pt;
+    line-height: 1.2;
+}
+
+.address-lines div {
+    margin-bottom: 1mm;
+}
+
+.meta-line {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1mm;
+}
+
+.meta-label {
+    font-size: 9pt;
     color: #666;
+}
+
+.meta-value {
+    font-size: 10pt;
+    color: #000;
+}
+
+/* Invoice title section */
+.invoice-title-section {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3mm;
+}
+
+.title-left {
+    font-size: 14pt;
+    font-weight: bold;
+}
+
+.title-right {
+    font-size: 10pt;
+}
+
+.title-line {
+    border-bottom: 0.5pt solid #CCC;
+    margin-bottom: 5mm;
+}
+
+.thank-you-text {
+    font-size: 10pt;
+    margin-bottom: 8mm;
 }
 
 /* Items table */
 .items-table {
     width: 100%;
     border-collapse: collapse;
-    margin: 20px 0;
-    font-size: 9pt;
+    font-size: 10pt;
+    margin-bottom: 5mm;
+}
+
+.items-table thead tr {
+    border-top: 0.5pt solid #CCC;
 }
 
 .items-table th {
-    background-color: #f5f5f5;
-    border-bottom: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
     font-weight: bold;
-    font-size: 8pt;
+    padding: 2mm 1mm;
+    text-align: left;
 }
 
 .items-table td {
-    border-bottom: 1px solid #eee;
-    padding: 6px 8px;
+    padding: 2mm 1mm;
     vertical-align: top;
 }
 
-.items-table th.right,
-.items-table td.right {
+/* Column widths and alignments */
+.col-bezeichnung {
+    width: 46%;
+    text-align: left;
+}
+
+.col-menge {
+    width: 9%;
     text-align: right;
 }
 
-.items-table th.center,
-.items-table td.center {
-    text-align: center;
+.col-einheit {
+    width: 12%;
+    text-align: right;
 }
 
-/* Currency formatting */
-.currency {
+.col-mwst {
+    width: 8%;
     text-align: right;
-    white-space: nowrap;
+}
+
+.col-preis {
+    width: 12%;
+    text-align: right;
+}
+
+.col-betrag {
+    width: 13%;
+    text-align: right;
+}
+
+.table-bottom-line {
+    border-bottom: 0.5pt solid #CCC;
+    margin-bottom: 8mm;
+}
+
+/* Info Palette section */
+.info-palette-section {
+    margin-bottom: 5mm;
+}
+
+.info-title {
+    font-size: 10pt;
+    font-weight: bold;
+    margin-bottom: 3mm;
+}
+
+.info-text {
+    font-size: 9pt;
+    color: #666;
+    line-height: 1.2;
+    margin-bottom: 1mm;
+}
+
+.info-bottom-line {
+    border-bottom: 0.5pt solid #CCC;
+    margin-bottom: 10mm;
 }
 
 /* Totals section */
-.totals {
-    margin: 20px 0;
-    width: 100%;
-}
-
-.totals-table {
-    width: 300px;
+.totals-section {
+    width: 60mm;
     margin-left: auto;
-    border-collapse: collapse;
+    margin-bottom: 15mm;
+}
+
+.totals-line {
+    display: flex;
+    justify-content: space-between;
     font-size: 10pt;
+    margin-bottom: 1mm;
 }
 
-.totals-table td {
-    padding: 4px 8px;
-    border-bottom: 1px solid #eee;
+.total-label {
+    text-align: left;
 }
 
-.totals-table .label {
+.total-value {
     text-align: right;
-    font-weight: normal;
-}
-
-.totals-table .amount {
-    text-align: right;
-    width: 80px;
-}
-
-.totals-table .total-row {
     font-weight: bold;
-    border-top: 2px solid #333;
-    border-bottom: 2px solid #333;
 }
 
-/* QR Bill section */
-.qr-section {
-    margin-top: 40px;
-    page-break-inside: avoid;
+/* Payment section */
+.payment-section {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15mm;
 }
 
-.qr-title {
+.payment-title {
+    font-size: 10pt;
     font-weight: bold;
-    margin-bottom: 10px;
-    font-size: 11pt;
+    margin-bottom: 3mm;
 }
 
-.qr-bill {
-    text-align: center;
+.payment-info {
+    font-size: 10pt;
+    line-height: 1.2;
 }
 
-.qr-bill img {
-    max-width: 300px;
-    height: auto;
+.payment-info div {
+    margin-bottom: 1mm;
+}
+
+.qr-code {
+    width: 35mm;
+    height: 35mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qr-code img {
+    max-width: 35mm;
+    max-height: 35mm;
+}
+
+/* Greeting section */
+.greeting-section {
+    font-size: 10pt;
+    margin-bottom: 20mm;
+    line-height: 1.4;
+}
+
+.greeting-section div {
+    margin-bottom: 1mm;
 }
 
 /* Footer */
 .footer {
-    position: fixed;
-    bottom: 10mm;
-    left: 0;
-    right: 0;
-    text-align: center;
-    font-size: 8pt;
+    position: absolute;
+    bottom: 18mm;
+    left: 18mm;
+    right: 18mm;
+    display: flex;
+    justify-content: space-between;
+    font-size: 9pt;
     color: #666;
-    border-top: 1px solid #eee;
-    padding-top: 5px;
 }
 
-/* Utility classes */
-.text-right {
+.footer-left {
+    flex: 1;
+    text-align: left;
+}
+
+.footer-center {
+    flex: 1;
+    text-align: center;
+}
+
+.footer-right {
+    flex: 1;
     text-align: right;
 }
 
-.text-center {
+/* Page Break */
+.page-break {
+    page-break-before: always;
+}
+
+/* QR Page Styles */
+.qr-page {
+    padding: 20mm;
+}
+
+.qr-header {
     text-align: center;
+    margin-bottom: 20mm;
 }
 
-.bold {
+.qr-header h2 {
+    font-size: 16pt;
     font-weight: bold;
+    margin-bottom: 5mm;
 }
 
-.small {
+.qr-header p {
+    font-size: 10pt;
+    color: #666;
+}
+
+.qr-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.qr-section-left {
+    width: 25%;
     font-size: 8pt;
 }
 
-.mt-20 {
-    margin-top: 20px;
+.qr-section-center {
+    width: 35%;
+    text-align: center;
 }
 
-.mb-20 {
-    margin-bottom: 20px;
+.qr-section-right {
+    width: 35%;
+    font-size: 8pt;
 }
 
-/* Responsive adjustments for small amounts */
-@media print {
-    .items-table {
-        font-size: 8pt;
-    }
-    
-    .totals-table {
-        font-size: 9pt;
-    }
+.qr-title {
+    font-size: 11pt;
+    font-weight: bold;
+    margin-bottom: 8mm;
+    border-bottom: 0.5pt solid #000;
+    padding-bottom: 2mm;
+}
+
+.qr-field {
+    margin-bottom: 8mm;
+}
+
+.qr-label {
+    font-size: 6pt;
+    color: #666;
+    margin-bottom: 1mm;
+    text-transform: uppercase;
+}
+
+.qr-value {
+    font-size: 8pt;
+    line-height: 1.2;
+    margin-bottom: 0.5mm;
+}
+
+.qr-amount {
+    font-size: 12pt;
+    font-weight: bold;
+}
+
+.qr-code-large {
+    margin: 10mm 0;
+}
+
+.qr-code-large img {
+    max-width: 46mm;
+    max-height: 46mm;
+    width: 46mm;
+    height: 46mm;
 }

@@ -500,8 +500,10 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         """Filter invoices by current user - non-staff users see only their invoices"""
         user = self.request.user
         if user.is_staff:
+            # Staff users see all invoices including archived ones
             return Invoice.objects.all().select_related('order', 'order__customer', 'order__created_by')
         else:
+            # Regular users see all their invoices (including archived ones)
             return Invoice.objects.filter(order__created_by=user).select_related('order', 'order__customer', 'order__created_by')
     
     @action(detail=True, methods=['get'], url_path='pdf')
@@ -645,6 +647,39 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             logger.error(f"Failed to archive invoice {pk}: {str(e)}", exc_info=True)
             return Response(
                 {'error': {'code': 'ARCHIVE_FAILED', 'message': f'Fehler beim Archivieren: {str(e)}'}},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def destroy(self, request, *args, **kwargs):
+        """Delete an invoice permanently"""
+        import logging
+        logger = logging.getLogger(__name__)
+
+        try:
+            invoice = self.get_object()
+            invoice_number = invoice.invoice_number
+
+            logger.info(f"Attempting to delete invoice {invoice_number} (ID: {invoice.id}) for user {request.user}")
+
+            # Perform the delete operation
+            invoice.delete()
+
+            logger.info(f"Successfully deleted invoice {invoice_number}")
+            return Response(
+                {'message': f'Rechnung {invoice_number} erfolgreich gelöscht'},
+                status=status.HTTP_204_NO_CONTENT
+            )
+
+        except Invoice.DoesNotExist:
+            logger.error(f"Invoice does not exist for delete operation")
+            return Response(
+                {'error': {'code': 'INVOICE_NOT_FOUND', 'message': 'Rechnung nicht gefunden'}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            logger.error(f"Failed to delete invoice: {str(e)}", exc_info=True)
+            return Response(
+                {'error': {'code': 'DELETE_FAILED', 'message': f'Fehler beim Löschen: {str(e)}'}},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 

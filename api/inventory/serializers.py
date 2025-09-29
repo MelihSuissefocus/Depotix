@@ -59,6 +59,34 @@ class CustomerSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'owner', 'created_at', 'updated_at']
 
+    def validate_customer_number(self, value):
+        """Validate customer number uniqueness and format"""
+        if not value:
+            raise serializers.ValidationError("Kundennummer ist erforderlich")
+
+        # Format validation (also done in model validator, but good to have here too)
+        if not value.isdigit() or len(value) != 4:
+            raise serializers.ValidationError("Kundennummer muss genau 4 Ziffern haben")
+
+        customer_num = int(value)
+        if customer_num < 1000:
+            raise serializers.ValidationError("Kundennummer muss mindestens 1000 sein")
+
+        # Uniqueness validation
+        customer_queryset = Customer.objects.filter(
+            customer_number=value,
+            owner=self.context['request'].user
+        )
+
+        # If this is an update, exclude the current instance
+        if self.instance:
+            customer_queryset = customer_queryset.exclude(pk=self.instance.pk)
+
+        if customer_queryset.exists():
+            raise serializers.ValidationError("Diese Kundennummer ist bereits vergeben")
+
+        return value
+
     def create(self, validated_data):
         # Auto-assign owner from request user
         validated_data['owner'] = self.context['request'].user
