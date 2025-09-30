@@ -231,8 +231,12 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
     }
   }
 
-  const handleClose = () => {
-    if (!isSubmitting) {
+  const handleClose = (open: boolean) => {
+    // Radix Dialog calls onOpenChange with the new open state
+    // When user closes (ESC, X, outside-click), open = false
+    if (!open) {
+      // Allow modal to close even during submission (Radix handles this)
+      // Cleanup happens after close
       resetForm()
       onClose()
     }
@@ -457,7 +461,7 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
         <DialogFooter>
           <Button
             variant="outline"
-            onClick={handleClose}
+            onClick={() => handleClose(false)}
             disabled={isSubmitting}
           >
             {t('common.cancel')}
