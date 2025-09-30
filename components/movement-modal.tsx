@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Loader2 } from "lucide-react"
 import { stockMovementAPI, inventoryAPI, supplierAPI, customerAPI } from "@/lib/api"
 import { useTranslation } from "@/lib/i18n"
 import { notify } from "@/lib/notify"
@@ -26,7 +27,8 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
   const [customers, setCustomers] = useState<Customer[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [quantityInputMode, setQuantityInputMode] = useState<"total" | "uom">("total")
-  
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+
   const [formData, setFormData] = useState({
     item: "",
     qty_base: "",
@@ -77,6 +79,7 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
       note: ""
     })
     setQuantityInputMode("total")
+    setFieldErrors({})
   }
 
   const calculateBaseUnits = () => {
@@ -117,10 +120,14 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
   }
 
   const handleSubmit = async () => {
+    // Clear previous errors
+    setFieldErrors({})
+    const errors: Record<string, string> = {}
+
     // Validate inputs
     if (!formData.item) {
+      errors.item = t('movement.itemRequired')
       notify.error(t('movement.itemRequired'))
-      return
     }
 
     let qty_base = 0
@@ -130,13 +137,14 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
 
     if (quantityInputMode === "total") {
       if (!formData.qty_base) {
+        errors.qty_base = t('movement.totalQuantityRequired')
         notify.error(t('movement.totalQuantityRequired'))
-        return
-      }
-      qty_base = parseInt(formData.qty_base)
-      if (isNaN(qty_base) || qty_base <= 0) {
-        notify.error(t('movement.invalidTotalQuantity'))
-        return
+      } else {
+        qty_base = parseInt(formData.qty_base)
+        if (isNaN(qty_base) || qty_base <= 0) {
+          errors.qty_base = t('movement.invalidTotalQuantity')
+          notify.error(t('movement.invalidTotalQuantity'))
+        }
       }
     } else {
       qty_pallets = parseInt(formData.qty_pallets) || 0
@@ -144,13 +152,13 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
       qty_singles = parseInt(formData.qty_singles) || 0
 
       if (qty_pallets < 0 || qty_packages < 0 || qty_singles < 0) {
+        errors.qty_pallets = t('movement.negativeQuantities')
         notify.error(t('movement.negativeQuantities'))
-        return
       }
 
       if (qty_pallets === 0 && qty_packages === 0 && qty_singles === 0) {
+        errors.qty_pallets = t('movement.minOneQuantity')
         notify.error(t('movement.minOneQuantity'))
-        return
       }
 
       qty_base = calculateBaseUnits()
@@ -158,7 +166,13 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
 
     // Validate customer for RETURN movements
     if (mode === "RETURN" && !formData.customer) {
+      errors.customer = t('movement.customerRequiredForReturn')
       notify.error(t('movement.customerRequiredForReturn'))
+    }
+
+    // If there are validation errors, set them and stop
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
       return
     }
 
@@ -199,14 +213,19 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
       onSuccess()
     } catch (err: any) {
       console.error("Movement submission failed:", err)
-      
-      if (err.message.includes("422")) {
-        notify.error(t('movement.insufficientStock'))
-      } else if (err.message.includes("400")) {
-        notify.error(t('movement.invalidInputs'))
-      } else {
-        notify.error(t('movement.submitError'))
+
+      // Determine appropriate error message
+      let errorMessage = t('movement.submitError')
+
+      if (err?.message) {
+        if (err.message.includes("422")) {
+          errorMessage = t('movement.insufficientStock')
+        } else if (err.message.includes("400")) {
+          errorMessage = t('movement.invalidInputs')
+        }
       }
+
+      notify.error(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -234,9 +253,12 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
             <Label htmlFor="item">Artikel *</Label>
             <Select
               value={formData.item}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, item: value }))}
+              onValueChange={(value) => {
+                setFormData(prev => ({ ...prev, item: value }))
+                setFieldErrors(prev => ({ ...prev, item: "" }))
+              }}
             >
-              <SelectTrigger>
+              <SelectTrigger className={fieldErrors.item ? "border-red-500" : ""}>
                 <SelectValue placeholder={t('placeholders.selectItem')} />
               </SelectTrigger>
               <SelectContent>
@@ -247,6 +269,9 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
                 ))}
               </SelectContent>
             </Select>
+            {fieldErrors.item && (
+              <p className="text-sm text-red-500 mt-1">{fieldErrors.item}</p>
+            )}
           </div>
 
           {/* Quantity Input Mode Selection */}
@@ -267,8 +292,15 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
                     min="1"
                     placeholder={t('movement.totalQuantityPlaceholder')}
                     value={formData.qty_base}
-                    onChange={(e) => setFormData(prev => ({ ...prev, qty_base: e.target.value }))}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, qty_base: e.target.value }))
+                      setFieldErrors(prev => ({ ...prev, qty_base: "" }))
+                    }}
+                    className={fieldErrors.qty_base ? "border-red-500" : ""}
                   />
+                  {fieldErrors.qty_base && (
+                    <p className="text-sm text-red-500 mt-1">{fieldErrors.qty_base}</p>
+                  )}
                 </div>
               </TabsContent>
 
@@ -295,7 +327,11 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
                             min="0"
                             placeholder="0"
                             value={formData.qty_pallets}
-                            onChange={(e) => setFormData(prev => ({ ...prev, qty_pallets: e.target.value }))}
+                            onChange={(e) => {
+                              setFormData(prev => ({ ...prev, qty_pallets: e.target.value }))
+                              setFieldErrors(prev => ({ ...prev, qty_pallets: "" }))
+                            }}
+                            className={fieldErrors.qty_pallets ? "border-red-500" : ""}
                           />
                         </div>
                         <div>
@@ -306,7 +342,11 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
                             min="0"
                             placeholder="0"
                             value={formData.qty_packages}
-                            onChange={(e) => setFormData(prev => ({ ...prev, qty_packages: e.target.value }))}
+                            onChange={(e) => {
+                              setFormData(prev => ({ ...prev, qty_packages: e.target.value }))
+                              setFieldErrors(prev => ({ ...prev, qty_packages: "" }))
+                            }}
+                            className={fieldErrors.qty_pallets ? "border-red-500" : ""}
                           />
                         </div>
                         <div>
@@ -317,10 +357,17 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
                             min="0"
                             placeholder="0"
                             value={formData.qty_singles}
-                            onChange={(e) => setFormData(prev => ({ ...prev, qty_singles: e.target.value }))}
+                            onChange={(e) => {
+                              setFormData(prev => ({ ...prev, qty_singles: e.target.value }))
+                              setFieldErrors(prev => ({ ...prev, qty_singles: "" }))
+                            }}
+                            className={fieldErrors.qty_pallets ? "border-red-500" : ""}
                           />
                         </div>
                       </div>
+                      {fieldErrors.qty_pallets && (
+                        <p className="text-sm text-red-500 mt-1">{fieldErrors.qty_pallets}</p>
+                      )}
 
                       {/* Live Preview */}
                       {(() => {
@@ -373,9 +420,12 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
               </Label>
               <Select
                 value={formData.customer}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, customer: value }))}
+                onValueChange={(value) => {
+                  setFormData(prev => ({ ...prev, customer: value }))
+                  setFieldErrors(prev => ({ ...prev, customer: "" }))
+                }}
               >
-                <SelectTrigger>
+                <SelectTrigger className={fieldErrors.customer ? "border-red-500" : ""}>
                   <SelectValue placeholder={t('placeholders.selectCustomer')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -386,6 +436,9 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
                   ))}
                 </SelectContent>
               </Select>
+              {fieldErrors.customer && (
+                <p className="text-sm text-red-500 mt-1">{fieldErrors.customer}</p>
+              )}
             </div>
           )}
 
@@ -413,13 +466,14 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
             onClick={handleSubmit}
             disabled={isSubmitting}
             className={
-              mode === "IN" 
-                ? "bg-green-600 hover:bg-green-700" 
+              mode === "IN"
+                ? "bg-green-600 hover:bg-green-700"
                 : mode === "OUT"
                 ? "bg-red-600 hover:bg-red-700"
                 : "bg-orange-600 hover:bg-orange-700"
             }
           >
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isSubmitting ? t('movement.submitting') : t(mode === "IN" ? 'movement.submitStockIn' : mode === "OUT" ? 'movement.submitStockOut' : 'movement.submitReturn')}
           </Button>
         </DialogFooter>
