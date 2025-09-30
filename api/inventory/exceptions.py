@@ -9,11 +9,30 @@ class InsufficientStockError(Exception):
     pass
 
 
+class IdempotencyConflictError(Exception):
+    """Exception raised when idempotency key already exists (retry safe)"""
+    def __init__(self, message, existing_movement=None):
+        self.message = message
+        self.existing_movement = existing_movement
+        super().__init__(self.message)
+
+
+class PPUConversionError(Exception):
+    """Exception raised when PPU conversion doesn't match between client and server"""
+    pass
+
+
 def custom_exception_handler(exc, context):
     """
     Custom exception handler for consistent error responses
     """
-    # Handle custom InsufficientStockError first
+    # Handle IdempotencyConflictError (200 OK with existing data)
+    if isinstance(exc, IdempotencyConflictError):
+        from .serializers import StockMovementSerializer
+        serializer = StockMovementSerializer(exc.existing_movement)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # Handle custom InsufficientStockError (422 Unprocessable Entity)
     if isinstance(exc, InsufficientStockError):
         custom_response_data = {
             'error': {
@@ -21,7 +40,17 @@ def custom_exception_handler(exc, context):
                 'message': str(exc)
             }
         }
-        return Response(custom_response_data, status=422)
+        return Response(custom_response_data, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+    # Handle PPUConversionError (400 Bad Request)
+    if isinstance(exc, PPUConversionError):
+        custom_response_data = {
+            'error': {
+                'code': 'PPU_CONVERSION_ERROR',
+                'message': str(exc)
+            }
+        }
+        return Response(custom_response_data, status=status.HTTP_400_BAD_REQUEST)
     
     # Call REST framework's default exception handler first
     response = exception_handler(exc, context)

@@ -154,44 +154,141 @@ class StockMovementViewSet(viewsets.ModelViewSet):
         ).select_related('item', 'supplier', 'customer', 'created_by')
     
     def perform_create(self, serializer):
-        """Create stock movement and update inventory quantity atomically"""
-        from django.db import transaction
-        from decimal import Decimal
+        """
+        Create stock movement with ACID guarantees and idempotency.
 
-        with transaction.atomic():
-            # Get the validated data
-            item = serializer.validated_data['item']
-            movement_type = serializer.validated_data['type']
-            qty_base = serializer.validated_data['qty_base']
+        This is the core transaction service (moveInventory) that ensures:
+        1. Idempotency: Same idempotency_key returns existing movement
+        2. Atomicity: Movement + quantity update in single transaction
+        3. Consistency: PPU conversion validated, negative stock prevented
+        4. Isolation: Row-level locking via SELECT FOR UPDATE
+        5. Durability: DB constraints enforce data integrity
 
-            # Calculate delta based on movement type
-            if movement_type in ['IN', 'RETURN']:
-                delta = qty_base  # Positive for incoming stock
-            else:  # OUT, DEFECT
-                delta = -qty_base  # Negative for outgoing stock
+        Raises:
+            IdempotencyConflictError: If idempotency_key exists (returns 200)
+            InsufficientStockError: If insufficient stock (returns 422)
+            PPUConversionError: If client/server PPU mismatch (returns 400)
+            ValidationError: For other validation failures (returns 400)
+        """
+        from django.db import transaction, IntegrityError
+        from .utils import (
+            validate_movement_data,
+            calculate_delta,
+            verify_ppu_conversion
+        )
+        from .exceptions import (
+            InsufficientStockError,
+            IdempotencyConflictError,
+            PPUConversionError
+        )
+        from .models import InventoryItem, StockMovement
+        import uuid
 
-            # Lock item and update quantity
-            from .models import InventoryItem
-            item = InventoryItem.objects.select_for_update().get(id=item.id)
-            previous_qty = item.quantity or Decimal('0')
-            new_qty = previous_qty + delta
+        # ====================================================================
+        # STEP 1: Extract and generate idempotency_key
+        # ====================================================================
+        idempotency_key = serializer.validated_data.get('idempotency_key')
+        if not idempotency_key:
+            # Server-side UUID generation if client didn't provide
+            idempotency_key = str(uuid.uuid4())
+            serializer.validated_data['idempotency_key'] = idempotency_key
 
-            # Validate that quantity doesn't go negative for outgoing movements
-            if new_qty < 0 and movement_type in ['OUT', 'DEFECT']:
-                from .exceptions import InsufficientStockError
-                raise InsufficientStockError(
-                    f"Nicht genügend Lagerbestand. Verfügbar: {previous_qty}, Angefordert: {qty_base}"
+        # ====================================================================
+        # STEP 2: Check idempotency (early return if duplicate)
+        # ====================================================================
+        try:
+            existing_movement = StockMovement.objects.get(idempotency_key=idempotency_key)
+            # Idempotent response: Return existing movement as 200 OK
+            raise IdempotencyConflictError(
+                f"Movement already processed with key {idempotency_key}",
+                existing_movement=existing_movement
+            )
+        except StockMovement.DoesNotExist:
+            # Good: No duplicate, proceed with creation
+            pass
+
+        # ====================================================================
+        # STEP 3: BEGIN ATOMIC TRANSACTION
+        # ====================================================================
+        try:
+            with transaction.atomic():
+                # Extract validated data
+                item = serializer.validated_data['item']
+                movement_type = serializer.validated_data['type']
+                qty_base = serializer.validated_data['qty_base']
+                qty_pallets = serializer.validated_data.get('qty_pallets', 0)
+                qty_packages = serializer.validated_data.get('qty_packages', 0)
+                qty_singles = serializer.validated_data.get('qty_singles', 0)
+
+                # ============================================================
+                # STEP 4: Verify PPU conversion (defense-in-depth)
+                # ============================================================
+                if qty_pallets or qty_packages or qty_singles:
+                    try:
+                        verify_ppu_conversion(
+                            qty_pallets,
+                            qty_packages,
+                            qty_singles,
+                            item.unit_pallet_factor,
+                            item.unit_package_factor,
+                            qty_base,
+                            strict=True
+                        )
+                    except Exception as e:
+                        raise PPUConversionError(str(e))
+
+                # ============================================================
+                # STEP 5: Lock item row (pessimistic locking for concurrency)
+                # ============================================================
+                item = InventoryItem.objects.select_for_update().get(id=item.id)
+
+                # ============================================================
+                # STEP 6: Validate movement constraints
+                # ============================================================
+                validate_movement_data(
+                    movement_type,
+                    qty_base,
+                    item.quantity,
+                    item.name
                 )
 
-            # Update item quantity
-            item.quantity = new_qty
-            item.save(update_fields=['quantity', 'last_updated'])
+                # ============================================================
+                # STEP 7: Calculate delta and new quantity
+                # ============================================================
+                delta = calculate_delta(movement_type, qty_base, item.quantity)
+                new_qty = item.quantity + delta
 
-            # Set created_by from request user
-            serializer.validated_data['created_by'] = self.request.user
+                # Double-check: Prevent negative stock (DB constraint will also catch this)
+                if new_qty < 0:
+                    raise InsufficientStockError(
+                        f"Nicht genügend Lagerbestand für {item.name}. "
+                        f"Verfügbar: {item.quantity}, Angefordert: {qty_base}"
+                    )
 
-            # Save the movement normally
-            serializer.save()
+                # ============================================================
+                # STEP 8: Update item quantity (denormalized cache)
+                # ============================================================
+                item.quantity = new_qty
+                item.save(update_fields=['quantity', 'last_updated'])
+
+                # ============================================================
+                # STEP 9: Save movement (append-only ledger)
+                # ============================================================
+                serializer.validated_data['created_by'] = self.request.user
+                movement = serializer.save()
+
+                # Transaction commits here if no exceptions
+
+        except IntegrityError as e:
+            # Race condition: Another request created same idempotency_key
+            if 'idempotency_key' in str(e) or 'unique constraint' in str(e).lower():
+                existing_movement = StockMovement.objects.get(idempotency_key=idempotency_key)
+                raise IdempotencyConflictError(
+                    f"Concurrent request detected for key {idempotency_key}",
+                    existing_movement=existing_movement
+                )
+            # Re-raise other integrity errors
+            raise
     
     @action(detail=False, methods=['post'], url_path='in')
     def stock_in(self, request):

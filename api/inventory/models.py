@@ -335,8 +335,8 @@ class InventoryItemSupplier(models.Model):
 
 
 class StockMovement(models.Model):
-    """Enhanced stock movement tracking with UoM support"""
-    
+    """Enhanced stock movement tracking with UoM support and idempotency"""
+
     MOVEMENT_TYPE_CHOICES = [
         ('IN', 'Stock In'),
         ('OUT', 'Stock Out'),
@@ -344,20 +344,30 @@ class StockMovement(models.Model):
         ('DEFECT', 'Defective'),
         ('ADJUST', 'Adjustment'),
     ]
-    
+
     item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='stock_movements')
     type = models.CharField(max_length=20, choices=MOVEMENT_TYPE_CHOICES)
     qty_base = models.PositiveIntegerField(help_text="Quantity in base units")
-    
+
     # UoM input helpers for better UX
     qty_pallets = models.IntegerField(default=0, help_text="Quantity in pallets")
     qty_packages = models.IntegerField(default=0, help_text="Quantity in packages")
     qty_singles = models.IntegerField(default=0, help_text="Quantity in single units")
-    
+
+    # Idempotency for safe retries
+    idempotency_key = models.CharField(
+        max_length=64,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="UUID for idempotent operations - prevents duplicate submissions",
+        db_index=True,
+    )
+
     # Tracking and relationships
     created_at = models.DateTimeField(auto_now_add=True)
     note = models.TextField(blank=True, help_text="Movement notes or reason")
-    supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True, 
+    supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True,
                                 related_name='stock_movements')
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True,
                                 related_name='stock_movements')
@@ -370,6 +380,7 @@ class StockMovement(models.Model):
             models.Index(fields=['item', 'created_at']),
             models.Index(fields=['type', 'created_at']),
             models.Index(fields=['created_by', 'created_at']),
+            models.Index(fields=['item', 'type', 'created_at']),
         ]
 
     def clean(self):

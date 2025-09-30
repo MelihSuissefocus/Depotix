@@ -302,11 +302,20 @@ class PasswordChangeSerializer(serializers.Serializer):
 
 
 class StockMovementSerializer(serializers.ModelSerializer):
-    """Stock movement serializer with UoM support and validations"""
+    """Stock movement serializer with UoM support, idempotency, and validations"""
     item_name = serializers.CharField(source='item.name', read_only=True)
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
     customer_name = serializers.CharField(source='customer.name', read_only=True)
     created_by_username = serializers.CharField(source='created_by.username', read_only=True)
+
+    # Idempotency key for safe retries
+    idempotency_key = serializers.CharField(
+        max_length=64,
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+        help_text="Client-generated UUID for idempotent operations"
+    )
 
     class Meta:
         model = StockMovement
@@ -314,10 +323,10 @@ class StockMovementSerializer(serializers.ModelSerializer):
             'id', 'item', 'item_name', 'type', 'qty_base', 'qty_pallets',
             'qty_packages', 'qty_singles', 'created_at', 'note', 'supplier',
             'supplier_name', 'customer', 'customer_name', 'created_by',
-            'created_by_username'
+            'created_by_username', 'idempotency_key'
         ]
         read_only_fields = [
-            'id', 'created_at', 'item_name', 'supplier_name', 
+            'id', 'created_at', 'item_name', 'supplier_name',
             'customer_name', 'created_by_username'
         ]
 

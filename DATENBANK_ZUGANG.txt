@@ -1,0 +1,90 @@
+================================================================================
+POSTGRESQL DATENBANK ZUGANGSDATEN - DEPOTIX
+================================================================================
+
+VERBINDUNGSINFORMATIONEN:
+-------------------------
+Host/IP-Adresse:    91.98.136.168
+Port:               5432
+Datenbank:          depotix
+Benutzer:           depotix
+Passwort:           4Y__dBU85RFg1EnsPPJCjFSY-8D0zQv4UY9qDUcHYY0
+
+
+VERBINDUNGSSTRING:
+------------------
+postgresql://depotix:4Y__dBU85RFg1EnsPPJCjFSY-8D0zQv4UY9qDUcHYY0@91.98.136.168:5432/depotix
+
+
+KONFIGURATION FÜR VERSCHIEDENE TOOLS:
+--------------------------------------
+
+1. DBeaver / DataGrip / pgAdmin:
+   - Connection Type: PostgreSQL
+   - Host: 91.98.136.168
+   - Port: 5432
+   - Database: depotix
+   - Username: depotix
+   - Password: 4Y__dBU85RFg1EnsPPJCjFSY-8D0zQv4UY9qDUcHYY0
+   - SSL Mode: Prefer (oder Disable falls Prefer nicht funktioniert)
+
+2. psql Kommandozeile:
+   psql -h 91.98.136.168 -p 5432 -U depotix -d depotix
+
+3. TablePlus:
+   - Connection: PostgreSQL
+   - Host: 91.98.136.168
+   - Port: 5432
+   - User: depotix
+   - Password: 4Y__dBU85RFg1EnsPPJCjFSY-8D0zQv4UY9qDUcHYY0
+   - Database: depotix
+
+4. Navicat:
+   - Connection Type: PostgreSQL
+   - Host: 91.98.136.168
+   - Port: 5432
+   - Initial Database: depotix
+   - User Name: depotix
+   - Password: 4Y__dBU85RFg1EnsPPJCjFSY-8D0zQv4UY9qDUcHYY0
+
+
+WICHTIGE HINWEISE:
+------------------
+- Der Port 5432 ist jetzt extern freigegeben
+- Die Datenbank läuft in einem Docker Container (postgres:15)
+- Server Zeitzone: Europe/Zurich
+- Stelle sicher, dass keine Firewall den Zugriff blockiert
+
+
+FEHLERBEHEBUNG:
+---------------
+Falls die Verbindung nicht funktioniert:
+
+1. Firewall prüfen:
+   sudo ufw status
+   sudo ufw allow 5432/tcp
+
+2. Container Status prüfen:
+   docker ps | grep depotix-db
+
+3. Direkter Test vom Server:
+   docker exec depotix-db-1 psql -U depotix -d depotix -c "SELECT version();"
+
+4. Port-Freigabe prüfen:
+   netstat -tuln | grep 5432
+
+5. Von extern testen:
+   telnet 91.98.136.168 5432
+   oder
+   nc -zv 91.98.136.168 5432
+
+
+SICHERHEITSHINWEIS:
+-------------------
+⚠️  ACHTUNG: Diese Datei enthält sensible Zugangsdaten!
+⚠️  Teile diese Informationen NICHT öffentlich!
+⚠️  Lösche diese Datei nach dem Kopieren der Daten an einen sicheren Ort!
+
+
+Stand: 2025-09-29
+================================================================================
