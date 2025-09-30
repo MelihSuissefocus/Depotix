@@ -41,31 +41,42 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
   })
 
   useEffect(() => {
-    if (isOpen) {
-      loadFormData()
-    }
-  }, [isOpen])
+    let isMounted = true
 
-  const loadFormData = async () => {
-    try {
-      const [itemsData, suppliersData, customersData] = await Promise.all([
-        inventoryAPI.getItems(),
-        supplierAPI.getSuppliers(),
-        customerAPI.getCustomers()
-      ])
-      
-      const itemsArray = Array.isArray(itemsData) ? itemsData : itemsData.results || []
-      const suppliersArray = Array.isArray(suppliersData) ? suppliersData : suppliersData.results || []
-      const customersArray = Array.isArray(customersData) ? customersData : customersData.results || []
-      
-      setItems(itemsArray)
-      setSuppliers(suppliersArray)
-      setCustomers(customersArray)
-    } catch (err) {
-      console.error("Failed to load form data:", err)
-      notify.error(t('movement.loadFormDataError'))
+    if (isOpen) {
+      const loadData = async () => {
+        try {
+          const [itemsData, suppliersData, customersData] = await Promise.all([
+            inventoryAPI.getItems(),
+            supplierAPI.getSuppliers(),
+            customerAPI.getCustomers()
+          ])
+
+          // Only update state if modal is still open
+          if (!isMounted) return
+
+          const itemsArray = Array.isArray(itemsData) ? itemsData : itemsData.results || []
+          const suppliersArray = Array.isArray(suppliersData) ? suppliersData : suppliersData.results || []
+          const customersArray = Array.isArray(customersData) ? customersData : customersData.results || []
+
+          setItems(itemsArray)
+          setSuppliers(suppliersArray)
+          setCustomers(customersArray)
+        } catch (err) {
+          if (!isMounted) return
+          console.error("Failed to load form data:", err)
+          notify.error(t('movement.loadFormDataError'))
+        }
+      }
+
+      loadData()
     }
-  }
+
+    // Cleanup: Prevent state updates after modal closes
+    return () => {
+      isMounted = false
+    }
+  }, [isOpen, t])
 
   const resetForm = () => {
     setFormData({
@@ -207,10 +218,18 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
 
       const successKey = mode === "IN" ? 'movement.stockInSuccess' : mode === "OUT" ? 'movement.stockOutSuccess' : 'movement.returnSuccess'
       notify.success(t(successKey))
-      
+
+      // CRITICAL: Close modal FIRST, then trigger parent callbacks
+      // This prevents race conditions where parent state updates (e.g. setIsLoading)
+      // could interfere with modal re-opening
       resetForm()
       onClose()
-      onSuccess()
+
+      // Defer onSuccess to next tick to ensure modal is fully closed
+      // before parent triggers async operations (e.g. refetch logs)
+      setTimeout(() => {
+        onSuccess()
+      }, 0)
     } catch (err: any) {
       console.error("Movement submission failed:", err)
 
