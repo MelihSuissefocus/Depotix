@@ -61,6 +61,7 @@ export default function SuppliersPage() {
     phone: "",
     address: "",
   });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const fetchSuppliers = async () => {
@@ -94,7 +95,40 @@ export default function SuppliersPage() {
       )
     : [];
 
+  // Email validation (RFC 5322 simplified, matches Django's EmailField)
+  const isValidEmail = (email: string): boolean => {
+    if (!email) return true; // Empty is valid (optional field)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Form validation
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    // Name is required
+    if (!newSupplier.name.trim()) {
+      errors.name = "Firmenname ist erforderlich";
+    }
+
+    // Email must be valid if provided
+    if (newSupplier.email && !isValidEmail(newSupplier.email)) {
+      errors.email = "Bitte geben Sie eine gültige E-Mail-Adresse ein";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleAddSupplier = async () => {
+    // Clear previous errors
+    setFormErrors({});
+
+    // Validate form
+    if (!validateForm()) {
+      notify.error("Bitte korrigieren Sie die Fehler im Formular");
+      return;
+    }
     try {
       const ownerID = 1; // Placeholder
       await supplierAPI.createSupplier({
@@ -114,13 +148,39 @@ export default function SuppliersPage() {
         phone: "",
         address: "",
       });
-    } catch (err) {
+      setFormErrors({});
+      notify.success("Lieferant erfolgreich hinzugefügt");
+    } catch (err: any) {
       console.error("Failed to add supplier:", err);
+
+      // Parse backend validation errors
+      const errorMessage = err?.message || "Fehler beim Hinzufügen des Lieferanten";
+
+      if (errorMessage.includes("400") || errorMessage.includes("Invalid")) {
+        // Try to extract field-specific errors from backend
+        if (errorMessage.toLowerCase().includes("email")) {
+          setFormErrors({ email: "Ungültige E-Mail-Adresse" });
+          notify.error("Bitte überprüfen Sie die E-Mail-Adresse");
+        } else {
+          notify.error("Ungültige Eingaben. Bitte überprüfen Sie Ihre Angaben.");
+        }
+      } else {
+        notify.error(errorMessage);
+      }
     }
   };
 
   const handleEditSupplier = async () => {
     if (!selectedSupplier) return;
+
+    // Clear previous errors
+    setFormErrors({});
+
+    // Validate form
+    if (!validateForm()) {
+      notify.error("Bitte korrigieren Sie die Fehler im Formular");
+      return;
+    }
 
     try {
       await supplierAPI.updateSupplier(selectedSupplier.id, {
@@ -137,8 +197,24 @@ export default function SuppliersPage() {
         phone: "",
         address: "",
       });
-    } catch (err) {
+      setFormErrors({});
+      notify.success("Lieferant erfolgreich aktualisiert");
+    } catch (err: any) {
       console.error("Failed to update supplier:", err);
+
+      // Parse backend validation errors
+      const errorMessage = err?.message || "Fehler beim Aktualisieren des Lieferanten";
+
+      if (errorMessage.includes("400") || errorMessage.includes("Invalid")) {
+        if (errorMessage.toLowerCase().includes("email")) {
+          setFormErrors({ email: "Ungültige E-Mail-Adresse" });
+          notify.error("Bitte überprüfen Sie die E-Mail-Adresse");
+        } else {
+          notify.error("Ungültige Eingaben. Bitte überprüfen Sie Ihre Angaben.");
+        }
+      } else {
+        notify.error(errorMessage);
+      }
     }
   };
 
@@ -301,15 +377,27 @@ export default function SuppliersPage() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Company Name</Label>
+              <Label htmlFor="name">Company Name *</Label>
               <Input
                 id="name"
                 value={newSupplier.name}
-                onChange={(e) =>
+                onChange={(e) => {
                   setNewSupplier({ ...newSupplier, name: e.target.value })
-                }
+                  // Clear error on change
+                  if (formErrors.name) {
+                    setFormErrors({ ...formErrors, name: "" })
+                  }
+                }}
+                className={formErrors.name ? "border-red-500" : ""}
+                aria-invalid={!!formErrors.name}
+                aria-describedby={formErrors.name ? "name-error" : undefined}
                 required
               />
+              {formErrors.name && (
+                <p id="name-error" className="text-sm text-red-500 mt-1">
+                  {formErrors.name}
+                </p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -331,10 +419,22 @@ export default function SuppliersPage() {
                   id="email"
                   type="email"
                   value={newSupplier.email}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setNewSupplier({ ...newSupplier, email: e.target.value })
-                  }
+                    // Clear error on change
+                    if (formErrors.email) {
+                      setFormErrors({ ...formErrors, email: "" })
+                    }
+                  }}
+                  className={formErrors.email ? "border-red-500" : ""}
+                  aria-invalid={!!formErrors.email}
+                  aria-describedby={formErrors.email ? "email-error" : undefined}
                 />
+                {formErrors.email && (
+                  <p id="email-error" className="text-sm text-red-500 mt-1">
+                    {formErrors.email}
+                  </p>
+                )}
               </div>
             </div>
             <div className="space-y-2">
@@ -360,10 +460,18 @@ export default function SuppliersPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+            <Button variant="outline" onClick={() => {
+              setIsAddDialogOpen(false);
+              setFormErrors({});
+            }}>
               Cancel
             </Button>
-            <Button onClick={handleAddSupplier}>Add Supplier</Button>
+            <Button
+              onClick={handleAddSupplier}
+              disabled={!newSupplier.name.trim()}
+            >
+              Add Supplier
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -379,15 +487,26 @@ export default function SuppliersPage() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-name">Company Name</Label>
+              <Label htmlFor="edit-name">Company Name *</Label>
               <Input
                 id="edit-name"
                 value={newSupplier.name}
-                onChange={(e) =>
+                onChange={(e) => {
                   setNewSupplier({ ...newSupplier, name: e.target.value })
-                }
+                  if (formErrors.name) {
+                    setFormErrors({ ...formErrors, name: "" })
+                  }
+                }}
+                className={formErrors.name ? "border-red-500" : ""}
+                aria-invalid={!!formErrors.name}
+                aria-describedby={formErrors.name ? "edit-name-error" : undefined}
                 required
               />
+              {formErrors.name && (
+                <p id="edit-name-error" className="text-sm text-red-500 mt-1">
+                  {formErrors.name}
+                </p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -409,10 +528,21 @@ export default function SuppliersPage() {
                   id="edit-email"
                   type="email"
                   value={newSupplier.email}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setNewSupplier({ ...newSupplier, email: e.target.value })
-                  }
+                    if (formErrors.email) {
+                      setFormErrors({ ...formErrors, email: "" })
+                    }
+                  }}
+                  className={formErrors.email ? "border-red-500" : ""}
+                  aria-invalid={!!formErrors.email}
+                  aria-describedby={formErrors.email ? "edit-email-error" : undefined}
                 />
+                {formErrors.email && (
+                  <p id="edit-email-error" className="text-sm text-red-500 mt-1">
+                    {formErrors.email}
+                  </p>
+                )}
               </div>
             </div>
             <div className="space-y-2">
@@ -440,11 +570,19 @@ export default function SuppliersPage() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
+              onClick={() => {
+                setIsEditDialogOpen(false);
+                setFormErrors({});
+              }}
             >
               Cancel
             </Button>
-            <Button onClick={handleEditSupplier}>Save Changes</Button>
+            <Button
+              onClick={handleEditSupplier}
+              disabled={!newSupplier.name.trim()}
+            >
+              Save Changes
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
