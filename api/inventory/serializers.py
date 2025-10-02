@@ -333,7 +333,16 @@ class StockMovementSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Auto-assign created_by from request user
         validated_data['created_by'] = self.context['request'].user
-        return super().create(validated_data)
+
+        # Extract skip_quantity_update from context if present
+        # This is passed via serializer.save(skip_quantity_update=True)
+        skip_quantity_update = self.context.get('skip_quantity_update', False)
+
+        # Create the movement instance, passing the flag to the model's save()
+        instance = self.Meta.model(**validated_data)
+        instance.save(skip_quantity_update=skip_quantity_update)
+
+        return instance
 
     def validate(self, data):
         """Validate UoM calculations and business rules"""
@@ -368,7 +377,13 @@ class StockMovementSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "RETURN movements should reference a customer."
             )
-        
+
+        # IN movements should have supplier or note
+        if movement_type == 'IN' and not data.get('supplier') and not data.get('note'):
+            raise serializers.ValidationError(
+                "IN movements should reference a supplier or include a note."
+            )
+
         return data
 
 
@@ -439,7 +454,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         model = Invoice
         fields = [
             'id', 'invoice_number', 'order', 'order_number', 'customer_name',
-            'issue_date', 'due_date', 'total_net', 'total_tax', 'total_gross',
+            'issue_date', 'delivery_date', 'due_date', 'total_net', 'total_tax', 'total_gross',
             'currency', 'pdf_file', 'is_archived'
         ]
         read_only_fields = [

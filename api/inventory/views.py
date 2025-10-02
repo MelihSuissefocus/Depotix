@@ -275,6 +275,8 @@ class StockMovementViewSet(viewsets.ModelViewSet):
                 # STEP 9: Save movement (append-only ledger)
                 # ============================================================
                 serializer.validated_data['created_by'] = self.request.user
+                # Pass skip_quantity_update via context to avoid double-updating quantity
+                serializer.context['skip_quantity_update'] = True
                 movement = serializer.save()
 
                 # Transaction commits here if no exceptions

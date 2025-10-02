@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertTriangle, ArrowDown, ArrowUp, Box, Search, TrendingUp, TrendingDown, RotateCcw } from "lucide-react"
-import { logAPI} from "@/lib/api"
+import { stockMovementAPI } from "@/lib/api"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -15,7 +15,7 @@ import { MovementModal } from "@/components/movement-modal"
 import type { DateRange } from "react-day-picker"
 
 export default function LogsPage() {
-  const [logs, setLogs] = useState<InventoryLog[]>([])
+  const [logs, setLogs] = useState<StockMovement[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
@@ -28,7 +28,7 @@ export default function LogsPage() {
     const fetchLogs = async () => {
       try {
         setIsLoading(true)
-        const data = await logAPI.getLogs()
+        const data = await stockMovementAPI.getMovements()
         // Ensure data is an array
         setLogs(Array.isArray(data.results) ? data.results : [])
       } catch (err) {
@@ -46,7 +46,7 @@ export default function LogsPage() {
     const fetchLogs = async () => {
       try {
         setIsLoading(true)
-        const data = await logAPI.getLogs()
+        const data = await stockMovementAPI.getMovements()
         setLogs(Array.isArray(data.results) ? data.results : [])
       } catch (err) {
         setError("Failed to fetch logs")
@@ -75,20 +75,20 @@ export default function LogsPage() {
 
 
   // Filter logs based on search query, action filter, and date range
-  const filteredLogs = Array.isArray(logs) 
+  const filteredLogs = Array.isArray(logs)
     ? logs.filter((log) => {
         // Apply search filter
         const matchesSearch =
           searchQuery === "" ||
           (log.item_name && log.item_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (log.username && log.username.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (log.notes && log.notes.toLowerCase().includes(searchQuery.toLowerCase()))
+          (log.created_by_username && log.created_by_username.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (log.note && log.note.toLowerCase().includes(searchQuery.toLowerCase()))
 
         // Apply action filter
-        const matchesAction = actionFilter === "all" || log.action === actionFilter
+        const matchesAction = actionFilter === "all" || log.type === actionFilter
 
         // Apply date range filter
-        const logDate = new Date(log.timestamp)
+        const logDate = new Date(log.created_at)
         const matchesDateRange =
           (!dateRange?.from || logDate >= dateRange.from) && (!dateRange?.to || logDate <= dateRange.to)
 
@@ -161,9 +161,9 @@ export default function LogsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Actions</SelectItem>
-                  <SelectItem value="ADD">Added</SelectItem>
-                  <SelectItem value="REMOVE">Removed</SelectItem>
-                  <SelectItem value="UPDATE">Updated</SelectItem>
+                  <SelectItem value="IN">Stock In</SelectItem>
+                  <SelectItem value="OUT">Stock Out</SelectItem>
+                  <SelectItem value="RETURN">Return</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -192,10 +192,10 @@ export default function LogsPage() {
               <TableRow>
                 <TableHead>Date & Time</TableHead>
                 <TableHead>Item</TableHead>
-                <TableHead>Action</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Supplier/Customer</TableHead>
                 <TableHead>User</TableHead>
-                <TableHead>Qty Change</TableHead>
-                <TableHead>New Qty</TableHead>
                 <TableHead>Notes</TableHead>
               </TableRow>
             </TableHeader>
@@ -203,36 +203,38 @@ export default function LogsPage() {
               {filteredLogs.length > 0 ? (
                 filteredLogs.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
+                    <TableCell>{new Date(log.created_at).toLocaleString()}</TableCell>
                     <TableCell>{log.item_name || `Item #${log.item}`}</TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
                         className={
-                          log.action === "ADD"
+                          log.type === "IN"
                             ? "bg-green-50 text-green-700 border-green-200"
-                            : log.action === "REMOVE"
+                            : log.type === "OUT"
                               ? "bg-red-50 text-red-700 border-red-200"
-                              : "bg-blue-50 text-blue-700 border-blue-200"
+                              : "bg-orange-50 text-orange-700 border-orange-200"
                         }
                       >
-                        {log.action === "ADD" ? (
+                        {log.type === "IN" ? (
                           <ArrowUp className="h-3 w-3 mr-1" />
-                        ) : log.action === "REMOVE" ? (
+                        ) : log.type === "OUT" ? (
                           <ArrowDown className="h-3 w-3 mr-1" />
                         ) : (
-                          <Box className="h-3 w-3 mr-1" />
+                          <RotateCcw className="h-3 w-3 mr-1" />
                         )}
-                        {log.action}
+                        {log.type === "IN" ? "Stock In" : log.type === "OUT" ? "Stock Out" : "Return"}
                       </Badge>
                     </TableCell>
-                    <TableCell>{log.username || "-"}</TableCell>
                     <TableCell>
-                      {log.action === "ADD" ? "+" : log.action === "REMOVE" ? "-" : "±"}
-                      {log.quantity_change}
+                      {log.type === "IN" ? "+" : log.type === "OUT" ? "-" : "+"}
+                      {log.qty_base}
                     </TableCell>
-                    <TableCell>{log.new_quantity}</TableCell>
-                    <TableCell>{log.notes || "-"}</TableCell>
+                    <TableCell>
+                      {log.supplier_name || log.customer_name || "-"}
+                    </TableCell>
+                    <TableCell>{log.created_by_username || "-"}</TableCell>
+                    <TableCell>{log.note || "-"}</TableCell>
                   </TableRow>
                 ))
               ) : (

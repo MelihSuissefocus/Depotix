@@ -28,6 +28,8 @@ interface WizardData {
   customer: number
   customer_name?: string
   customer_address?: string
+  delivery_date?: string
+  due_date?: string
   items: InvoiceItem[]
 }
 

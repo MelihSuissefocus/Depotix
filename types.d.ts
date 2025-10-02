@@ -94,6 +94,26 @@ interface InventoryLog {
     timestamp: string;
     notes: string | null;
   }
+
+interface StockMovement {
+    id: number;
+    item: number;
+    item_name?: string;
+    type: "IN" | "OUT" | "RETURN" | "DEFECT" | "ADJUST";
+    qty_base: number;
+    qty_pallets?: number;
+    qty_packages?: number;
+    qty_singles?: number;
+    supplier?: number | null;
+    supplier_name?: string;
+    customer?: number | null;
+    customer_name?: string;
+    note?: string | null;
+    created_by?: number;
+    created_by_username?: string;
+    created_at: string;
+    idempotency_key?: string | null;
+  }
   
 interface InventoryItemSupplier {
     id: number;
@@ -299,6 +319,7 @@ interface Invoice {
   order_number?: string;
   customer_name?: string;
   issue_date?: string;
+  delivery_date?: string;
   due_date?: string;
   total_net: string;
   total_tax: string;

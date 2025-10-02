@@ -414,35 +414,39 @@ class StockMovement(models.Model):
             raise ValidationError("IN movements should reference a supplier or include a note.")
 
     def save(self, *args, **kwargs):
-        self.clean()
-        
+        # Note: Validation is handled by the serializer, not here
+        # self.clean() is intentionally not called to avoid ValidationErrors during save
+
+        # Check if quantity update should be skipped (when ViewSet already handled it)
+        skip_quantity_update = kwargs.pop('skip_quantity_update', False)
+
         # Store previous quantity for logging
         previous_qty = self.item.quantity
-        
+
         # Save the movement first
         super().save(*args, **kwargs)
-        
-        # Update item quantities based on movement type
+
+        # Calculate what the quantities would be (needed for logging even if we skip update)
         new_qty = previous_qty
         quantity_change = 0
-        
+        log_action = 'UPDATE'
+
         if self.type == 'IN':
-            new_qty = self.item.quantity + self.qty_base
+            new_qty = previous_qty + self.qty_base if skip_quantity_update else self.item.quantity + self.qty_base
             quantity_change = self.qty_base
             log_action = 'ADD'
         elif self.type == 'OUT':
-            new_qty = max(0, self.item.quantity - self.qty_base)
+            new_qty = max(0, previous_qty - self.qty_base) if skip_quantity_update else max(0, self.item.quantity - self.qty_base)
             quantity_change = -self.qty_base
             log_action = 'REMOVE'
         elif self.type == 'RETURN':
-            new_qty = self.item.quantity + self.qty_base
+            new_qty = previous_qty + self.qty_base if skip_quantity_update else self.item.quantity + self.qty_base
             quantity_change = self.qty_base
             log_action = 'ADD'
         elif self.type == 'DEFECT':
             # Move from available to defective
             transfer_qty = min(self.qty_base, self.item.available_qty)
-            new_qty = self.item.quantity - transfer_qty
-            self.item.defective_qty += transfer_qty
+            new_qty = previous_qty - transfer_qty if skip_quantity_update else self.item.quantity - transfer_qty
             quantity_change = -transfer_qty
             log_action = 'REMOVE'
         elif self.type == 'ADJUST':
@@ -450,12 +454,18 @@ class StockMovement(models.Model):
             new_qty = max(0, self.qty_base)
             quantity_change = new_qty - previous_qty
             log_action = 'UPDATE'
-        
-        # Update item quantity
-        self.item.quantity = new_qty
-        self.item.save()
-        
-        # Create corresponding InventoryLog entry for backward compatibility
+        else:
+            # Unknown type, skip everything
+            return
+
+        if not skip_quantity_update:
+            # Update item quantity (only if not already updated by ViewSet)
+            self.item.quantity = new_qty
+            if self.type == 'DEFECT':
+                self.item.defective_qty += min(self.qty_base, self.item.available_qty)
+            self.item.save()
+
+        # Always create InventoryLog entry for backward compatibility (even if quantity was updated elsewhere)
         InventoryLog.objects.create(
             item=self.item,
             user=self.created_by,
@@ -578,11 +588,12 @@ class SalesOrderItem(models.Model):
 
 class Invoice(models.Model):
     """Invoice generation from sales orders"""
-    
+
     invoice_number = models.CharField(max_length=20, unique=True, blank=True)
     order = models.OneToOneField(SalesOrder, on_delete=models.CASCADE, related_name='invoice')
     issue_date = models.DateTimeField(auto_now_add=True)
-    due_date = models.DateField(null=True, blank=True)
+    delivery_date = models.DateField(null=True, blank=True, help_text="Lieferdatum")
+    due_date = models.DateField(null=True, blank=True, help_text="Fälligkeitsdatum")
     
     # Financial amounts (copied from order)
     total_net = models.DecimalField(max_digits=12, decimal_places=2)

@@ -307,6 +307,7 @@ body {
 
 /* QR Page Styles */
 .qr-page {
+    page-break-before: always;
     padding: 20mm;
 }
 

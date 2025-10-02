@@ -310,6 +310,15 @@ export const customerAPI = {
 
 // API functions for stock movements
 export const stockMovementAPI = {
+  getMovements: (params = {}) => {
+    const queryParams = new URLSearchParams()
+    Object.entries(params).forEach(([key, value]) => {
+      queryParams.append(key, String(value))
+    })
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : ""
+    return fetchAPI(`/inventory/stock-movements/${queryString}`)
+  },
+
   createMovement: (data: {
     type: "IN" | "OUT" | "RETURN"
     item: number
@@ -325,7 +334,7 @@ export const stockMovementAPI = {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  
+
   // Convenience wrapper for RETURN movements
   createReturn: (data: {
     item: number
