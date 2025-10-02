@@ -598,10 +598,20 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             # Staff users see all invoices including archived ones
-            return Invoice.objects.all().select_related('order', 'order__customer', 'order__created_by')
+            return Invoice.objects.all().select_related(
+                'order',
+                'order__customer',
+                'order__created_by'
+            ).prefetch_related('order__items', 'order__items__item')
         else:
             # Regular users see all their invoices (including archived ones)
-            return Invoice.objects.filter(order__created_by=user).select_related('order', 'order__customer', 'order__created_by')
+            return Invoice.objects.filter(
+                order__created_by=user
+            ).select_related(
+                'order',
+                'order__customer',
+                'order__created_by'
+            ).prefetch_related('order__items', 'order__items__item')
     
     @action(detail=True, methods=['get'], url_path='pdf')
     def generate_pdf(self, request, pk=None):
@@ -663,7 +673,11 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             
             # Generate QR code data URI
             qr_data_uri = None
+            import logging
+            logger = logging.getLogger(__name__)
+
             try:
+                logger.info(f"Starting QR code generation for invoice {invoice.invoice_number}")
                 qr_data_uri = _qr_svg_data_uri(
                     iban=company_profile.iban,
                     creditor=creditor,
@@ -673,8 +687,16 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                     reference=invoice.invoice_number,
                     message=f"Rechnung {invoice.invoice_number}"
                 )
+                logger.info(f"QR code generated successfully for invoice {invoice.invoice_number}, URI length: {len(qr_data_uri)}")
+            except ValueError as e:
+                # Log the specific error but continue WITHOUT QR code
+                logger.warning(f"QR bill generation failed for invoice {invoice.invoice_number}: {str(e)}")
+                logger.warning("Continuing PDF generation without QR code")
+                qr_data_uri = None
             except Exception as e:
-                # QR bill generation failed, continue without it
+                # Unexpected error - log but continue without QR code
+                logger.error(f"Unexpected error generating QR bill for invoice {invoice.invoice_number}", exc_info=True)
+                logger.warning("Continuing PDF generation without QR code")
                 qr_data_uri = None
             
             # Build context for template

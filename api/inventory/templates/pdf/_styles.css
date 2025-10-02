@@ -276,10 +276,9 @@ body {
 
 /* Footer */
 .footer {
-    position: absolute;
-    bottom: 18mm;
-    left: 18mm;
-    right: 18mm;
+    margin-top: 20mm;
+    padding-top: 10mm;
+    border-top: 0.5pt solid #CCC;
     display: flex;
     justify-content: space-between;
     font-size: 9pt;

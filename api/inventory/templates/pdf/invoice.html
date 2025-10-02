@@ -85,7 +85,7 @@
             </div>
             <div class="meta-line">
                 <span class="meta-label">MwSt-Nr:</span>
-                <span class="meta-value">{{ supplier.vat_id|default:"CHE-390.391.667 MWST" }}</span>
+                <span class="meta-value">{{ supplier.mwst_number|default:"CHE-390.391.667 MWST" }}</span>
             </div>
         </div>
     </div>
@@ -177,7 +177,7 @@
     <div class="footer">
         <div class="footer-left">{{ supplier.name|default:"Bi-Swiss GmbH" }}  /  {{ supplier.street|default:"Eichengasse 3" }}  /  {{ supplier.postal_code|default:"4207" }} {{ supplier.city|default:"Oensingen" }}</div>
         <div class="footer-center">Telefon {{ supplier.phone|default:"+41 76 840 55 40" }}</div>
-        <div class="footer-right">UID MwSt.: {{ supplier.vat_id|default:"CHE-390.391.667 MWST" }}</div>
+        <div class="footer-right">UID MwSt.: {{ supplier.mwst_number|default:"CHE-390.391.667 MWST" }}</div>
     </div>
 
     {% if qr_data_uri %}
@@ -224,7 +224,7 @@
 
             <div class="qr-section-center">
                 <div class="qr-code-large">
-                    <img src="{{ qr_data_uri }}" alt="Swiss QR Bill Code">
+                    {{ qr_data_uri|safe }}
                 </div>
             </div>
 
