@@ -89,7 +89,7 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
         } catch (err) {
           if (!isMounted) return
           console.error("Failed to load form data:", err)
-          setGlobalError(t('movement.loadFormDataError'))
+          setGlobalError("Fehler beim Laden der Formulardaten")
         } finally {
           if (isMounted) {
             setIsLoadingData(false)
@@ -107,7 +107,7 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
     return () => {
       isMounted = false
     }
-  }, [isOpen, t])
+  }, [isOpen])
 
   // ========================================================================
   // COMPUTED VALUES

@@ -123,48 +123,6 @@ export default function InvoicesPage() {
     loadInvoices()
   }, [currentPage, searchTerm])
 
-  // Periodic synchronization to detect stale data
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout
-
-    // Only set up periodic sync if we have invoices and aren't currently loading
-    if (invoices.length > 0 && !isLoading) {
-      intervalId = setInterval(() => {
-        console.log(`[${new Date().toISOString()}] Performing background sync...`)
-        loadInvoices(false) // Background refresh without loading indicator
-      }, 30000) // Sync every 30 seconds
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId)
-      }
-    }
-  }, [invoices.length, isLoading, currentPage, searchTerm])
-
-  // Focus-based refresh to sync when user returns to tab
-  useEffect(() => {
-    const handleFocus = () => {
-      console.log(`[${new Date().toISOString()}] Tab focused - performing sync...`)
-      loadInvoices(false)
-    }
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        console.log(`[${new Date().toISOString()}] Tab visible - performing sync...`)
-        loadInvoices(false)
-      }
-    }
-
-    window.addEventListener('focus', handleFocus)
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-
-    return () => {
-      window.removeEventListener('focus', handleFocus)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }
-  }, [])
-
   useEffect(() => {
     if (isWizardOpen && currentStep === 2) {
       loadItems(itemSearch)
