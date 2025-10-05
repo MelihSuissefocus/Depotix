@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//home/deploy/Depotix/**)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Read(//home/deploy/**)",
+      "Bash(python test:*)",
+      "Bash(python3:*)",
+      "Bash(source:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

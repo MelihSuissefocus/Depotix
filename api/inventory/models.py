@@ -618,19 +618,18 @@ class Invoice(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.invoice_number:
-            # Generate invoice number: INV-YYYY-####
-            year = timezone.now().year
+            # Generate invoice number: RE######
             last_invoice = Invoice.objects.filter(
-                invoice_number__startswith=f'INV-{year}-'
+                invoice_number__startswith='RE'
             ).order_by('invoice_number').last()
-            
+
             if last_invoice:
-                last_num = int(last_invoice.invoice_number.split('-')[-1])
+                last_num = int(last_invoice.invoice_number[2:])
                 new_num = last_num + 1
             else:
                 new_num = 1
-            
-            self.invoice_number = f'INV-{year}-{new_num:04d}'
+
+            self.invoice_number = f'RE{new_num:06d}'
         
         # Copy totals from order if not set
         if not self.total_net:

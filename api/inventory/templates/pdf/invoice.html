@@ -20,9 +20,13 @@
                 <div>{{ supplier.postal_code|default:"CH-4702" }} {{ supplier.city|default:"Oensingen" }}</div>
             </div>
 
-            <!-- Logo placeholder right -->
+            <!-- Logo right -->
             <div class="logo-placeholder">
-                Logo
+                {% if logo_data_uri %}
+                    <img src="{{ logo_data_uri }}" alt="{{ supplier.name }}" style="max-height: 60px; max-width: 200px; object-fit: contain;" />
+                {% else %}
+                    Logo
+                {% endif %}
             </div>
         </div>
 
@@ -73,7 +77,7 @@
             </div>
             <div class="meta-line">
                 <span class="meta-label">Lieferdatum:</span>
-                <span class="meta-value">{% if order.delivery_date %}{{ order.delivery_date|date:"d.m.Y" }}{% endif %}</span>
+                <span class="meta-value">{% if invoice.delivery_date %}{{ invoice.delivery_date|date:"d.m.Y" }}{% endif %}</span>
             </div>
             <div class="meta-line">
                 <span class="meta-label">Zahlungsmethode:</span>
@@ -147,7 +151,7 @@
             <span class="total-value">{{ invoice.total_net|swiss_currency }}</span>
         </div>
         <div class="totals-line">
-            <span class="total-label">Total MwSt 2.60% Von CHF</span>
+            <span class="total-label">Total MwSt {{ invoice.vat_rate }}% Von CHF</span>
             <span class="total-value">{{ invoice.total_tax|swiss_currency }}</span>
         </div>
         <div class="totals-line">
@@ -181,88 +185,9 @@
     </div>
 
     {% if qr_data_uri %}
-    <!-- Page 2 - Swiss QR Bill -->
-    <div class="qr-page">
-        <div class="qr-header">
-            <h2>QR-Rechnung</h2>
-            <p>Schweizer QR-Code nach Standard ISO 20022</p>
-        </div>
-
-        <div class="qr-content">
-            <div class="qr-section-left">
-                <div class="qr-title">Empfangsschein</div>
-
-                <div class="qr-field">
-                    <div class="qr-label">Konto / Zahlbar an</div>
-                    <div class="qr-value">{{ supplier.iban }}</div>
-                    <div class="qr-value">{{ supplier.name }}</div>
-                    <div class="qr-value">{{ supplier.street }}</div>
-                    <div class="qr-value">{{ supplier.postal_code }} {{ supplier.city }}</div>
-                </div>
-
-                <div class="qr-field">
-                    <div class="qr-label">Zahlbar durch</div>
-                    <div class="qr-value">{{ customer.name }}</div>
-                    {% if customer.contact_name %}
-                    <div class="qr-value">{{ customer.contact_name }}</div>
-                    {% endif %}
-                    {{ customer.address|linebreaksbr }}
-                </div>
-
-                <div class="qr-field">
-                    <div class="qr-label">Währung</div>
-                    <div class="qr-value">{{ invoice.currency }}</div>
-                </div>
-
-                <div class="qr-field">
-                    <div class="qr-label">Betrag</div>
-                    <div class="qr-amount">{{ invoice.total_gross|swiss_currency }}</div>
-                </div>
-            </div>
-
-            <div class="qr-section-center">
-                <div class="qr-code-large">
-                    {{ qr_data_uri|safe }}
-                </div>
-            </div>
-
-            <div class="qr-section-right">
-                <div class="qr-title">Zahlteil</div>
-
-                <div class="qr-field">
-                    <div class="qr-label">Währung</div>
-                    <div class="qr-value">{{ invoice.currency }}</div>
-                </div>
-
-                <div class="qr-field">
-                    <div class="qr-label">Betrag</div>
-                    <div class="qr-amount">{{ invoice.total_gross|swiss_currency }}</div>
-                </div>
-
-                <div class="qr-field">
-                    <div class="qr-label">Konto / Zahlbar an</div>
-                    <div class="qr-value">{{ supplier.iban }}</div>
-                    <div class="qr-value">{{ supplier.name }}</div>
-                    <div class="qr-value">{{ supplier.street }}</div>
-                    <div class="qr-value">{{ supplier.postal_code }} {{ supplier.city }}</div>
-                </div>
-
-                <div class="qr-field">
-                    <div class="qr-label">Zusätzliche Informationen</div>
-                    <div class="qr-value">Rechnung {{ invoice.invoice_number }}</div>
-                    <div class="qr-value">Fälligkeitsdatum: {{ invoice.due_date|date:"d.m.Y" }}</div>
-                </div>
-
-                <div class="qr-field">
-                    <div class="qr-label">Zahlbar durch</div>
-                    <div class="qr-value">{{ customer.name }}</div>
-                    {% if customer.contact_name %}
-                    <div class="qr-value">{{ customer.contact_name }}</div>
-                    {% endif %}
-                    {{ customer.address|linebreaksbr }}
-                </div>
-            </div>
-        </div>
+    <!-- Page 2 - Swiss QR Bill (generated by qrbill library) -->
+    <div class="qr-page-full">
+        {{ qr_data_uri|safe }}
     </div>
     {% endif %}
 

@@ -13,7 +13,15 @@ import { AlertCircle, CheckCircle, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/lib/auth"
 import { toast } from 'react-hot-toast';
-import { companyProfileAPI } from "@/lib/api"
+import { companyProfileAPI, patchCompanyProfileWithFile } from "@/lib/api"
+
+// Debug: Check if the API is properly imported
+console.log('companyProfileAPI imported:', companyProfileAPI)
+console.log('patchWithFile function:', companyProfileAPI?.patchWithFile)
+console.log('companyProfileAPI keys:', Object.keys(companyProfileAPI || {}))
+console.log('typeof patchWithFile:', typeof companyProfileAPI?.patchWithFile)
+console.log('patchCompanyProfileWithFile imported:', patchCompanyProfileWithFile)
+console.log('typeof patchCompanyProfileWithFile:', typeof patchCompanyProfileWithFile)
 
 export default function SettingsPage() {
   const { user, isLoading: authLoading, updateProfile, changePassword } = useAuth()
@@ -38,6 +46,8 @@ export default function SettingsPage() {
     mwst_number: "",
     currency: "CHF",
   })
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
 
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [lowStockAlerts, setLowStockAlerts] = useState(true)
@@ -80,6 +90,10 @@ export default function SettingsPage() {
         mwst_number: profile.mwst_number || "",
         currency: profile.currency || "CHF",
       })
+      // Set logo preview if exists
+      if (profile.logo) {
+        setLogoPreview(profile.logo)
+      }
     } catch (err) {
       // Profile doesn't exist yet - this is normal for new users
       console.log("No company profile found, starting fresh")
@@ -104,10 +118,38 @@ export default function SettingsPage() {
     return errors
   }
 
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Bitte wählen Sie eine Bilddatei')
+        return
+      }
+      // Validate file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('Datei ist zu groß (max. 2MB)')
+        return
+      }
+      setLogoFile(file)
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleRemoveLogo = () => {
+    setLogoFile(null)
+    setLogoPreview(null)
+  }
+
   const handleSaveCompanyProfile = async () => {
     try {
       setIsSaving(true)
-      
+
       // Client-side validation
       const validationErrors = validateProfileForm()
       if (validationErrors.length > 0) {
@@ -115,9 +157,61 @@ export default function SettingsPage() {
         return
       }
 
-      await companyProfileAPI.patch(profileForm)
+      // Ensure companyProfileAPI is available
+      if (!companyProfileAPI) {
+        throw new Error('CompanyProfileAPI ist nicht verfügbar')
+      }
+
+      // If logo file is selected, upload it using FormData
+      if (logoFile) {
+        const formData = new FormData()
+        Object.entries(profileForm).forEach(([key, value]) => {
+          if (value !== null && value !== undefined) {
+            formData.append(key, value)
+          }
+        })
+        formData.append('logo', logoFile)
+        
+        // Debug: Log FormData contents
+        console.log('FormData contents:')
+        for (let [key, value] of formData.entries()) {
+          console.log(`${key}:`, value)
+        }
+
+        // Debug: Check if the function exists
+        if (typeof companyProfileAPI.patchWithFile !== 'function') {
+          console.error('patchWithFile function not found:', companyProfileAPI)
+          console.error('Available methods:', Object.keys(companyProfileAPI || {}))
+          
+          // Try the direct function as fallback
+          if (typeof patchCompanyProfileWithFile === 'function') {
+            console.warn('Using direct patchCompanyProfileWithFile function')
+            try {
+              await patchCompanyProfileWithFile(formData)
+            } catch (error) {
+              console.error('Error calling patchCompanyProfileWithFile:', error)
+              throw error
+            }
+          } else {
+            // Final fallback: try to use the regular patch method without file upload
+            console.warn('Falling back to regular patch method without logo upload')
+            await companyProfileAPI.patch(profileForm)
+            toast.warning('Logo konnte nicht hochgeladen werden, aber andere Daten wurden gespeichert')
+          }
+        } else {
+          try {
+            await companyProfileAPI.patchWithFile(formData)
+          } catch (error) {
+            console.error('Error calling patchWithFile:', error)
+            throw error
+          }
+        }
+      } else {
+        await companyProfileAPI.patch(profileForm)
+      }
+
       toast.success("Firmenprofil gespeichert")
-      
+
       // Reload to get the updated profile
       await loadCompanyProfile()
     } catch (err) {
@@ -510,12 +604,53 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  {/* Logo placeholder */}
+                  {/* Logo upload */}
                   <div className="space-y-2">
-                    <Label>Logo (optional)</Label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                      <p className="text-sm text-gray-500">Logo-Upload folgt in einer späteren Version</p>
-                    </div>
+                    <Label htmlFor="logo">Logo (optional)</Label>
+                    {logoPreview ? (
+                      <div className="space-y-2">
+                        <div className="border border-gray-300 rounded-lg p-4 flex items-center justify-center bg-gray-50">
+                          <img
+                            src={logoPreview}
+                            alt="Firmenlogo"
+                            className="max-h-32 object-contain"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => document.getElementById('logo-input')?.click()}
+                          >
+                            Ändern
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleRemoveLogo}
+                          >
+                            Entfernen
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-400 transition-colors"
+                        onClick={() => document.getElementById('logo-input')?.click()}
+                      >
+                        <p className="text-sm text-gray-500 mb-2">Klicken oder Logo hierher ziehen</p>
+                        <p className="text-xs text-gray-400">PNG, JPG, SVG (max. 2MB)</p>
+                      </div>
+                    )}
+                    <input
+                      id="logo-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoChange}
+                      className="hidden"
+                    />
                   </div>
                 </>
               )}

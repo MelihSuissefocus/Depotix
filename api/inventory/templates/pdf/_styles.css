@@ -308,12 +308,12 @@ body {
 /* QR Page Styles */
 .qr-page {
     page-break-before: always;
-    padding: 20mm;
+    padding: 15mm;
 }
 
 .qr-header {
     text-align: center;
-    margin-bottom: 20mm;
+    margin-bottom: 15mm;
 }
 
 .qr-header h2 {
@@ -331,20 +331,24 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    gap: 10mm;
 }
 
 .qr-section-left {
-    width: 25%;
+    width: 30%;
     font-size: 8pt;
 }
 
 .qr-section-center {
-    width: 35%;
+    width: 30%;
     text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .qr-section-right {
-    width: 35%;
+    width: 30%;
     font-size: 8pt;
 }
 
@@ -378,13 +382,16 @@ body {
     font-weight: bold;
 }
 
-.qr-code-large {
-    margin: 10mm 0;
+/* Full QR Bill page from qrbill library */
+.qr-page-full {
+    page-break-before: always;
+    width: 210mm;
+    height: 297mm;
+    padding: 0;
+    margin: 0;
 }
 
-.qr-code-large img {
-    max-width: 46mm;
-    max-height: 46mm;
-    width: 46mm;
-    height: 46mm;
+.qr-page-full svg {
+    width: 210mm;
+    height: 297mm;
 }

@@ -126,7 +126,7 @@ export default function InvoicesPage() {
   }, [currentPage, searchTerm])
 
   useEffect(() => {
-    if (isWizardOpen && currentStep === 2) {
+    if (isWizardOpen && currentStep === 3) {
       loadItems(itemSearch)
     }
   }, [isWizardOpen, currentStep, itemSearch])
@@ -378,12 +378,13 @@ export default function InvoicesPage() {
     }
   }
 
-  const createQuickInvoice = async (customerID: number, items: InvoiceItem[]) => {
-    // Step 1: Create a draft order with items
+  const createQuickInvoice = async (customerID: number, items: InvoiceItem[], deliveryDate?: string, dueDate?: string) => {
+    // Create order with items in one request using the new items_data field
     const orderPayload = {
       customer: customerID,
       status: 'DRAFT' as const,
-      items: items.map(item => ({
+      delivery_date: deliveryDate,
+      items_data: items.map(item => ({
         item: item.item,
         qty_base: item.qty_base,
         unit_price: item.unit_price,
@@ -393,50 +394,24 @@ export default function InvoicesPage() {
     
     console.log("Creating order with payload:", orderPayload)
     
-    // First create order - but ordersAPI doesn't have a create method, we need to use a direct POST
+    // Create order with items in one request
     const orderResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/inventory/orders/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${JSON.parse(localStorage.getItem("auth_tokens") || '{}').access}`
       },
-      body: JSON.stringify({
-        customer: customerID,
-        status: 'DRAFT',
-        notes: 'Quick Invoice'
-      })
+      body: JSON.stringify(orderPayload)
     })
     
     if (!orderResponse.ok) {
+      const errorData = await orderResponse.json()
+      console.error("Order creation failed:", errorData)
       throw new Error(`Order creation failed: ${orderResponse.status}`)
     }
     
     const order = await orderResponse.json()
-    console.log("Order created:", order)
-    
-    // Step 2: Add items to the order
-    for (const item of items) {
-      const itemPayload = {
-        order: order.id,
-        item: item.item,
-        qty_base: item.qty_base,
-        unit_price: item.unit_price,
-        tax_rate: item.tax_rate
-      }
-      
-      const itemResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/inventory/order-items/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${JSON.parse(localStorage.getItem("auth_tokens") || '{}').access}`
-        },
-        body: JSON.stringify(itemPayload)
-      })
-      
-      if (!itemResponse.ok) {
-        throw new Error(`Item creation failed: ${itemResponse.status}`)
-      }
-    }
+    console.log("Order created with items:", order)
     
     // Step 3: Confirm the order
     await ordersAPI.confirm(order.id)
@@ -449,6 +424,28 @@ export default function InvoicesPage() {
     // Step 5: Create invoice from order
     const invoice = await ordersAPI.invoice(order.id)
     console.log("Invoice created:", invoice)
+    
+    // Step 6: Update invoice with due date if provided
+    if (dueDate) {
+      const updateResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/inventory/invoices/${invoice.id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${JSON.parse(localStorage.getItem("auth_tokens") || '{}').access}`
+        },
+        body: JSON.stringify({
+          due_date: dueDate
+        })
+      })
+      
+      if (!updateResponse.ok) {
+        console.warn(`Failed to update invoice due date: ${updateResponse.status}`)
+      } else {
+        const updatedInvoice = await updateResponse.json()
+        console.log("Invoice updated with due date:", updatedInvoice)
+        return updatedInvoice
+      }
+    }
     
     return invoice
   }
@@ -468,6 +465,16 @@ export default function InvoicesPage() {
         return
       }
 
+      if (!wizardData.delivery_date) {
+        toast.error("Bitte geben Sie ein Lieferdatum an")
+        return
+      }
+
+      if (!wizardData.due_date) {
+        toast.error("Bitte geben Sie ein Fälligkeitsdatum an")
+        return
+      }
+
       const invalidItems = wizardData.items.filter(item => 
         !item.item || item.qty_base <= 0 || !item.unit_price || parseFloat(item.unit_price) <= 0
       )
@@ -478,7 +485,7 @@ export default function InvoicesPage() {
       }
 
       console.log("Creating quick invoice with data:", wizardData)
-      const invoice = await createQuickInvoice(wizardData.customer, wizardData.items)
+      const invoice = await createQuickInvoice(wizardData.customer, wizardData.items, wizardData.delivery_date, wizardData.due_date)
 
       toast.success("Rechnung erfolgreich erstellt")
       
@@ -593,6 +600,48 @@ export default function InvoicesPage() {
         )
 
       case 2:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Rechnungsdaten erfassen</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="delivery-date">Lieferdatum</Label>
+                <Input
+                  id="delivery-date"
+                  type="date"
+                  value={wizardData.delivery_date || new Date().toISOString().split('T')[0]}
+                  onChange={(e) => setWizardData(prev => ({
+                    ...prev,
+                    delivery_date: e.target.value
+                  }))}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="due-date">Fälligkeitsdatum</Label>
+                <Input
+                  id="due-date"
+                  type="date"
+                  value={wizardData.due_date || ""}
+                  onChange={(e) => setWizardData(prev => ({
+                    ...prev,
+                    due_date: e.target.value
+                  }))}
+                />
+              </div>
+            </div>
+            
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Diese Daten werden auf der Rechnung angezeigt. Das Fälligkeitsdatum bestimmt, bis wann die Rechnung bezahlt werden muss.
+              </AlertDescription>
+            </Alert>
+          </div>
+        )
+
+      case 3:
         const totals = calculateTotals()
         return (
           <div className="space-y-4">
@@ -728,7 +777,7 @@ export default function InvoicesPage() {
           </div>
         )
 
-      case 3:
+      case 4:
         const finalTotals = calculateTotals()
         return (
           <div className="space-y-4">
@@ -741,6 +790,14 @@ export default function InvoicesPage() {
               <CardContent className="space-y-4">
                 <div>
                   <strong>Kunde:</strong> {wizardData.customer_name}
+                </div>
+                
+                <div>
+                  <strong>Lieferdatum:</strong> {wizardData.delivery_date ? new Date(wizardData.delivery_date).toLocaleDateString('de-CH') : 'Nicht angegeben'}
+                </div>
+                
+                <div>
+                  <strong>Fälligkeitsdatum:</strong> {wizardData.due_date ? new Date(wizardData.due_date).toLocaleDateString('de-CH') : 'Nicht angegeben'}
                 </div>
                 
                 <div>
@@ -810,13 +867,14 @@ export default function InvoicesPage() {
               Neue Rechnung
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Neue Rechnung erstellen</DialogTitle>
               <DialogDescription>
-                Schritt {currentStep} von 3: {
+                Schritt {currentStep} von 4: {
                   currentStep === 1 ? "Kunde auswählen" :
-                  currentStep === 2 ? "Positionen erfassen" :
+                  currentStep === 2 ? "Daten erfassen" :
+                  currentStep === 3 ? "Positionen erfassen" :
                   "Rechnung generieren"
                 }
               </DialogDescription>
@@ -848,12 +906,13 @@ export default function InvoicesPage() {
                   Abbrechen
                 </Button>
                 
-                {currentStep < 3 ? (
+                {currentStep < 4 ? (
                   <Button 
                     onClick={() => setCurrentStep(prev => prev + 1)}
                     disabled={
                       (currentStep === 1 && !selectedCustomer) ||
-                      (currentStep === 2 && wizardData.items.length === 0)
+                      (currentStep === 2 && (!wizardData.delivery_date || !wizardData.due_date)) ||
+                      (currentStep === 3 && wizardData.items.length === 0)
                     }
                   >
                     Weiter

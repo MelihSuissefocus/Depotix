@@ -416,6 +416,13 @@ class SalesOrderSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source='customer.name', read_only=True)
     created_by_username = serializers.CharField(source='created_by.username', read_only=True)
     items = SalesOrderItemSerializer(many=True, read_only=True)
+    # Allow items to be written during creation
+    items_data = serializers.ListField(
+        child=serializers.DictField(),
+        write_only=True,
+        required=False,
+        help_text="List of items to create with the order"
+    )
 
     class Meta:
         model = SalesOrder
@@ -423,7 +430,7 @@ class SalesOrderSerializer(serializers.ModelSerializer):
             'id', 'order_number', 'customer', 'customer_name', 'status',
             'order_date', 'delivery_date', 'currency', 'total_net',
             'total_tax', 'total_gross', 'created_by', 'created_by_username',
-            'items'
+            'items', 'items_data'
         ]
         read_only_fields = [
             'id', 'order_number', 'order_date', 'customer_name',
@@ -432,16 +439,32 @@ class SalesOrderSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
+        # Extract items data
+        items_data = validated_data.pop('items_data', [])
+        
         # Auto-assign created_by from request user
         validated_data['created_by'] = self.context['request'].user
-        return super().create(validated_data)
+        
+        # Create the order
+        order = super().create(validated_data)
+        
+        # Create order items
+        for item_data in items_data:
+            # Get the InventoryItem instance
+            item_id = item_data.pop('item')
+            try:
+                item_instance = InventoryItem.objects.get(id=item_id)
+                item_data['item'] = item_instance
+                SalesOrderItem.objects.create(order=order, **item_data)
+            except InventoryItem.DoesNotExist:
+                raise serializers.ValidationError(f"Item with id {item_id} does not exist")
+        
+        return order
 
     def validate_delivery_date(self, value):
-        """Ensure delivery date is not in the past"""
-        if value:
-            from django.utils import timezone
-            if value < timezone.now().date():
-                raise serializers.ValidationError("Delivery date cannot be in the past")
+        """Validate delivery date - allow past, present, and future dates"""
+        # No validation needed - delivery date can be in past, present, or future
+        # This allows for retroactive order entry and historical records
         return value
 
 
@@ -513,6 +536,18 @@ class OrderToInvoiceSerializer(serializers.Serializer):
 
 class CompanyProfileSerializer(serializers.ModelSerializer):
     """Company profile serializer"""
+    
+    def to_representation(self, instance):
+        """Override to provide full URL for logo field"""
+        data = super().to_representation(instance)
+        if instance.logo:
+            request = self.context.get('request')
+            if request:
+                data['logo'] = request.build_absolute_uri(instance.logo.url)
+            else:
+                # Fallback for when no request context is available
+                data['logo'] = f"https://depotix.ch/api/media/{instance.logo.name}"
+        return data
     
     class Meta:
         model = CompanyProfile

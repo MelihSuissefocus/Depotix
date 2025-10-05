@@ -34,44 +34,43 @@ def save(self, *args, **kwargs):
 ```
 
 ### Invoices
-**Format**: `INV-YYYY-####`
-**Example**: `INV-2025-0001`, `INV-2025-0002`
-**Description**: Invoice numbering for billing
+**Format**: `RE######`
+**Example**: `RE000001`, `RE000002`
+**Description**: Rechnung (Invoice) numbering for billing
 
 **Implementation**:
 ```python
 def save(self, *args, **kwargs):
     if not self.invoice_number:
-        year = timezone.now().year
         last_invoice = Invoice.objects.filter(
-            invoice_number__startswith=f'INV-{year}-'
+            invoice_number__startswith='RE'
         ).order_by('invoice_number').last()
-        
+
         if last_invoice:
-            last_num = int(last_invoice.invoice_number.split('-')[-1])
+            last_num = int(last_invoice.invoice_number[2:])
             new_num = last_num + 1
         else:
             new_num = 1
-        
-        self.invoice_number = f'INV-{year}-{new_num:04d}'
-    
+
+        self.invoice_number = f'RE{new_num:06d}'
+
     super().save(*args, **kwargs)
 ```
 
 ## Numbering Rules
 
 ### General Rules
-1. **Yearly Reset**: Sequence resets every calendar year
-2. **Zero-Padding**: 4-digit sequential numbers with leading zeros
+1. **Yearly Reset**: Sales orders reset every calendar year; invoices use continuous numbering
+2. **Zero-Padding**: Sequential numbers with leading zeros (4 digits for sales orders, 6 digits for invoices)
 3. **Immutable**: Numbers cannot be changed once assigned
 4. **Unique**: Each document type has independent sequences
 5. **Auto-Generation**: Numbers assigned automatically on creation
 
 ### Sequence Management
-- **Starting Number**: 0001 for each new year
+- **Starting Number**: 0001 for sales orders (yearly), 000001 for invoices (continuous)
 - **Increment**: +1 for each new document
 - **Gap Handling**: Gaps may occur due to deleted drafts (acceptable)
-- **Rollover**: Automatically starts new sequence on January 1st
+- **Rollover**: Sales orders start new sequence on January 1st; invoices continue indefinitely
 
 ### Database Implementation
 Numbers are generated at the model level during save() operations:
@@ -110,6 +109,7 @@ Numbers are generated at the model level during save() operations:
 {
   "id": 1,
   "order_number": "LS-2025-0001",
+  "invoice_number": "RE000001",
   "customer": 1,
   "status": "CONFIRMED",
   "order_date": "2025-09-11",
@@ -225,9 +225,10 @@ WHERE 'LS-2025-' || LPAD(num::text, 4, '0') NOT IN (
 ```bash
 # Numbering system configuration
 NUMBERING_YEAR_RESET=true
-NUMBERING_SEQUENCE_LENGTH=4
+NUMBERING_SALES_SEQUENCE_LENGTH=4
+NUMBERING_INVOICE_SEQUENCE_LENGTH=6
 NUMBERING_SALES_PREFIX=LS
-NUMBERING_INVOICE_PREFIX=INV
+NUMBERING_INVOICE_PREFIX=RE
 ```
 
 ### Django Settings
@@ -235,9 +236,11 @@ NUMBERING_INVOICE_PREFIX=INV
 # Numbering system settings
 DEPOTIX_NUMBERING = {
     'SALES_ORDER_PREFIX': 'LS',
-    'INVOICE_PREFIX': 'INV',
-    'SEQUENCE_LENGTH': 4,
-    'YEARLY_RESET': True,
+    'INVOICE_PREFIX': 'RE',
+    'SALES_SEQUENCE_LENGTH': 4,
+    'INVOICE_SEQUENCE_LENGTH': 6,
+    'SALES_YEARLY_RESET': True,
+    'INVOICE_YEARLY_RESET': False,
     'AUTO_ASSIGN': True,
 }
 ```
@@ -248,9 +251,9 @@ DEPOTIX_NUMBERING = {
 
 #### Working Implementation
 - ✅ **SalesOrder**: Auto-generates LS-2025-0001, LS-2025-0002, etc.
-- ✅ **Invoice**: Auto-generates INV-2025-0001, INV-2025-0002, etc.
-- ✅ **Yearly Reset**: New sequence starts each January 1st
-- ✅ **Zero Padding**: 4-digit numbers with leading zeros
+- ✅ **Invoice**: Auto-generates RE000001, RE000002, etc.
+- ✅ **Yearly Reset**: Sales orders reset each January 1st; invoices use continuous numbering
+- ✅ **Zero Padding**: 4-digit numbers for sales orders, 6-digit for invoices with leading zeros
 - ✅ **Uniqueness**: Database-level unique constraints
 - ✅ **Django Integration**: Implemented in model save() methods
 
@@ -262,7 +265,7 @@ Sales Orders:
 - LS-2025-0002 (Cafe Berliner Luft) - CONFIRMED
 
 Invoices:
-- INV-2025-0001 (Generated from LS-2025-0001)
+- RE000001 (Generated from LS-2025-0001)
 ```
 
 #### Future Enhancement: DocumentSequence

@@ -384,6 +384,74 @@ export const expensesAPI = {
     }),
 };
 
+// Helper function for multipart form data requests
+async function fetchAPIWithFile(endpoint: string, formData: FormData) {
+  const url = `${API_BASE}${endpoint}`
+
+  // Get auth token from localStorage
+  const tokensStr = typeof window !== "undefined" ? localStorage.getItem("auth_tokens") : null
+  const tokens = tokensStr ? JSON.parse(tokensStr) : null
+
+  const headers: HeadersInit = {
+    ...(tokens?.access ? { Authorization: `Bearer ${tokens.access}` } : {}),
+    // Don't set Content-Type header - browser will set it with boundary for multipart/form-data
+  }
+
+  console.log('fetchAPIWithFile called with:', { url, headers, formDataKeys: Array.from(formData.keys()) })
+
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers,
+    body: formData,
+  })
+
+  if (!response.ok) {
+    // Handle errors similar to fetchAPI
+    if (response.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem("auth_tokens")
+      window.location.href = "/login"
+      throw new Error("Session expired. Please login again.")
+    }
+
+    let errorBody: any = null
+    try {
+      const contentType = response.headers.get("content-type") || ""
+      if (contentType.includes("application/json")) {
+        errorBody = await response.json().catch(() => null)
+      } else {
+        errorBody = (await response.text().catch(() => null)) || null
+      }
+    } catch (e) {
+      errorBody = null
+    }
+
+    const bodyMessage =
+      errorBody && typeof errorBody === "object"
+        ? errorBody.message || errorBody.detail || JSON.stringify(errorBody)
+        : errorBody || response.statusText || ""
+
+    const errorCode = errorBody && typeof errorBody === "object" ? errorBody.code : null
+    const germanMessage = getGermanErrorMessage(bodyMessage, errorCode)
+
+    const message = germanMessage
+      ? `${germanMessage} (Status ${response.status})`
+      : `Ein Fehler ist aufgetreten (Status ${response.status})`
+
+    throw new Error(message)
+  }
+
+  if (response.status === 204) {
+    return null
+  }
+
+  const contentType = response.headers.get("content-type") || ""
+  if (contentType.includes("application/json")) {
+    return await response.json()
+  }
+
+  return await response.text()
+}
+
 // API functions for company profile
 export const companyProfileAPI = {
   get: (): Promise<CompanyProfile> => fetchAPI("/inventory/company-profile/"),
@@ -392,6 +460,24 @@ export const companyProfileAPI = {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
+  patchWithFile: async (formData: FormData): Promise<CompanyProfile> => {
+    return await fetchAPIWithFile("/inventory/company-profile/", formData);
+  },
+}
+
+// Export the function directly as well for better reliability
+export const patchCompanyProfileWithFile = async (formData: FormData): Promise<CompanyProfile> => {
+  return await fetchAPIWithFile("/inventory/company-profile/", formData);
+}
+
+// Ensure the API object is properly structured
+if (typeof window !== 'undefined') {
+  console.log('CompanyProfileAPI loaded:', {
+    hasGet: typeof companyProfileAPI.get === 'function',
+    hasPatch: typeof companyProfileAPI.patch === 'function',
+    hasPatchWithFile: typeof companyProfileAPI.patchWithFile === 'function',
+    keys: Object.keys(companyProfileAPI)
+  });
 }
 
 // API functions for sales orders

@@ -1,9 +1,20 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Copy files
-COPY package.json ./
-COPY . .
+# Copy files from parent directory (build context is ..)
+COPY package.json package-lock.json* ./
+COPY app ./app
+COPY components ./components
+COPY lib ./lib
+COPY locales ./locales
+COPY public ./public
+COPY next.config.ts ./
+COPY tsconfig.json ./
+COPY postcss.config.mjs ./
+COPY components.json ./
+COPY next-env.d.ts ./
+COPY types.d.ts ./
+COPY eslint.config.mjs ./
 
 # Install dependencies
 RUN npm install --legacy-peer-deps

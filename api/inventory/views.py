@@ -403,7 +403,7 @@ class CompanyProfileView(APIView):
                 'phone': ''
             }
         )
-        serializer = CompanyProfileSerializer(profile)
+        serializer = CompanyProfileSerializer(profile, context={'request': request})
         return Response(serializer.data)
     
     def patch(self, request):
@@ -419,7 +419,15 @@ class CompanyProfileView(APIView):
                 'phone': ''
             }
         )
-        serializer = CompanyProfileSerializer(profile, data=request.data, partial=True)
+        
+        # Handle file uploads properly
+        data = request.data.copy()
+        
+        # If there's a logo file, handle it properly
+        if 'logo' in request.FILES:
+            data['logo'] = request.FILES['logo']
+        
+        serializer = CompanyProfileSerializer(profile, data=data, partial=True, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
@@ -549,7 +557,10 @@ class SalesOrderViewSet(viewsets.ModelViewSet):
                     )
                 
                 # Create invoice (model handles numbering and totals automatically)
-                invoice = Invoice.objects.create(order=order)
+                invoice = Invoice.objects.create(
+                    order=order,
+                    delivery_date=order.delivery_date
+                )
                 
                 # Update order status
                 order.status = 'INVOICED'
