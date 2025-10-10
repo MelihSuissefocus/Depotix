@@ -8,11 +8,11 @@ register = template.Library()
 @register.filter
 def swiss_currency(value):
     """
-    Format currency in Swiss format: 7'688,60
-    Uses apostrophe as thousands separator and comma as decimal separator
+    Format currency in Swiss format: 7'688.60
+    Uses apostrophe as thousands separator and period as decimal separator
     """
     if value is None:
-        return "0,00"
+        return "0.00"
 
     try:
         # Convert to Decimal for precision
@@ -36,11 +36,11 @@ def swiss_currency(value):
                 grouped.append(reversed_int[i:i+3])
             integer_part = "'".join(grouped)[::-1]
 
-        # Return with comma as decimal separator
-        return f"{integer_part},{decimal_part}"
+        # Return with period as decimal separator
+        return f"{integer_part}.{decimal_part}"
 
     except (ValueError, TypeError, InvalidOperation):
-        return "0,00"
+        return "0.00"
 
 @register.filter
 def swiss_date_format(value):

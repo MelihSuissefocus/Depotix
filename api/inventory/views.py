@@ -347,6 +347,27 @@ class StockMovementViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+    @action(detail=False, methods=['delete'], url_path='clear-all')
+    def clear_all(self, request):
+        """Delete all stock movements for the current user's items"""
+        try:
+            deleted_count, _ = StockMovement.objects.filter(
+                item__owner=request.user
+            ).delete()
+
+            return Response(
+                {
+                    'message': f'Successfully deleted {deleted_count} stock movements',
+                    'deleted_count': deleted_count
+                },
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Failed to delete stock movements: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 class ExpenseFilter(FilterSet):
     """Filter set for expense queries"""

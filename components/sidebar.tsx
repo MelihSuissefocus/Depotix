@@ -50,12 +50,6 @@ const routes = [
     color: "text-emerald-500",
   },
   {
-    label: "Bestellungen",
-    icon: ShoppingCart,
-    href: "/orders",
-    color: "text-purple-500",
-  },
-  {
     label: "Rechnungen",
     icon: FileText,
     href: "/invoices",

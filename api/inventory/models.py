@@ -232,13 +232,19 @@ class InventoryItem(models.Model):
         """Owner username for API compatibility"""
         return self.owner.username if self.owner else None
 
+    def save(self, *args, **kwargs):
+        """Override save to convert empty SKU to NULL"""
+        if self.sku == '':
+            self.sku = None
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.name} ({self.sku or 'No SKU'})"
 
 
 class Expense(models.Model):
     """Financial expense tracking"""
-    
+
     CATEGORY_CHOICES = [
         ('PURCHASE', 'Purchase'),
         ('TRANSPORT', 'Transport'),
@@ -248,7 +254,7 @@ class Expense(models.Model):
         ('MARKETING', 'Marketing'),
         ('OTHER', 'Other'),
     ]
-    
+
     date = models.DateField()
     description = models.CharField(max_length=500)
     amount = models.DecimalField(
@@ -257,12 +263,13 @@ class Expense(models.Model):
     )
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     supplier = models.ForeignKey(
-        Supplier, 
-        on_delete=models.SET_NULL, 
+        Supplier,
+        on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='expenses'
     )
     receipt_number = models.CharField(max_length=100, blank=True, null=True)
+    receipt_pdf = models.FileField(upload_to='expense_receipts/', blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='expenses')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -366,6 +373,11 @@ class StockMovement(models.Model):
 
     # Tracking and relationships
     created_at = models.DateTimeField(auto_now_add=True)
+    movement_timestamp = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Optional custom timestamp for when the movement occurred. If not set, created_at is used."
+    )
     note = models.TextField(blank=True, help_text="Movement notes or reason")
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True,
                                 related_name='stock_movements')
@@ -591,7 +603,7 @@ class Invoice(models.Model):
 
     invoice_number = models.CharField(max_length=20, unique=True, blank=True)
     order = models.OneToOneField(SalesOrder, on_delete=models.CASCADE, related_name='invoice')
-    issue_date = models.DateTimeField(auto_now_add=True)
+    issue_date = models.DateField(null=True, blank=True, help_text="Dokument Datum")
     delivery_date = models.DateField(null=True, blank=True, help_text="Lieferdatum")
     due_date = models.DateField(null=True, blank=True, help_text="Fälligkeitsdatum")
     

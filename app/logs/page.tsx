@@ -5,13 +5,15 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { AlertTriangle, ArrowDown, ArrowUp, Box, Search, TrendingUp, TrendingDown, RotateCcw } from "lucide-react"
+import { AlertTriangle, ArrowDown, ArrowUp, Box, Search, TrendingUp, TrendingDown, RotateCcw, Trash2 } from "lucide-react"
 import { stockMovementAPI } from "@/lib/api"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { DateRangePicker } from "@/components/date-range-picker"
 import { MovementModal } from "@/components/movement-modal"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { toast } from "react-hot-toast"
 import type { DateRange } from "react-day-picker"
 
 export default function LogsPage() {
@@ -23,6 +25,8 @@ export default function LogsPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
   const [isMovementModalOpen, setIsMovementModalOpen] = useState(false)
   const [movementMode, setMovementMode] = useState<"IN" | "OUT" | "RETURN">("IN")
+  const [showClearDialog, setShowClearDialog] = useState(false)
+  const [isClearing, setIsClearing] = useState(false)
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -71,6 +75,24 @@ export default function LogsPage() {
   const openRetourModal = () => {
     setMovementMode("RETURN")
     setIsMovementModalOpen(true)
+  }
+
+  const handleClearAllLogs = async () => {
+    try {
+      setIsClearing(true)
+      await stockMovementAPI.clearAll()
+      toast.success("Alle Logs erfolgreich gelöscht")
+      setShowClearDialog(false)
+
+      // Refresh logs
+      const data = await stockMovementAPI.getMovements()
+      setLogs(Array.isArray(data.results) ? data.results : [])
+    } catch (err: any) {
+      console.error("Failed to clear logs:", err)
+      toast.error("Fehler beim Löschen der Logs")
+    } finally {
+      setIsClearing(false)
+    }
   }
 
 
@@ -173,7 +195,7 @@ export default function LogsPage() {
               </Label>
               <DateRangePicker date={dateRange} onDateChange={setDateRange} />
             </div>
-            <div className="ml-auto">
+            <div className="ml-auto flex gap-2">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -183,6 +205,13 @@ export default function LogsPage() {
                 }}
               >
                 Reset Filters
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => setShowClearDialog(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Alle Logs löschen
               </Button>
             </div>
           </div>
@@ -203,7 +232,7 @@ export default function LogsPage() {
               {filteredLogs.length > 0 ? (
                 filteredLogs.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell>{new Date(log.created_at).toLocaleString()}</TableCell>
+                    <TableCell>{new Date(log.movement_timestamp || log.created_at).toLocaleString()}</TableCell>
                     <TableCell>{log.item_name || `Item #${log.item}`}</TableCell>
                     <TableCell>
                       <Badge
@@ -250,12 +279,51 @@ export default function LogsPage() {
       </Card>
 
       {/* Movement Modal */}
-      <MovementModal 
+      <MovementModal
         isOpen={isMovementModalOpen}
         onClose={() => setIsMovementModalOpen(false)}
         mode={movementMode}
         onSuccess={handleMovementSuccess}
       />
+
+      {/* Clear All Logs Confirmation Dialog */}
+      <Dialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Alle Logs löschen</DialogTitle>
+            <DialogDescription>
+              Sind Sie sicher, dass Sie alle Bewegungslogs unwiderruflich löschen möchten?
+              Diese Aktion kann nicht rückgängig gemacht werden.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowClearDialog(false)}
+              disabled={isClearing}
+            >
+              Abbrechen
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleClearAllLogs}
+              disabled={isClearing}
+            >
+              {isClearing ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  Wird gelöscht...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Alle löschen
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

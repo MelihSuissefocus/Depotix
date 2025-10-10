@@ -153,7 +153,8 @@ def _qr_svg_data_uri(iban, creditor, debtor, amount, currency, reference, messag
             amount=amount_str,
             currency=currency,
             debtor=debtor_data,
-            additional_information=message[:140] if message else None  # Max 140 chars
+            additional_information=message[:140] if message else None,  # Max 140 chars
+            language='de'  # Set language to German
         )
 
         # Generate SVG to temp file (qrbill requires a file path)

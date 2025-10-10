@@ -349,6 +349,12 @@ export const stockMovementAPI = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  // Delete all stock movements
+  clearAll: () =>
+    fetchAPI("/inventory/stock-movements/clear-all/", {
+      method: "DELETE",
+    }),
 }
 
 // API functions for expenses

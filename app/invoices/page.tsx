@@ -22,12 +22,14 @@ interface InvoiceItem {
   qty_base: number
   unit_price: string
   tax_rate: string
+  search?: string
 }
 
 interface WizardData {
   customer: number
   customer_name?: string
   customer_address?: string
+  issue_date?: string
   delivery_date?: string
   due_date?: string
   items: InvoiceItem[]
@@ -324,7 +326,7 @@ export default function InvoicesPage() {
   const addInvoiceItem = () => {
     setWizardData(prev => ({
       ...prev,
-      items: [...prev.items, { item: 0, qty_base: 1, unit_price: "0.00", tax_rate: "8.10" }]
+      items: [...prev.items, { item: 0, qty_base: 1, unit_price: "0.00", tax_rate: "8.10", search: "" }]
     }))
   }
 
@@ -378,7 +380,7 @@ export default function InvoicesPage() {
     }
   }
 
-  const createQuickInvoice = async (customerID: number, items: InvoiceItem[], deliveryDate?: string, dueDate?: string) => {
+  const createQuickInvoice = async (customerID: number, items: InvoiceItem[], issueDate?: string, deliveryDate?: string, dueDate?: string) => {
     // Create order with items in one request using the new items_data field
     const orderPayload = {
       customer: customerID,
@@ -425,28 +427,30 @@ export default function InvoicesPage() {
     const invoice = await ordersAPI.invoice(order.id)
     console.log("Invoice created:", invoice)
     
-    // Step 6: Update invoice with due date if provided
-    if (dueDate) {
+    // Step 6: Update invoice with issue_date and due_date if provided
+    if (issueDate || dueDate) {
+      const updatePayload: any = {}
+      if (issueDate) updatePayload.issue_date = issueDate
+      if (dueDate) updatePayload.due_date = dueDate
+
       const updateResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/inventory/invoices/${invoice.id}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${JSON.parse(localStorage.getItem("auth_tokens") || '{}').access}`
         },
-        body: JSON.stringify({
-          due_date: dueDate
-        })
+        body: JSON.stringify(updatePayload)
       })
-      
+
       if (!updateResponse.ok) {
-        console.warn(`Failed to update invoice due date: ${updateResponse.status}`)
+        console.warn(`Failed to update invoice dates: ${updateResponse.status}`)
       } else {
         const updatedInvoice = await updateResponse.json()
-        console.log("Invoice updated with due date:", updatedInvoice)
+        console.log("Invoice updated with dates:", updatedInvoice)
         return updatedInvoice
       }
     }
-    
+
     return invoice
   }
 
@@ -485,7 +489,7 @@ export default function InvoicesPage() {
       }
 
       console.log("Creating quick invoice with data:", wizardData)
-      const invoice = await createQuickInvoice(wizardData.customer, wizardData.items, wizardData.delivery_date, wizardData.due_date)
+      const invoice = await createQuickInvoice(wizardData.customer, wizardData.items, wizardData.issue_date, wizardData.delivery_date, wizardData.due_date)
 
       toast.success("Rechnung erfolgreich erstellt")
       
@@ -603,8 +607,21 @@ export default function InvoicesPage() {
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Rechnungsdaten erfassen</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="issue-date">Dokument Datum</Label>
+                <Input
+                  id="issue-date"
+                  type="date"
+                  value={wizardData.issue_date || new Date().toISOString().split('T')[0]}
+                  onChange={(e) => setWizardData(prev => ({
+                    ...prev,
+                    issue_date: e.target.value
+                  }))}
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="delivery-date">Lieferdatum</Label>
                 <Input
@@ -617,7 +634,7 @@ export default function InvoicesPage() {
                   }))}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="due-date">Fälligkeitsdatum</Label>
                 <Input
@@ -631,7 +648,7 @@ export default function InvoicesPage() {
                 />
               </div>
             </div>
-            
+
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
@@ -668,20 +685,20 @@ export default function InvoicesPage() {
                           <div className="relative">
                             <Input
                               placeholder="Artikel suchen..."
-                              value={itemSearch}
-                              onChange={(e) => setItemSearch(e.target.value)}
+                              value={item.search || ""}
+                              onChange={(e) => updateInvoiceItem(index, 'search', e.target.value)}
                             />
-                            {itemSearch && availableItems.length > 0 && (
+                            {item.search && availableItems.length > 0 && (
                               <div className="absolute z-20 w-full bg-white border rounded-md mt-1 max-h-40 overflow-y-auto shadow-lg">
-                                {availableItems.filter(ai => 
-                                  ai.name.toLowerCase().includes(itemSearch.toLowerCase())
+                                {availableItems.filter(ai =>
+                                  ai.name.toLowerCase().includes((item.search || "").toLowerCase())
                                 ).slice(0, 10).map((availableItem) => (
                                   <div
                                     key={availableItem.id}
                                     className="p-2 hover:bg-gray-50 cursor-pointer"
                                     onClick={() => {
                                       updateInvoiceItem(index, 'item', availableItem.id)
-                                      setItemSearch("")
+                                      updateInvoiceItem(index, 'search', "")
                                     }}
                                   >
                                     <div className="font-medium">{availableItem.name}</div>
@@ -791,15 +808,19 @@ export default function InvoicesPage() {
                 <div>
                   <strong>Kunde:</strong> {wizardData.customer_name}
                 </div>
-                
+
+                <div>
+                  <strong>Dokument Datum:</strong> {wizardData.issue_date ? new Date(wizardData.issue_date).toLocaleDateString('de-CH') : 'Nicht angegeben'}
+                </div>
+
                 <div>
                   <strong>Lieferdatum:</strong> {wizardData.delivery_date ? new Date(wizardData.delivery_date).toLocaleDateString('de-CH') : 'Nicht angegeben'}
                 </div>
-                
+
                 <div>
                   <strong>Fälligkeitsdatum:</strong> {wizardData.due_date ? new Date(wizardData.due_date).toLocaleDateString('de-CH') : 'Nicht angegeben'}
                 </div>
-                
+
                 <div>
                   <strong>Positionen:</strong> {wizardData.items.length} Artikel
                 </div>
@@ -907,11 +928,11 @@ export default function InvoicesPage() {
                 </Button>
                 
                 {currentStep < 4 ? (
-                  <Button 
+                  <Button
                     onClick={() => setCurrentStep(prev => prev + 1)}
                     disabled={
                       (currentStep === 1 && !selectedCustomer) ||
-                      (currentStep === 2 && (!wizardData.delivery_date || !wizardData.due_date)) ||
+                      (currentStep === 2 && (!wizardData.issue_date || !wizardData.delivery_date || !wizardData.due_date)) ||
                       (currentStep === 3 && wizardData.items.length === 0)
                     }
                   >

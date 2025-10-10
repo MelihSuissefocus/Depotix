@@ -15,15 +15,13 @@
         <div class="header-row">
             <!-- Supplier info left -->
             <div class="supplier-info">
-                <div>{{ supplier.name|default:"Bi-Swiss GmbH" }}</div>
-                <div>{{ supplier.street|default:"Eichengasse 3" }}</div>
-                <div>{{ supplier.postal_code|default:"CH-4702" }} {{ supplier.city|default:"Oensingen" }}</div>
+                <div>{{ supplier.name|default:"Bi-Swiss GmbH" }} / {{ supplier.street|default:"Eichengasse 3" }} / {{ supplier.postal_code|default:"CH-4702" }} {{ supplier.city|default:"Oensingen" }}</div>
             </div>
 
             <!-- Logo right -->
             <div class="logo-placeholder">
                 {% if logo_data_uri %}
-                    <img src="{{ logo_data_uri }}" alt="{{ supplier.name }}" style="max-height: 60px; max-width: 200px; object-fit: contain;" />
+                    <img src="{{ logo_data_uri }}" alt="{{ supplier.name }}" class="logo-img" />
                 {% else %}
                     Logo
                 {% endif %}
@@ -49,13 +47,13 @@
 
             <div class="section-title delivery-address">Lieferadresse</div>
             <div class="address-lines">
+                <div>{{ customer.name }}</div>
+                {% if customer.contact_name %}
+                <div>{{ customer.contact_name }}</div>
+                {% endif %}
                 {% if customer.shipping_address %}
                     {{ customer.shipping_address|linebreaksbr }}
                 {% else %}
-                    <div>{{ customer.name }}</div>
-                    {% if customer.contact_name %}
-                    <div>{{ customer.contact_name }}</div>
-                    {% endif %}
                     {{ customer.address|linebreaksbr }}
                 {% endif %}
             </div>
@@ -94,10 +92,14 @@
         </div>
     </div>
 
+    <!-- Date line right-aligned -->
+    <div style="text-align: right; font-size: 10pt; margin-bottom: 2mm;">
+        Oensingen, {{ invoice.issue_date|swiss_date_format }}
+    </div>
+
     <!-- Invoice title -->
-    <div class="invoice-title-section">
-        <div class="title-left">Rechnung {{ invoice.invoice_number }}</div>
-        <div class="title-right">Oensingen  /  {{ invoice.issue_date|swiss_date_format }}</div>
+    <div style="font-size: 12pt; font-weight: 600; margin-bottom: 2mm;">
+        Rechnung {{ invoice.invoice_number }}
     </div>
 
     <div class="title-line"></div>
@@ -115,6 +117,7 @@
                 <th class="col-einheit">Einheit</th>
                 <th class="col-mwst">MwSt</th>
                 <th class="col-preis">Preis</th>
+                <th class="col-rabatt">Rabatt</th>
                 <th class="col-betrag">Betrag CHF</th>
             </tr>
         </thead>
@@ -122,10 +125,11 @@
             {% for line in lines %}
             <tr>
                 <td class="col-bezeichnung">{{ line.name }}</td>
-                <td class="col-menge">{{ line.qty_base|floatformat:0 }}</td>
+                <td class="col-menge">{{ line.qty_base|floatformat:2 }}</td>
                 <td class="col-einheit">Verpackung</td>
-                <td class="col-mwst">{{ line.tax_rate|floatformat:2 }} %</td>
-                <td class="col-preis">{{ line.unit_price|swiss_currency }} CHF</td>
+                <td class="col-mwst">{{ line.tax_rate|floatformat:2 }}%</td>
+                <td class="col-preis">{{ line.unit_price|swiss_currency }}</td>
+                <td class="col-rabatt">0.00%</td>
                 <td class="col-betrag">{{ line.line_total_net|swiss_currency }}</td>
             </tr>
             {% endfor %}
@@ -134,16 +138,6 @@
 
     <div class="table-bottom-line"></div>
 
-    <!-- Info Palette section -->
-    <div class="info-palette-section">
-        <div class="info-title">Info Palette</div>
-        {% for line in lines %}
-        <div class="info-text">{{ line.qty_base }} × {{ line.name }}</div>
-        {% endfor %}
-    </div>
-
-    <div class="info-bottom-line"></div>
-
     <!-- Totals section -->
     <div class="totals-section">
         <div class="totals-line">
@@ -151,7 +145,7 @@
             <span class="total-value">{{ invoice.total_net|swiss_currency }}</span>
         </div>
         <div class="totals-line">
-            <span class="total-label">Total MwSt {{ invoice.vat_rate }}% Von CHF</span>
+            <span class="total-label">Total MwSt {{ invoice.vat_rate|floatformat:2 }}% von {{ invoice.total_net|swiss_currency }}</span>
             <span class="total-value">{{ invoice.total_tax|swiss_currency }}</span>
         </div>
         <div class="totals-line">
@@ -159,6 +153,9 @@
             <span class="total-value">{{ invoice.total_gross|swiss_currency }}</span>
         </div>
     </div>
+
+    <!-- Page break to force payment section to page 2 -->
+    <div class="page-break"></div>
 
     <!-- Payment information -->
     <div class="payment-section">
@@ -177,19 +174,19 @@
         <div>{{ supplier.name|default:"Bi-Swiss GmbH" }}</div>
     </div>
 
-    <!-- Footer -->
-    <div class="footer">
+    {% if qr_data_uri %}
+    <!-- Swiss QR Bill (generated by qrbill library) -->
+    <div class="qr-section-inline">
+        {{ qr_data_uri|safe }}
+    </div>
+    {% endif %}
+
+    <!-- Footer - Before QR Bill -->
+    <div class="footer footer-page-1">
         <div class="footer-left">{{ supplier.name|default:"Bi-Swiss GmbH" }}  /  {{ supplier.street|default:"Eichengasse 3" }}  /  {{ supplier.postal_code|default:"4207" }} {{ supplier.city|default:"Oensingen" }}</div>
         <div class="footer-center">Telefon {{ supplier.phone|default:"+41 76 840 55 40" }}</div>
         <div class="footer-right">UID MwSt.: {{ supplier.mwst_number|default:"CHE-390.391.667 MWST" }}</div>
     </div>
-
-    {% if qr_data_uri %}
-    <!-- Page 2 - Swiss QR Bill (generated by qrbill library) -->
-    <div class="qr-page-full">
-        {{ qr_data_uri|safe }}
-    </div>
-    {% endif %}
 
 </body>
 </html>

@@ -1,11 +1,24 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from datetime import datetime, date
 from .models import (
-    Category, Supplier, Customer, InventoryItem, 
+    Category, Supplier, Customer, InventoryItem,
     Expense, InventoryLog, InventoryItemSupplier,
     StockMovement, SalesOrder, SalesOrderItem, Invoice, DocumentSequence,
     CompanyProfile
 )
+
+
+class FlexibleDateField(serializers.DateField):
+    """Custom date field that accepts both date and datetime objects"""
+
+    def to_representation(self, value):
+        if value is None:
+            return None
+        # Convert datetime to date if needed
+        if isinstance(value, datetime):
+            value = value.date()
+        return super().to_representation(value)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -160,12 +173,13 @@ class InventoryItemSerializer(serializers.ModelSerializer):
 class ExpenseSerializer(serializers.ModelSerializer):
     """Expense tracking serializer"""
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
+    receipt_pdf = serializers.FileField(required=False, allow_null=True)
 
     class Meta:
         model = Expense
         fields = [
             'id', 'date', 'description', 'amount', 'category', 'supplier',
-            'supplier_name', 'receipt_number', 'notes', 'owner', 
+            'supplier_name', 'receipt_number', 'receipt_pdf', 'notes', 'owner',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'owner', 'created_at', 'updated_at', 'supplier_name']
@@ -317,11 +331,18 @@ class StockMovementSerializer(serializers.ModelSerializer):
         help_text="Client-generated UUID for idempotent operations"
     )
 
+    # Optional custom timestamp
+    movement_timestamp = serializers.DateTimeField(
+        required=False,
+        allow_null=True,
+        help_text="Optional custom timestamp for when the movement occurred"
+    )
+
     class Meta:
         model = StockMovement
         fields = [
             'id', 'item', 'item_name', 'type', 'qty_base', 'qty_pallets',
-            'qty_packages', 'qty_singles', 'created_at', 'note', 'supplier',
+            'qty_packages', 'qty_singles', 'created_at', 'movement_timestamp', 'note', 'supplier',
             'supplier_name', 'customer', 'customer_name', 'created_by',
             'created_by_username', 'idempotency_key'
         ]
@@ -472,6 +493,8 @@ class InvoiceSerializer(serializers.ModelSerializer):
     """Invoice serializer with order and customer details"""
     customer_name = serializers.CharField(source='order.customer.name', read_only=True)
     order_number = serializers.CharField(source='order.order_number', read_only=True)
+    # Use custom field to handle both datetime and date
+    issue_date = FlexibleDateField(required=False, allow_null=True)
 
     class Meta:
         model = Invoice
@@ -481,7 +504,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
             'currency', 'pdf_file', 'is_archived'
         ]
         read_only_fields = [
-            'id', 'invoice_number', 'issue_date', 'customer_name',
+            'id', 'invoice_number', 'customer_name',
             'order_number', 'total_net', 'total_tax', 'total_gross'
         ]
 

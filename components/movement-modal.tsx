@@ -47,8 +47,12 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
     qty_singles: "",
     supplier: "",
     customer: "",
-    note: ""
+    note: "",
+    movement_date: "",
+    movement_time: ""
   })
+
+  const [useCurrentDateTime, setUseCurrentDateTime] = useState(true)
 
   // UI state
   const [quantityInputMode, setQuantityInputMode] = useState<"total" | "uom">("total")
@@ -222,9 +226,12 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
       qty_singles: "",
       supplier: "",
       customer: "",
-      note: ""
+      note: "",
+      movement_date: "",
+      movement_time: ""
     })
     setQuantityInputMode("total")
+    setUseCurrentDateTime(true)
     setFieldErrors({})
     setGlobalError("")
   }
@@ -288,7 +295,7 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
 
     try {
       // Prepare payload
-      const payload = {
+      const payload: any = {
         item: parseInt(formData.item),
         type: mode,
         qty_base: calculatedQtyBase,
@@ -299,6 +306,11 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
         supplier: formData.supplier ? parseInt(formData.supplier) : null,
         customer: formData.customer ? parseInt(formData.customer) : null,
         idempotency_key: idempotencyKey
+      }
+
+      // Add custom timestamp if not using current date/time
+      if (!useCurrentDateTime && formData.movement_date && formData.movement_time) {
+        payload.movement_timestamp = `${formData.movement_date}T${formData.movement_time}:00`
       }
 
       // Submit movement
@@ -615,6 +627,53 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
                 placeholder={t('movement.notePlaceholder')}
                 rows={3}
               />
+            </div>
+
+            {/* Date/Time Section */}
+            <div className="space-y-4 p-4 bg-muted rounded-md">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="useCurrentDateTime"
+                  checked={useCurrentDateTime}
+                  onChange={(e) => setUseCurrentDateTime(e.target.checked)}
+                  disabled={isSubmitting}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                <Label htmlFor="useCurrentDateTime" className="cursor-pointer">
+                  Aktuelles Datum & Uhrzeit automatisch verwenden
+                </Label>
+              </div>
+
+              {!useCurrentDateTime && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="movement_date">Datum</Label>
+                    <Input
+                      id="movement_date"
+                      type="date"
+                      value={formData.movement_date}
+                      onChange={(e) => handleFieldChange('movement_date', e.target.value)}
+                      disabled={isSubmitting}
+                      className={fieldErrors.movement_date ? "border-red-500" : ""}
+                    />
+                    {renderFieldError('movement_date')}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="movement_time">Uhrzeit</Label>
+                    <Input
+                      id="movement_time"
+                      type="time"
+                      value={formData.movement_time}
+                      onChange={(e) => handleFieldChange('movement_time', e.target.value)}
+                      disabled={isSubmitting}
+                      className={fieldErrors.movement_time ? "border-red-500" : ""}
+                    />
+                    {renderFieldError('movement_time')}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Dialog Footer */}

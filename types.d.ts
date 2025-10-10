@@ -112,6 +112,7 @@ interface StockMovement {
     created_by?: number;
     created_by_username?: string;
     created_at: string;
+    movement_timestamp?: string | null;
     idempotency_key?: string | null;
   }
   
@@ -256,6 +257,7 @@ interface Expense {
   supplier?: number | null;
   supplier_name?: string;
   receipt_number?: string | null;
+  receipt_pdf?: string | null;
   notes?: string | null;
   owner?: number;
   created_at?: string;

@@ -67,7 +67,13 @@
       "Bash(python3.12:*)",
       "Bash(sudo pkill:*)",
       "Read(//usr/**)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(PGPASSWORD='4Y__dBU85RFg1EnsPPJCjFSY-8D0zQv4UY9qDUcHYY0' psql -h localhost -U depotix -d depotix -c \"\\d inventory_expense\")",
+      "Bash(sudo lsof:*)",
+      "Bash(sudo systemctl restart:*)",
+      "Bash(systemctl:*)",
+      "Bash(systemctl restart:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

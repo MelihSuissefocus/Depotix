@@ -25,7 +25,9 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  Download,
   Edit,
+  FileText,
   MoreHorizontal,
   Plus,
   Search,
@@ -107,6 +109,7 @@ export default function ExpensesPage() {
     receipt_number: "",
     notes: "",
   });
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Debounced search query
@@ -230,6 +233,7 @@ export default function ExpensesPage() {
       receipt_number: "",
       notes: "",
     });
+    setReceiptFile(null);
     setErrors({});
   };
 
@@ -241,17 +245,41 @@ export default function ExpensesPage() {
     }
 
     try {
-      const expenseData: Expense = {
-        date: formData.date,
-        description: formData.description,
-        amount: formData.amount,
-        category: formData.category as keyof typeof EXPENSE_CATEGORIES,
-        supplier: formData.supplier && formData.supplier !== "none" ? Number(formData.supplier) : null,
-        receipt_number: formData.receipt_number || null,
-        notes: formData.notes || null,
-      };
+      const formDataToSend = new FormData();
+      formDataToSend.append('date', formData.date);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('amount', formData.amount);
+      formDataToSend.append('category', formData.category);
 
-      await expensesAPI.create(expenseData);
+      if (formData.supplier && formData.supplier !== "none") {
+        formDataToSend.append('supplier', formData.supplier);
+      }
+
+      if (formData.receipt_number) {
+        formDataToSend.append('receipt_number', formData.receipt_number);
+      }
+
+      if (formData.notes) {
+        formDataToSend.append('notes', formData.notes);
+      }
+
+      if (receiptFile) {
+        formDataToSend.append('receipt_pdf', receiptFile);
+      }
+
+      // Use fetch directly for FormData
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/inventory/expenses/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${JSON.parse(localStorage.getItem("auth_tokens") || '{}').access}`
+        },
+        body: formDataToSend
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       await fetchData();
       setIsCreateDialogOpen(false);
       resetForm();
@@ -270,17 +298,41 @@ export default function ExpensesPage() {
     }
 
     try {
-      const expenseData: Partial<Expense> = {
-        date: formData.date,
-        description: formData.description,
-        amount: formData.amount,
-        category: formData.category as keyof typeof EXPENSE_CATEGORIES,
-        supplier: formData.supplier && formData.supplier !== "none" ? Number(formData.supplier) : null,
-        receipt_number: formData.receipt_number || null,
-        notes: formData.notes || null,
-      };
+      const formDataToSend = new FormData();
+      formDataToSend.append('date', formData.date);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('amount', formData.amount);
+      formDataToSend.append('category', formData.category);
 
-      await expensesAPI.update(selectedExpense.id!, expenseData);
+      if (formData.supplier && formData.supplier !== "none") {
+        formDataToSend.append('supplier', formData.supplier);
+      }
+
+      if (formData.receipt_number) {
+        formDataToSend.append('receipt_number', formData.receipt_number);
+      }
+
+      if (formData.notes) {
+        formDataToSend.append('notes', formData.notes);
+      }
+
+      if (receiptFile) {
+        formDataToSend.append('receipt_pdf', receiptFile);
+      }
+
+      // Use fetch directly for FormData
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/inventory/expenses/${selectedExpense.id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${JSON.parse(localStorage.getItem("auth_tokens") || '{}').access}`
+        },
+        body: formDataToSend
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       await fetchData();
       setIsEditDialogOpen(false);
       setSelectedExpense(null);
@@ -321,6 +373,37 @@ export default function ExpensesPage() {
       notes: expense.notes || "",
     });
     setIsEditDialogOpen(true);
+  };
+
+  // Download receipt PDF
+  const handleDownloadReceipt = async (expense: Expense) => {
+    if (!expense.receipt_pdf) return;
+
+    try {
+      const response = await fetch(expense.receipt_pdf, {
+        headers: {
+          'Authorization': `Bearer ${JSON.parse(localStorage.getItem("auth_tokens") || '{}').access}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Rechnung_${expense.receipt_number || expense.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success("PDF heruntergeladen");
+    } catch (err) {
+      console.error("Failed to download receipt:", err);
+      toast.error("PDF konnte nicht heruntergeladen werden");
+    }
   };
 
   // Format currency
@@ -465,7 +548,14 @@ export default function ExpensesPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>{supplier?.name || "-"}</TableCell>
-                      <TableCell>{expense.receipt_number || "-"}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {expense.receipt_number || "-"}
+                          {expense.receipt_pdf && (
+                            <FileText className="h-4 w-4 text-blue-600" title="PDF vorhanden" />
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -477,6 +567,15 @@ export default function ExpensesPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Aktionen</DropdownMenuLabel>
                             <DropdownMenuSeparator />
+                            {expense.receipt_pdf && (
+                              <>
+                                <DropdownMenuItem onClick={() => handleDownloadReceipt(expense)}>
+                                  <Download className="h-4 w-4 mr-2" />
+                                  PDF herunterladen
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                              </>
+                            )}
                             <DropdownMenuItem onClick={() => openEditDialog(expense)}>
                               <Edit className="h-4 w-4 mr-2" />
                               Bearbeiten
@@ -656,6 +755,29 @@ export default function ExpensesPage() {
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="receipt_pdf">Rechnung PDF (optional)</Label>
+              <Input
+                id="receipt_pdf"
+                type="file"
+                accept=".pdf"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.type === 'application/pdf') {
+                      setReceiptFile(file);
+                    } else {
+                      toast.error("Nur PDF-Dateien sind erlaubt");
+                      e.target.value = '';
+                    }
+                  }
+                }}
+              />
+              {receiptFile && (
+                <p className="text-xs text-green-600">✓ {receiptFile.name} ausgewählt</p>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
@@ -785,6 +907,32 @@ export default function ExpensesPage() {
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-receipt_pdf">Rechnung PDF (optional)</Label>
+              <Input
+                id="edit-receipt_pdf"
+                type="file"
+                accept=".pdf"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.type === 'application/pdf') {
+                      setReceiptFile(file);
+                    } else {
+                      toast.error("Nur PDF-Dateien sind erlaubt");
+                      e.target.value = '';
+                    }
+                  }
+                }}
+              />
+              {receiptFile && (
+                <p className="text-xs text-green-600">✓ {receiptFile.name} ausgewählt</p>
+              )}
+              {selectedExpense?.receipt_pdf && !receiptFile && (
+                <p className="text-xs text-gray-500">Aktuell: PDF vorhanden</p>
+              )}
             </div>
           </div>
           <DialogFooter>
