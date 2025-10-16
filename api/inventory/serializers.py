@@ -5,7 +5,7 @@ from .models import (
     Category, Supplier, Customer, InventoryItem,
     Expense, InventoryLog, InventoryItemSupplier,
     StockMovement, SalesOrder, SalesOrderItem, Invoice, DocumentSequence,
-    CompanyProfile
+    CompanyProfile, InvoiceTemplate
 )
 
 
@@ -110,7 +110,7 @@ class InventoryItemSerializer(serializers.ModelSerializer):
     """Enhanced inventory item serializer with computed fields"""
     category_name = serializers.CharField(source='category.name', read_only=True)
     owner_username = serializers.CharField(source='owner.username', read_only=True)
-    available_qty = serializers.IntegerField(read_only=True)
+    total_quantity_in_verpackungen = serializers.IntegerField(read_only=True)
     is_low_stock = serializers.BooleanField(read_only=True)
     total_value = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     # Provide a front-end friendly alias for min_stock_level
@@ -119,20 +119,24 @@ class InventoryItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = InventoryItem
         fields = [
-            'id', 'name', 'description', 'sku', 'quantity', 'defective_qty',
+            'id', 'name', 'description', 'sku',
+            # Neue Lagerbestände
+            'palette_quantity', 'verpackung_quantity', 'defective_qty',
             'price', 'cost', 'min_stock_level', 'low_stock_threshold', 'location', 'unit_base',
-            'unit_package_factor', 'unit_pallet_factor', 'category', 
-            'category_name', 'owner', 'owner_username', 'date_added', 
-            'last_updated', 'is_active', 'available_qty', 'is_low_stock', 
+            'unit_package_factor', 'unit_pallet_factor', 'category',
+            'category_name', 'owner', 'owner_username', 'date_added',
+            'last_updated', 'is_active', 'total_quantity_in_verpackungen', 'is_low_stock',
             'total_value',
             # Neue Getränke-spezifische Felder
-            'brand', 'beverage_type', 'container_type', 'volume_ml', 
+            'brand', 'beverage_type', 'container_type', 'volume_ml',
             'deposit_chf', 'is_returnable', 'is_alcoholic', 'abv_percent',
-            'country_of_origin', 'ean_unit', 'ean_pack', 'vat_rate'
+            'country_of_origin', 'ean_unit', 'ean_pack', 'vat_rate',
+            # Produktstruktur (Umrechnungsfaktoren)
+            'verpackungen_pro_palette', 'stueck_pro_verpackung'
         ]
         read_only_fields = [
             'id', 'owner', 'owner_username', 'date_added', 'last_updated',
-            'available_qty', 'is_low_stock', 'total_value', 'category_name'
+            'total_quantity_in_verpackungen', 'is_low_stock', 'total_value', 'category_name'
         ]
 
     def create(self, validated_data):
@@ -143,14 +147,13 @@ class InventoryItemSerializer(serializers.ModelSerializer):
     def validate(self, data):
         """Validate defective quantity doesn't exceed total quantity and beverage-specific rules"""
         from decimal import Decimal
-        
-        quantity = data.get('quantity', 0)
+
+        palette_qty = data.get('palette_quantity', 0)
+        verpackung_qty = data.get('verpackung_quantity', 0)
         defective_qty = data.get('defective_qty', 0)
-        
-        if defective_qty > quantity:
-            raise serializers.ValidationError(
-                "Defective quantity cannot exceed total quantity"
-            )
+
+        # Note: defective_qty is tracked in Verpackungen
+        # We'll validate in views if needed
         
         # Getränke-spezifische Validierungen
         is_alcoholic = data.get('is_alcoholic', False)
@@ -174,15 +177,19 @@ class ExpenseSerializer(serializers.ModelSerializer):
     """Expense tracking serializer"""
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
     receipt_pdf = serializers.FileField(required=False, allow_null=True)
+    stock_movement_id = serializers.IntegerField(source='stock_movement.id', read_only=True)
+    stock_movement_item_name = serializers.CharField(source='stock_movement.item.name', read_only=True)
 
     class Meta:
         model = Expense
         fields = [
             'id', 'date', 'description', 'amount', 'category', 'supplier',
-            'supplier_name', 'receipt_number', 'receipt_pdf', 'notes', 'owner',
+            'supplier_name', 'stock_movement', 'stock_movement_id', 'stock_movement_item_name',
+            'receipt_number', 'receipt_pdf', 'notes', 'owner',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'owner', 'created_at', 'updated_at', 'supplier_name']
+        read_only_fields = ['id', 'owner', 'created_at', 'updated_at', 'supplier_name',
+                           'stock_movement_id', 'stock_movement_item_name']
 
     def create(self, validated_data):
         # Auto-assign owner from request user
@@ -230,7 +237,7 @@ class InventoryItemSupplierSerializer(serializers.ModelSerializer):
 class InventoryItemListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for item lists"""
     category_name = serializers.CharField(source='category.name', read_only=True)
-    available_qty = serializers.IntegerField(read_only=True)
+    total_quantity_in_verpackungen = serializers.IntegerField(read_only=True)
     is_low_stock = serializers.BooleanField(read_only=True)
     # expose low_stock_threshold for list views (read-only)
     low_stock_threshold = serializers.IntegerField(source='min_stock_level', read_only=True)
@@ -238,7 +245,8 @@ class InventoryItemListSerializer(serializers.ModelSerializer):
     class Meta:
         model = InventoryItem
         fields = [
-            'id', 'name', 'sku', 'quantity', 'available_qty', 'price',
+            'id', 'name', 'sku', 'palette_quantity', 'verpackung_quantity',
+            'total_quantity_in_verpackungen', 'price',
             'category', 'category_name', 'is_low_stock', 'last_updated', 'low_stock_threshold'
         ]
 
@@ -246,13 +254,14 @@ class InventoryItemListSerializer(serializers.ModelSerializer):
 class InventoryLevelSerializer(serializers.ModelSerializer):
     """Serializer for inventory level checks"""
     item_name = serializers.CharField(source='name', read_only=True)
-    current_quantity = serializers.IntegerField(source='available_qty', read_only=True)
+    current_quantity = serializers.IntegerField(source='total_quantity_in_verpackungen', read_only=True)
     low_stock_threshold = serializers.IntegerField(source='min_stock_level', read_only=True)
 
     class Meta:
         model = InventoryItem
         fields = [
-            'item_id', 'item_name', 'current_quantity', 
+            'item_id', 'item_name', 'current_quantity',
+            'palette_quantity', 'verpackung_quantity',
             'low_stock_threshold', 'is_low_stock', 'last_updated'
         ]
 
@@ -316,7 +325,7 @@ class PasswordChangeSerializer(serializers.Serializer):
 
 
 class StockMovementSerializer(serializers.ModelSerializer):
-    """Stock movement serializer with UoM support, idempotency, and validations"""
+    """Stock movement serializer with Paletten/Verpackungen support"""
     item_name = serializers.CharField(source='item.name', read_only=True)
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
     customer_name = serializers.CharField(source='customer.name', read_only=True)
@@ -341,8 +350,8 @@ class StockMovementSerializer(serializers.ModelSerializer):
     class Meta:
         model = StockMovement
         fields = [
-            'id', 'item', 'item_name', 'type', 'qty_base', 'qty_pallets',
-            'qty_packages', 'qty_singles', 'created_at', 'movement_timestamp', 'note', 'supplier',
+            'id', 'item', 'item_name', 'type', 'unit', 'quantity',
+            'purchase_price', 'created_at', 'movement_timestamp', 'note', 'supplier',
             'supplier_name', 'customer', 'customer_name', 'created_by',
             'created_by_username', 'idempotency_key'
         ]
@@ -366,33 +375,28 @@ class StockMovementSerializer(serializers.ModelSerializer):
         return instance
 
     def validate(self, data):
-        """Validate UoM calculations and business rules"""
+        """Validate stock availability and business rules"""
         item = data.get('item')
         movement_type = data.get('type')
-        qty_base = data.get('qty_base', 0)
-        qty_pallets = data.get('qty_pallets', 0)
-        qty_packages = data.get('qty_packages', 0)
-        qty_singles = data.get('qty_singles', 0)
-        
-        # Calculate qty_base from UoM inputs if not provided
-        if not qty_base and (qty_pallets or qty_packages or qty_singles):
-            calculated_base = (
-                qty_pallets * item.unit_pallet_factor * item.unit_package_factor +
-                qty_packages * item.unit_package_factor +
-                qty_singles
-            )
-            data['qty_base'] = calculated_base
-            qty_base = calculated_base
-        
+        unit = data.get('unit', 'verpackung')
+        quantity = data.get('quantity', 0)
+
         # Validate stock availability for OUT/DEFECT movements
         if movement_type in ['OUT', 'DEFECT'] and item:
-            available_qty = item.available_qty
-            if qty_base > available_qty:
-                # Import the custom exception here to avoid circular imports
-                from .exceptions import InsufficientStockError
-                error_msg = f"Cannot {movement_type.lower()} {qty_base} units. Only {available_qty} units available."
-                raise InsufficientStockError(error_msg)
-        
+            if unit == 'palette':
+                if quantity > item.palette_quantity:
+                    raise serializers.ValidationError(
+                        f"Cannot {movement_type.lower()} {quantity} Paletten. "
+                        f"Only {item.palette_quantity} Paletten available."
+                    )
+            elif unit == 'verpackung':
+                total_verpackungen = item.total_quantity_in_verpackungen
+                if quantity > total_verpackungen:
+                    raise serializers.ValidationError(
+                        f"Cannot {movement_type.lower()} {quantity} Verpackungen. "
+                        f"Only {total_verpackungen} Verpackungen available."
+                    )
+
         # RETURN should have customer reference
         if movement_type == 'RETURN' and not data.get('customer'):
             raise serializers.ValidationError(
@@ -418,8 +422,8 @@ class SalesOrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = SalesOrderItem
         fields = [
-            'id', 'order', 'item', 'item_name', 'qty_base', 'unit_price',
-            'tax_rate', 'line_total_net', 'line_tax', 'line_total_gross'
+            'id', 'order', 'item', 'item_name', 'qty_base', 'qty_display', 'selected_unit',
+            'unit_price', 'tax_rate', 'line_total_net', 'line_tax', 'line_total_gross'
         ]
         read_only_fields = [
             'id', 'item_name', 'line_total_net', 'line_tax', 'line_total_gross'
@@ -527,10 +531,10 @@ class DocumentSequenceSerializer(serializers.ModelSerializer):
 # Specialized serializers for business operations
 class StockMovementCreateSerializer(serializers.ModelSerializer):
     """Simplified serializer for creating stock movements via API"""
-    
+
     class Meta:
         model = StockMovement
-        fields = ['item', 'type', 'qty_base', 'note', 'supplier', 'customer']
+        fields = ['item', 'type', 'unit', 'quantity', 'note', 'supplier', 'customer']
 
     def create(self, validated_data):
         validated_data['created_by'] = self.context['request'].user
@@ -559,7 +563,7 @@ class OrderToInvoiceSerializer(serializers.Serializer):
 
 class CompanyProfileSerializer(serializers.ModelSerializer):
     """Company profile serializer"""
-    
+
     def to_representation(self, instance):
         """Override to provide full URL for logo field"""
         data = super().to_representation(instance)
@@ -571,12 +575,24 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
                 # Fallback for when no request context is available
                 data['logo'] = f"https://depotix.ch/api/media/{instance.logo.name}"
         return data
-    
+
     class Meta:
         model = CompanyProfile
         fields = [
             'id', 'user', 'name', 'street', 'postal_code', 'city', 'country',
             'email', 'phone', 'iban', 'bank_name', 'mwst_number', 'currency',
             'logo', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'user', 'created_at', 'updated_at']
+
+
+class InvoiceTemplateSerializer(serializers.ModelSerializer):
+    """Invoice template serializer"""
+
+    class Meta:
+        model = InvoiceTemplate
+        fields = [
+            'id', 'user', 'html_content', 'css_content', 'is_active',
+            'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']

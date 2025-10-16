@@ -2,9 +2,13 @@ interface InventoryItem {
     id?: number;
     name: string;
     description?: string | null;
-    quantity: number;
+
+    // Lagerbestände
+    palette_quantity: number;
+    verpackung_quantity: number;
     defective_qty?: number;
-    available_qty?: number;
+    total_quantity_in_verpackungen?: number;
+
     price: string;
     cost?: string | null;
     category: number | null;
@@ -36,6 +40,9 @@ interface InventoryItem {
     ean_unit?: string | null;
     ean_pack?: string | null;
     vat_rate?: string;
+    // Produktstruktur (Umrechnungsfaktoren)
+    verpackungen_pro_palette: number;
+    stueck_pro_verpackung: number;
   }
   
 interface Supplier {
@@ -100,10 +107,8 @@ interface StockMovement {
     item: number;
     item_name?: string;
     type: "IN" | "OUT" | "RETURN" | "DEFECT" | "ADJUST";
-    qty_base: number;
-    qty_pallets?: number;
-    qty_packages?: number;
-    qty_singles?: number;
+    unit: "palette" | "verpackung";
+    quantity: number;
     supplier?: number | null;
     supplier_name?: string;
     customer?: number | null;
@@ -179,6 +184,8 @@ interface InventoryLevel {
   item_id: number
   item_name: string
   current_quantity: number
+  palette_quantity: number
+  verpackung_quantity: number
   low_stock_threshold: number
   is_low_stock: boolean
   last_updated: string
@@ -256,6 +263,9 @@ interface Expense {
   category: 'PURCHASE' | 'TRANSPORT' | 'UTILITIES' | 'MAINTENANCE' | 'OFFICE' | 'MARKETING' | 'OTHER';
   supplier?: number | null;
   supplier_name?: string;
+  stock_movement?: number | null;
+  stock_movement_id?: number | null;
+  stock_movement_item_name?: string | null;
   receipt_number?: string | null;
   receipt_pdf?: string | null;
   notes?: string | null;
@@ -279,6 +289,16 @@ interface CompanyProfile {
   mwst_number?: string | null;
   currency: string;
   logo?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface InvoiceTemplate {
+  id?: number;
+  user?: number;
+  html_content: string;
+  css_content: string;
+  is_active: boolean;
   created_at?: string;
   updated_at?: string;
 }

@@ -13,12 +13,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, DateFilter, CharFilter
 from rest_framework.filters import OrderingFilter, SearchFilter
 from .exceptions import InsufficientStockError
-from .models import Category, InventoryItem, InventoryLog, StockMovement, Supplier, Customer, Expense, CompanyProfile, SalesOrder, SalesOrderItem, Invoice
+from .models import Category, InventoryItem, InventoryLog, StockMovement, Supplier, Customer, Expense, CompanyProfile, SalesOrder, SalesOrderItem, Invoice, InvoiceTemplate
 from .serializers import (
     UserRegistrationSerializer, UserSerializer,
     CategorySerializer, InventoryItemSerializer, InventoryLogSerializer,
     StockMovementSerializer, SupplierSerializer, CustomerSerializer, ExpenseSerializer,
-    CompanyProfileSerializer, SalesOrderSerializer, SalesOrderItemSerializer, InvoiceSerializer
+    CompanyProfileSerializer, SalesOrderSerializer, SalesOrderItemSerializer, InvoiceSerializer, InvoiceTemplateSerializer
 )
 from .services import book_stock_change, validate_stock_movement_data, StockOperationError
 from .utils.pdf import render_invoice_pdf, _qr_svg_data_uri
@@ -131,7 +131,11 @@ class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
     permission_classes = [IsAuthenticated]
-    
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    search_fields = ['name', 'contact_name', 'email', 'phone']
+    ordering_fields = ['name', 'created_at']
+    ordering = ['name']
+
     def get_queryset(self):
         # Filter customers by current user (owner)
         return Customer.objects.filter(owner=self.request.user)
@@ -160,26 +164,19 @@ class StockMovementViewSet(viewsets.ModelViewSet):
         This is the core transaction service (moveInventory) that ensures:
         1. Idempotency: Same idempotency_key returns existing movement
         2. Atomicity: Movement + quantity update in single transaction
-        3. Consistency: PPU conversion validated, negative stock prevented
+        3. Consistency: Stock validation, negative stock prevented
         4. Isolation: Row-level locking via SELECT FOR UPDATE
         5. Durability: DB constraints enforce data integrity
 
         Raises:
             IdempotencyConflictError: If idempotency_key exists (returns 200)
             InsufficientStockError: If insufficient stock (returns 422)
-            PPUConversionError: If client/server PPU mismatch (returns 400)
             ValidationError: For other validation failures (returns 400)
         """
         from django.db import transaction, IntegrityError
-        from .utils import (
-            validate_movement_data,
-            calculate_delta,
-            verify_ppu_conversion
-        )
         from .exceptions import (
             InsufficientStockError,
-            IdempotencyConflictError,
-            PPUConversionError
+            IdempotencyConflictError
         )
         from .models import InventoryItem, StockMovement
         import uuid
@@ -215,69 +212,159 @@ class StockMovementViewSet(viewsets.ModelViewSet):
                 # Extract validated data
                 item = serializer.validated_data['item']
                 movement_type = serializer.validated_data['type']
-                qty_base = serializer.validated_data['qty_base']
-                qty_pallets = serializer.validated_data.get('qty_pallets', 0)
-                qty_packages = serializer.validated_data.get('qty_packages', 0)
-                qty_singles = serializer.validated_data.get('qty_singles', 0)
+                unit = serializer.validated_data.get('unit', 'verpackung')
+                quantity = serializer.validated_data.get('quantity', 0)
 
                 # ============================================================
-                # STEP 4: Verify PPU conversion (defense-in-depth)
-                # ============================================================
-                if qty_pallets or qty_packages or qty_singles:
-                    try:
-                        verify_ppu_conversion(
-                            qty_pallets,
-                            qty_packages,
-                            qty_singles,
-                            item.unit_pallet_factor,
-                            item.unit_package_factor,
-                            qty_base,
-                            strict=True
-                        )
-                    except Exception as e:
-                        raise PPUConversionError(str(e))
-
-                # ============================================================
-                # STEP 5: Lock item row (pessimistic locking for concurrency)
+                # STEP 4: Lock item row (pessimistic locking for concurrency)
                 # ============================================================
                 item = InventoryItem.objects.select_for_update().get(id=item.id)
 
                 # ============================================================
-                # STEP 6: Validate movement constraints
+                # STEP 5: Validate stock availability for OUT/DEFECT movements
+                # Mit paralleler Verfolgung: verpackung_quantity ist bereits die totale Anzahl!
                 # ============================================================
-                validate_movement_data(
-                    movement_type,
-                    qty_base,
-                    item.quantity,
-                    item.name
-                )
+                if movement_type in ['OUT', 'DEFECT']:
+                    if unit == 'palette':
+                        if quantity > item.palette_quantity:
+                            raise InsufficientStockError(
+                                f"Nicht genügend Paletten für {item.name}. "
+                                f"Verfügbar: {item.palette_quantity}, Angefordert: {quantity}"
+                            )
+                    elif unit == 'verpackung':
+                        # Mit paralleler Verfolgung ist verpackung_quantity bereits die TOTALE Anzahl
+                        if quantity > item.verpackung_quantity:
+                            raise InsufficientStockError(
+                                f"Nicht genügend Verpackungen für {item.name}. "
+                                f"Verfügbar: {item.verpackung_quantity}, Angefordert: {quantity}"
+                            )
 
                 # ============================================================
-                # STEP 7: Calculate delta and new quantity
+                # STEP 6: Update item quantities based on movement type and unit
+                # KRITISCHE LOGISTIK-LOGIK: PARALLELE VERFOLGUNG
+                #
+                # WICHTIG: palette_quantity und verpackung_quantity sind PARALLEL!
+                # - palette_quantity = Anzahl Paletten
+                # - verpackung_quantity = TOTALE Anzahl Verpackungen (inkl. die in Paletten!)
+                #
+                # Beispiel: 2 Paletten à 50 Verpackungen
+                #   → palette_quantity = 2
+                #   → verpackung_quantity = 100
                 # ============================================================
-                delta = calculate_delta(movement_type, qty_base, item.quantity)
-                new_qty = item.quantity + delta
+                if movement_type == 'IN':
+                    if unit == 'palette':
+                        # Wareneingang: Paletten hinzufügen
+                        # BEIDE Werte müssen erhöht werden!
+                        item.palette_quantity += quantity
+                        item.verpackung_quantity += (quantity * item.verpackungen_pro_palette)
 
-                # Double-check: Prevent negative stock (DB constraint will also catch this)
-                if new_qty < 0:
-                    raise InsufficientStockError(
-                        f"Nicht genügend Lagerbestand für {item.name}. "
-                        f"Verfügbar: {item.quantity}, Angefordert: {qty_base}"
-                    )
+                    elif unit == 'verpackung':
+                        # Wareneingang: Verpackungen hinzufügen
+                        # Verpackungen direkt erhöhen
+                        item.verpackung_quantity += quantity
+
+                        # Paletten neu berechnen (wie viele KOMPLETTE Paletten haben wir jetzt?)
+                        item.palette_quantity = item.verpackung_quantity // item.verpackungen_pro_palette
+
+                elif movement_type == 'OUT':
+                    if unit == 'palette':
+                        # Warenausgang: Paletten abziehen
+                        # BEIDE Werte müssen reduziert werden!
+                        item.palette_quantity -= quantity
+                        item.verpackung_quantity -= (quantity * item.verpackungen_pro_palette)
+
+                    elif unit == 'verpackung':
+                        # Warenausgang: Verpackungen abziehen
+                        # Verpackungen direkt reduzieren
+                        item.verpackung_quantity -= quantity
+
+                        # Paletten neu berechnen (wie viele KOMPLETTE Paletten haben wir noch?)
+                        item.palette_quantity = item.verpackung_quantity // item.verpackungen_pro_palette
+
+                elif movement_type == 'RETURN':
+                    if unit == 'palette':
+                        # Retoure: Paletten zurück ins Lager
+                        # BEIDE Werte müssen erhöht werden!
+                        item.palette_quantity += quantity
+                        item.verpackung_quantity += (quantity * item.verpackungen_pro_palette)
+
+                    elif unit == 'verpackung':
+                        # Retoure: Verpackungen zurück ins Lager
+                        # Verpackungen direkt erhöhen
+                        item.verpackung_quantity += quantity
+
+                        # Paletten neu berechnen
+                        item.palette_quantity = item.verpackung_quantity // item.verpackungen_pro_palette
+
+                elif movement_type == 'DEFECT':
+                    if unit == 'palette':
+                        # Defekt: Paletten als defekt markieren
+                        # Maximale Anzahl ist begrenzt auf verfügbare Paletten
+                        transfer_qty = min(quantity, item.palette_quantity)
+
+                        # BEIDE Werte reduzieren
+                        item.palette_quantity -= transfer_qty
+                        item.verpackung_quantity -= (transfer_qty * item.verpackungen_pro_palette)
+
+                        # Defekte werden in Verpackungen gezählt (für Statistik)
+                        item.defective_qty += transfer_qty * item.verpackungen_pro_palette
+
+                    elif unit == 'verpackung':
+                        # Defekt: Verpackungen als defekt markieren
+                        # Maximale defekte Menge ist begrenzt auf Verfügbarkeit
+                        transfer_qty = min(quantity, item.verpackung_quantity)
+
+                        # Verpackungen reduzieren
+                        item.verpackung_quantity -= transfer_qty
+
+                        # Paletten neu berechnen
+                        item.palette_quantity = item.verpackung_quantity // item.verpackungen_pro_palette
+
+                        # Defekte Menge aktualisieren
+                        item.defective_qty += transfer_qty
+
+                elif movement_type == 'ADJUST':
+                    if unit == 'palette':
+                        # Korrektur: Paletten auf exakten Wert setzen
+                        # BEIDE Werte müssen angepasst werden!
+                        item.palette_quantity = max(0, quantity)
+                        item.verpackung_quantity = item.palette_quantity * item.verpackungen_pro_palette
+
+                    elif unit == 'verpackung':
+                        # Korrektur: Verpackungen auf exakten Wert setzen
+                        item.verpackung_quantity = max(0, quantity)
+
+                        # Paletten neu berechnen
+                        item.palette_quantity = item.verpackung_quantity // item.verpackungen_pro_palette
+
+                item.save(update_fields=['palette_quantity', 'verpackung_quantity', 'defective_qty', 'last_updated'])
 
                 # ============================================================
-                # STEP 8: Update item quantity (denormalized cache)
-                # ============================================================
-                item.quantity = new_qty
-                item.save(update_fields=['quantity', 'last_updated'])
-
-                # ============================================================
-                # STEP 9: Save movement (append-only ledger)
+                # STEP 7: Save movement (append-only ledger)
                 # ============================================================
                 serializer.validated_data['created_by'] = self.request.user
                 # Pass skip_quantity_update via context to avoid double-updating quantity
                 serializer.context['skip_quantity_update'] = True
                 movement = serializer.save()
+
+                # ============================================================
+                # STEP 8: Auto-create Expense for IN movements with purchase_price
+                # ============================================================
+                if movement_type == 'IN' and movement.purchase_price:
+                    from .models import Expense
+                    from datetime import date
+
+                    # Create expense entry for this purchase
+                    Expense.objects.create(
+                        date=date.today(),
+                        description=f"Wareneingang: {item.name} ({quantity} {unit})",
+                        amount=movement.purchase_price,
+                        category='PURCHASE',
+                        supplier=movement.supplier,
+                        stock_movement=movement,
+                        owner=self.request.user,
+                        notes=movement.note if movement.note else None
+                    )
 
                 # Transaction commits here if no exceptions
 
@@ -410,7 +497,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
 class CompanyProfileView(APIView):
     """Company profile management view"""
     permission_classes = [IsAuthenticated]
-    
+
     def get(self, request):
         """Get or create company profile for current user"""
         profile, created = CompanyProfile.objects.get_or_create(
@@ -426,7 +513,7 @@ class CompanyProfileView(APIView):
         )
         serializer = CompanyProfileSerializer(profile, context={'request': request})
         return Response(serializer.data)
-    
+
     def patch(self, request):
         """Partial update of company profile"""
         profile, created = CompanyProfile.objects.get_or_create(
@@ -440,15 +527,77 @@ class CompanyProfileView(APIView):
                 'phone': ''
             }
         )
-        
+
         # Handle file uploads properly
         data = request.data.copy()
-        
+
         # If there's a logo file, handle it properly
         if 'logo' in request.FILES:
             data['logo'] = request.FILES['logo']
-        
+
         serializer = CompanyProfileSerializer(profile, data=data, partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class InvoiceTemplateView(APIView):
+    """Invoice template management view"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Get or create invoice template for current user"""
+        import os
+        from django.conf import settings
+
+        # Try to get existing template
+        try:
+            template = InvoiceTemplate.objects.get(user=request.user)
+            serializer = InvoiceTemplateSerializer(template)
+            return Response(serializer.data)
+        except InvoiceTemplate.DoesNotExist:
+            # Load default templates from files
+            template_dir = os.path.join(settings.BASE_DIR, 'inventory', 'templates', 'pdf')
+            html_path = os.path.join(template_dir, 'invoice.html')
+            css_path = os.path.join(template_dir, '_styles.css')
+
+            html_content = ""
+            css_content = ""
+
+            try:
+                with open(html_path, 'r', encoding='utf-8') as f:
+                    html_content = f.read()
+            except Exception:
+                pass
+
+            try:
+                with open(css_path, 'r', encoding='utf-8') as f:
+                    css_content = f.read()
+            except Exception:
+                pass
+
+            # Create new template with defaults
+            template = InvoiceTemplate.objects.create(
+                user=request.user,
+                html_content=html_content,
+                css_content=css_content,
+                is_active=True
+            )
+            serializer = InvoiceTemplateSerializer(template)
+            return Response(serializer.data)
+
+    def patch(self, request):
+        """Update invoice template"""
+        template, created = InvoiceTemplate.objects.get_or_create(
+            user=request.user,
+            defaults={
+                'html_content': '',
+                'css_content': '',
+                'is_active': True
+            }
+        )
+
+        serializer = InvoiceTemplateSerializer(template, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
@@ -503,54 +652,24 @@ class SalesOrderViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], url_path='deliver')
     def deliver_order(self, request, pk=None):
-        """Deliver order: CONFIRMED → DELIVERED, create stock movements"""
+        """Deliver order: CONFIRMED → DELIVERED (no stock movement yet)"""
         try:
             with transaction.atomic():
                 order = self.get_object()
-                
+
                 if order.status != 'CONFIRMED':
                     return Response(
                         {'error': {'code': 'INVALID_STATUS', 'message': 'Only CONFIRMED orders can be delivered'}},
                         status=status.HTTP_422_UNPROCESSABLE_ENTITY
                     )
-                
-                # Process each order item and create stock movements
-                for order_item in order.items.all():
-                    # Use pessimistic locking on inventory item
-                    inventory_item = InventoryItem.objects.select_for_update().get(id=order_item.item.id)
-                    
-                    # Check stock availability
-                    if inventory_item.available_qty < order_item.qty_base:
-                        return Response(
-                            {'error': {
-                                'code': 'INSUFFICIENT_STOCK', 
-                                'message': f'Insufficient stock for {inventory_item.name}. Available: {inventory_item.available_qty}, Required: {order_item.qty_base}'
-                            }},
-                            status=status.HTTP_422_UNPROCESSABLE_ENTITY
-                        )
-                    
-                    # Create stock movement (OUT)
-                    StockMovement.objects.create(
-                        item=inventory_item,
-                        type='OUT',
-                        qty_base=order_item.qty_base,
-                        customer=order.customer,
-                        note=f'Delivery for order {order.order_number}',
-                        created_by=request.user
-                    )
-                
-                # Update order status
+
+                # Update order status (stock is deducted when invoice is created)
                 order.status = 'DELIVERED'
                 order.save()
-                
+
                 serializer = self.get_serializer(order)
                 return Response(serializer.data)
-        
-        except InventoryItem.DoesNotExist:
-            return Response(
-                {'error': {'code': 'ITEM_NOT_FOUND', 'message': 'One or more items not found'}},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+
         except Exception as e:
             return Response(
                 {'error': {'code': 'DELIVERY_FAILED', 'message': str(e)}},
@@ -559,38 +678,71 @@ class SalesOrderViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], url_path='invoice')
     def create_invoice(self, request, pk=None):
-        """Create invoice from order: DELIVERED → INVOICED"""
+        """Create invoice from order: DELIVERED → INVOICED, create stock movements (Warenausgang)"""
         try:
             with transaction.atomic():
                 order = self.get_object()
-                
+
                 if order.status != 'DELIVERED':
                     return Response(
                         {'error': {'code': 'INVALID_STATUS', 'message': 'Only DELIVERED orders can be invoiced'}},
                         status=status.HTTP_422_UNPROCESSABLE_ENTITY
                     )
-                
+
                 # Check if invoice already exists
                 if hasattr(order, 'invoice'):
                     return Response(
                         {'error': {'code': 'INVOICE_EXISTS', 'message': 'Order already has an invoice'}},
                         status=status.HTTP_422_UNPROCESSABLE_ENTITY
                     )
-                
+
+                # ============================================================
+                # KRITISCH: Warenausgang buchen für alle Artikel in der Bestellung
+                # ============================================================
+                for order_item in order.items.all():
+                    # Use pessimistic locking on inventory item
+                    inventory_item = InventoryItem.objects.select_for_update().get(id=order_item.item.id)
+
+                    # Check stock availability (in Verpackungen)
+                    if inventory_item.verpackung_quantity < order_item.qty_base:
+                        return Response(
+                            {'error': {
+                                'code': 'INSUFFICIENT_STOCK',
+                                'message': f'Nicht genügend Verpackungen für {inventory_item.name}. Verfügbar: {inventory_item.verpackung_quantity}, Benötigt: {order_item.qty_base}'
+                            }},
+                            status=status.HTTP_422_UNPROCESSABLE_ENTITY
+                        )
+
+                    # Create stock movement (OUT) - Warenausgang
+                    StockMovement.objects.create(
+                        item=inventory_item,
+                        type='OUT',
+                        unit='verpackung',  # Verkauf ist immer in Verpackungen
+                        quantity=order_item.qty_base,  # qty_base ist in Verpackungen
+                        customer=order.customer,
+                        note=f'Warenausgang für Rechnung {order.order_number}',
+                        created_by=request.user
+                    )
+
                 # Create invoice (model handles numbering and totals automatically)
                 invoice = Invoice.objects.create(
                     order=order,
                     delivery_date=order.delivery_date
                 )
-                
+
                 # Update order status
                 order.status = 'INVOICED'
                 order.save()
-                
+
                 # Return invoice data
                 invoice_serializer = InvoiceSerializer(invoice)
                 return Response(invoice_serializer.data, status=status.HTTP_201_CREATED)
-        
+
+        except InventoryItem.DoesNotExist:
+            return Response(
+                {'error': {'code': 'ITEM_NOT_FOUND', 'message': 'Einer oder mehrere Artikel nicht gefunden'}},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         except Exception as e:
             return Response(
                 {'error': {'code': 'INVOICE_CREATION_FAILED', 'message': str(e)}},
@@ -693,11 +845,24 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             # Build lines from order items
             lines = []
             for order_item in order.items.all():
+                # Get the display unit label
+                unit_label = 'Verpackung'
+                if hasattr(order_item, 'selected_unit'):
+                    if order_item.selected_unit == 'palette':
+                        unit_label = 'Palette'
+                    elif order_item.selected_unit == 'verpackung':
+                        unit_label = 'Verpackung'
+
+                # Use qty_display if available, otherwise fall back to qty_base
+                display_qty = order_item.qty_display if hasattr(order_item, 'qty_display') else order_item.qty_base
+
                 lines.append({
                     'name': order_item.item.name,
                     'description': order_item.item.description,
                     'sku': order_item.item.sku,
                     'qty_base': order_item.qty_base,
+                    'qty_display': display_qty,
+                    'selected_unit': unit_label,
                     'unit_price': order_item.unit_price,
                     'tax_rate': order_item.tax_rate,
                     'line_total_net': order_item.line_total_net,

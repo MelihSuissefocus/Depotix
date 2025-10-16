@@ -486,6 +486,16 @@ if (typeof window !== 'undefined') {
   });
 }
 
+// API functions for invoice templates
+export const invoiceTemplateAPI = {
+  get: (): Promise<InvoiceTemplate> => fetchAPI("/inventory/invoice-template/"),
+  patch: (payload: Partial<InvoiceTemplate>): Promise<InvoiceTemplate> =>
+    fetchAPI("/inventory/invoice-template/", {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+}
+
 // API functions for sales orders
 export const ordersAPI = {
   list: (params: {

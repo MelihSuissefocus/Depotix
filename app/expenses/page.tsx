@@ -537,7 +537,15 @@ export default function ExpensesPage() {
                     <TableRow key={expense.id}>
                       <TableCell>{formatDate(expense.date)}</TableCell>
                       <TableCell className="font-medium max-w-[200px] truncate" title={expense.description}>
-                        {expense.description}
+                        <div className="flex flex-col gap-1">
+                          <span>{expense.description}</span>
+                          {expense.stock_movement_id && expense.stock_movement_item_name && (
+                            <span className="text-xs text-blue-600 flex items-center gap-1">
+                              <span className="inline-block w-2 h-2 rounded-full bg-blue-600"></span>
+                              Automatisch erfasst via Wareneingang
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         {formatCurrency(expense.amount)}

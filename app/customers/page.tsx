@@ -315,7 +315,9 @@ export default function CustomersPage() {
     setIsDeleteDialogOpen(true);
   };
 
-  // Pagination
+  // Pagination (Backend uses PAGE_SIZE = 50)
+  const PAGE_SIZE = 50;
+
   const handlePrevPage = () => {
     if (hasPrevPage) {
       setCurrentPage(prev => prev - 1);
@@ -463,7 +465,7 @@ export default function CustomersPage() {
             <div className="flex items-center justify-between px-6 py-4 border-t">
               <div className="text-sm text-gray-500">
                 {totalCount > 0 && (
-                  <>Seite {currentPage} von {Math.ceil(totalCount / 20)} • {totalCount} Kunden insgesamt</>
+                  <>Seite {currentPage} von {Math.ceil(totalCount / PAGE_SIZE)} • {totalCount} Kunden insgesamt</>
                 )}
               </div>
               <div className="flex items-center space-x-2">

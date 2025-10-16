@@ -10,6 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { AlertCircle, Archive, ArchiveRestore, Download, FileText, Loader2, MoreVertical, Plus, Search, Settings, Trash2, X } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { toast } from 'react-hot-toast'
 import { invoicesAPI, customerAPI, inventoryAPI, ordersAPI } from "@/lib/api"
@@ -20,9 +21,14 @@ interface InvoiceItem {
   item: number
   item_name?: string
   qty_base: number
+  qty_input: number  // User-facing quantity input
+  selected_unit: 'palette' | 'verpackung'  // Selected unit type (no stueck anymore)
   unit_price: string
   tax_rate: string
   search?: string
+  // Store item details for calculation
+  item_verpackungen_pro_palette?: number
+  item_stueck_pro_verpackung?: number
 }
 
 interface WizardData {
@@ -51,9 +57,15 @@ export default function InvoicesPage() {
   // Wizard state
   const [isWizardOpen, setIsWizardOpen] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
-  const [wizardData, setWizardData] = useState<WizardData>({
-    customer: 0,
-    items: []
+  const [wizardData, setWizardData] = useState<WizardData>(() => {
+    const today = new Date().toISOString().split('T')[0]
+    return {
+      customer: 0,
+      items: [],
+      issue_date: today,
+      delivery_date: today,
+      due_date: ""
+    }
   })
   const [isCreating, setIsCreating] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
@@ -73,6 +85,29 @@ export default function InvoicesPage() {
       style: 'currency',
       currency: 'CHF'
     }).format(num)
+  }
+
+  const isValidDate = (dateString: string): boolean => {
+    // Check if the string matches YYYY-MM-DD format
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      return false
+    }
+
+    // Parse the date and check if it's valid
+    const date = new Date(dateString)
+
+    // Check if date is valid and matches the input
+    if (isNaN(date.getTime())) {
+      return false
+    }
+
+    // Verify the date components match the input (to catch invalid dates like 2024-02-30)
+    const [year, month, day] = dateString.split('-').map(Number)
+    return (
+      date.getFullYear() === year &&
+      date.getMonth() === month - 1 &&
+      date.getDate() === day
+    )
   }
 
   const loadInvoices = async (showLoadingIndicator = true) => {
@@ -301,7 +336,14 @@ export default function InvoicesPage() {
 
   const resetWizard = () => {
     setCurrentStep(1)
-    setWizardData({ customer: 0, items: [] })
+    const today = new Date().toISOString().split('T')[0]
+    setWizardData({
+      customer: 0,
+      items: [],
+      issue_date: today,
+      delivery_date: today,
+      due_date: ""
+    })
     setSelectedCustomer(null)
     setCustomerSearch("")
     setItemSearch("")
@@ -326,7 +368,17 @@ export default function InvoicesPage() {
   const addInvoiceItem = () => {
     setWizardData(prev => ({
       ...prev,
-      items: [...prev.items, { item: 0, qty_base: 1, unit_price: "0.00", tax_rate: "8.10", search: "" }]
+      items: [...prev.items, {
+        item: 0,
+        qty_base: 1,
+        qty_input: 1,
+        selected_unit: 'verpackung',
+        unit_price: "0.00",
+        tax_rate: "8.10",
+        search: "",
+        item_verpackungen_pro_palette: 1,
+        item_stueck_pro_verpackung: 1
+      }]
     }))
   }
 
@@ -337,13 +389,22 @@ export default function InvoicesPage() {
     }))
   }
 
+  const calculateQtyBase = (qty_input: number, unit: 'palette' | 'verpackung', item_verpackungen_pro_palette: number) => {
+    // Calculate base quantity (in Verpackungen) based on selected unit
+    if (unit === 'palette') {
+      return qty_input * item_verpackungen_pro_palette
+    } else {
+      return qty_input
+    }
+  }
+
   const updateInvoiceItem = (index: number, field: keyof InvoiceItem, value: any) => {
     setWizardData(prev => ({
       ...prev,
       items: prev.items.map((item, i) => {
         if (i === index) {
           const updated = { ...item, [field]: value }
-          
+
           // Auto-fill item name when item is selected
           if (field === 'item' && value) {
             const selectedItem = availableItems.find(ai => ai.id === value)
@@ -351,9 +412,26 @@ export default function InvoicesPage() {
               updated.item_name = selectedItem.name
               updated.unit_price = selectedItem.price || "0.00"
               updated.tax_rate = selectedItem.vat_rate || "8.10"
+              updated.item_verpackungen_pro_palette = selectedItem.verpackungen_pro_palette || 1
+              updated.item_stueck_pro_verpackung = selectedItem.stueck_pro_verpackung || 1
+              // Recalculate qty_base with current selection
+              updated.qty_base = calculateQtyBase(
+                updated.qty_input || 1,
+                updated.selected_unit || 'verpackung',
+                updated.item_verpackungen_pro_palette
+              )
             }
           }
-          
+
+          // Recalculate qty_base when quantity or unit changes
+          if (field === 'qty_input' || field === 'selected_unit') {
+            updated.qty_base = calculateQtyBase(
+              field === 'qty_input' ? value : item.qty_input || 1,
+              field === 'selected_unit' ? value : item.selected_unit || 'verpackung',
+              item.item_verpackungen_pro_palette || 1
+            )
+          }
+
           return updated
         }
         return item
@@ -389,6 +467,8 @@ export default function InvoicesPage() {
       items_data: items.map(item => ({
         item: item.item,
         qty_base: item.qty_base,
+        qty_display: item.qty_input,
+        selected_unit: item.selected_unit,
         unit_price: item.unit_price,
         tax_rate: item.tax_rate
       }))
@@ -614,7 +694,7 @@ export default function InvoicesPage() {
                 <Input
                   id="issue-date"
                   type="date"
-                  value={wizardData.issue_date || new Date().toISOString().split('T')[0]}
+                  value={wizardData.issue_date || ""}
                   onChange={(e) => setWizardData(prev => ({
                     ...prev,
                     issue_date: e.target.value
@@ -627,7 +707,7 @@ export default function InvoicesPage() {
                 <Input
                   id="delivery-date"
                   type="date"
-                  value={wizardData.delivery_date || new Date().toISOString().split('T')[0]}
+                  value={wizardData.delivery_date || ""}
                   onChange={(e) => setWizardData(prev => ({
                     ...prev,
                     delivery_date: e.target.value
@@ -679,7 +759,7 @@ export default function InvoicesPage() {
                 {wizardData.items.map((item, index) => (
                   <Card key={index}>
                     <CardContent className="pt-4">
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                         <div className="md:col-span-2 relative">
                           <Label>Artikel</Label>
                           <div className="relative">
@@ -703,7 +783,7 @@ export default function InvoicesPage() {
                                   >
                                     <div className="font-medium">{availableItem.name}</div>
                                     <div className="text-sm text-gray-500">
-                                      {formatCurrency(availableItem.price || "0")} - Lager: {availableItem.quantity}
+                                      {formatCurrency(availableItem.price || "0")} - Lager: {availableItem.palette_quantity} Paletten, {availableItem.verpackung_quantity} Verpackungen
                                     </div>
                                   </div>
                                 ))}
@@ -718,13 +798,34 @@ export default function InvoicesPage() {
                         </div>
 
                         <div>
+                          <Label>Einheit</Label>
+                          <Select
+                            value={item.selected_unit}
+                            onValueChange={(value) => updateInvoiceItem(index, 'selected_unit', value as 'palette' | 'verpackung')}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Einheit" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="palette">Palette</SelectItem>
+                              <SelectItem value="verpackung">Verpackung</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
                           <Label>Menge</Label>
                           <Input
                             type="number"
                             min="1"
-                            value={item.qty_base}
-                            onChange={(e) => updateInvoiceItem(index, 'qty_base', parseInt(e.target.value) || 1)}
+                            value={item.qty_input}
+                            onChange={(e) => updateInvoiceItem(index, 'qty_input', parseInt(e.target.value) || 1)}
                           />
+                          {item.item && (
+                            <div className="mt-1 text-xs text-gray-500">
+                              = {item.qty_base} Stück
+                            </div>
+                          )}
                         </div>
 
                         <div>
@@ -760,7 +861,7 @@ export default function InvoicesPage() {
                           </Button>
                         </div>
                       </div>
-                      
+
                       <div className="mt-2 text-right text-sm text-gray-600">
                         Zeilensumme: {formatCurrency((item.qty_base * parseFloat(item.unit_price || "0")))}
                       </div>
@@ -932,7 +1033,17 @@ export default function InvoicesPage() {
                     onClick={() => setCurrentStep(prev => prev + 1)}
                     disabled={
                       (currentStep === 1 && !selectedCustomer) ||
-                      (currentStep === 2 && (!wizardData.issue_date || !wizardData.delivery_date || !wizardData.due_date)) ||
+                      (currentStep === 2 && (
+                        !wizardData.issue_date ||
+                        !wizardData.delivery_date ||
+                        !wizardData.due_date ||
+                        wizardData.issue_date.trim() === "" ||
+                        wizardData.delivery_date.trim() === "" ||
+                        wizardData.due_date.trim() === "" ||
+                        !isValidDate(wizardData.issue_date) ||
+                        !isValidDate(wizardData.delivery_date) ||
+                        !isValidDate(wizardData.due_date)
+                      )) ||
                       (currentStep === 3 && wizardData.items.length === 0)
                     }
                   >

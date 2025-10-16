@@ -143,10 +143,14 @@ class InventoryItem(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     sku = models.CharField(max_length=100, unique=True, blank=True, null=True)
-    quantity = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+
+    # Lagerbestände
+    palette_quantity = models.IntegerField(default=0, validators=[MinValueValidator(0)], help_text="Anzahl Paletten auf Lager")
+    verpackung_quantity = models.IntegerField(default=0, validators=[MinValueValidator(0)], help_text="Anzahl Verpackungen auf Lager")
     defective_qty = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+
     price = models.DecimalField(
-        max_digits=10, decimal_places=2, 
+        max_digits=10, decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))]
     )
     cost = models.DecimalField(
@@ -186,10 +190,14 @@ class InventoryItem(models.Model):
     ean_pack = models.CharField(max_length=EAN_MAXLEN, blank=True, null=True)
     
     vat_rate = models.DecimalField(max_digits=4, decimal_places=2, default=8.10, help_text="MwSt. %")
-    
+
+    # Produktstruktur (Umrechnungsfaktoren)
+    verpackungen_pro_palette = models.IntegerField(default=1, validators=[MinValueValidator(1)], help_text="Wie viele Verpackungen hat eine Palette")
+    stueck_pro_verpackung = models.IntegerField(default=1, validators=[MinValueValidator(1)], help_text="Wie viele Stück hat eine Verpackung (nur Info)")
+
     category = models.ForeignKey(
-        Category, 
-        on_delete=models.SET_NULL, 
+        Category,
+        on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='items'
     )
@@ -204,23 +212,23 @@ class InventoryItem(models.Model):
             models.Index(fields=['sku']),
             models.Index(fields=['name', 'owner']),
             models.Index(fields=['category']),
-            models.Index(fields=['min_stock_level', 'quantity']),
+            models.Index(fields=['min_stock_level', 'palette_quantity']),
         ]
 
     @property
-    def available_qty(self):
-        """Available quantity (total - defective)"""
-        return self.quantity - self.defective_qty
+    def total_quantity_in_verpackungen(self):
+        """Calculate total stock in Verpackungen (Paletten * verpackungen_pro_palette + verpackung_quantity)"""
+        return (self.palette_quantity * self.verpackungen_pro_palette) + self.verpackung_quantity
 
     @property
     def is_low_stock(self):
-        """Check if item is below minimum stock level"""
-        return self.available_qty <= self.min_stock_level
+        """Check if item is below minimum stock level (converted to Verpackungen)"""
+        return self.total_quantity_in_verpackungen <= self.min_stock_level
 
     @property
     def total_value(self):
-        """Total value of available stock"""
-        return self.available_qty * self.price
+        """Total value of available stock (in Verpackungen)"""
+        return self.total_quantity_in_verpackungen * self.price
 
     @property
     def category_name(self):
@@ -267,6 +275,14 @@ class Expense(models.Model):
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='expenses'
+    )
+    stock_movement = models.ForeignKey(
+        'StockMovement',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='expense',
+        verbose_name="Warenbewegung",
+        help_text="Verknüpfte Warenbewegung (automatisch erstellt bei Wareneingang)"
     )
     receipt_number = models.CharField(max_length=100, blank=True, null=True)
     receipt_pdf = models.FileField(upload_to='expense_receipts/', blank=True, null=True)
@@ -342,7 +358,7 @@ class InventoryItemSupplier(models.Model):
 
 
 class StockMovement(models.Model):
-    """Enhanced stock movement tracking with UoM support and idempotency"""
+    """Enhanced stock movement tracking with Paletten/Verpackungen support"""
 
     MOVEMENT_TYPE_CHOICES = [
         ('IN', 'Stock In'),
@@ -352,14 +368,28 @@ class StockMovement(models.Model):
         ('ADJUST', 'Adjustment'),
     ]
 
+    UNIT_CHOICES = [
+        ('palette', 'Palette'),
+        ('verpackung', 'Verpackung'),
+    ]
+
     item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='stock_movements')
     type = models.CharField(max_length=20, choices=MOVEMENT_TYPE_CHOICES)
-    qty_base = models.PositiveIntegerField(help_text="Quantity in base units")
 
-    # UoM input helpers for better UX
-    qty_pallets = models.IntegerField(default=0, help_text="Quantity in pallets")
-    qty_packages = models.IntegerField(default=0, help_text="Quantity in packages")
-    qty_singles = models.IntegerField(default=0, help_text="Quantity in single units")
+    # Neue Struktur: Einheit + Menge
+    unit = models.CharField(max_length=20, choices=UNIT_CHOICES, default='verpackung', help_text="Einheit der Bewegung")
+    quantity = models.IntegerField(default=0, help_text="Menge in der gewählten Einheit")
+
+    # Einkaufspreis für Wareneingänge
+    purchase_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Einkaufspreis",
+        help_text="Einkaufspreis für diesen Wareneingang (nur bei type=IN)",
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
 
     # Idempotency for safe retries
     idempotency_key = models.CharField(
@@ -396,31 +426,29 @@ class StockMovement(models.Model):
         ]
 
     def clean(self):
-        """Validate UoM calculations and business rules"""
+        """Validate stock availability and business rules"""
         from django.core.exceptions import ValidationError
-        
-        # Calculate qty_base from UoM inputs if not set
-        if not self.qty_base and (self.qty_pallets or self.qty_packages or self.qty_singles):
-            calculated_base = (
-                self.qty_pallets * self.item.unit_pallet_factor * self.item.unit_package_factor +
-                self.qty_packages * self.item.unit_package_factor +
-                self.qty_singles
-            )
-            self.qty_base = calculated_base
-        
+
         # Validate stock availability for OUT/DEFECT movements
         if self.type in ['OUT', 'DEFECT']:
-            available_qty = self.item.available_qty
-            if self.qty_base > available_qty:
-                raise ValidationError(
-                    f"Cannot {self.type.lower()} {self.qty_base} units. "
-                    f"Only {available_qty} units available."
-                )
-        
+            if self.unit == 'palette':
+                if self.quantity > self.item.palette_quantity:
+                    raise ValidationError(
+                        f"Cannot {self.type.lower()} {self.quantity} Paletten. "
+                        f"Only {self.item.palette_quantity} Paletten available."
+                    )
+            elif self.unit == 'verpackung':
+                total_verpackungen = self.item.total_quantity_in_verpackungen
+                if self.quantity > total_verpackungen:
+                    raise ValidationError(
+                        f"Cannot {self.type.lower()} {self.quantity} Verpackungen. "
+                        f"Only {total_verpackungen} Verpackungen available."
+                    )
+
         # RETURN should have customer reference
         if self.type == 'RETURN' and not self.customer:
             raise ValidationError("RETURN movements should reference a customer.")
-        
+
         # IN movements typically have supplier reference
         if self.type == 'IN' and not self.supplier and not self.note:
             raise ValidationError("IN movements should reference a supplier or include a note.")
@@ -432,64 +460,134 @@ class StockMovement(models.Model):
         # Check if quantity update should be skipped (when ViewSet already handled it)
         skip_quantity_update = kwargs.pop('skip_quantity_update', False)
 
-        # Store previous quantity for logging
-        previous_qty = self.item.quantity
+        # IMPORTANT: Reload item from database to get the latest conversion factors
+        # This ensures we always use the current verpackungen_pro_palette value
+        self.item.refresh_from_db()
+
+        # Store previous quantities for logging
+        previous_palette_qty = self.item.palette_quantity
+        previous_verpackung_qty = self.item.verpackung_quantity
 
         # Save the movement first
         super().save(*args, **kwargs)
 
-        # Calculate what the quantities would be (needed for logging even if we skip update)
-        new_qty = previous_qty
-        quantity_change = 0
+        # Prepare for logging
         log_action = 'UPDATE'
-
-        if self.type == 'IN':
-            new_qty = previous_qty + self.qty_base if skip_quantity_update else self.item.quantity + self.qty_base
-            quantity_change = self.qty_base
-            log_action = 'ADD'
-        elif self.type == 'OUT':
-            new_qty = max(0, previous_qty - self.qty_base) if skip_quantity_update else max(0, self.item.quantity - self.qty_base)
-            quantity_change = -self.qty_base
-            log_action = 'REMOVE'
-        elif self.type == 'RETURN':
-            new_qty = previous_qty + self.qty_base if skip_quantity_update else self.item.quantity + self.qty_base
-            quantity_change = self.qty_base
-            log_action = 'ADD'
-        elif self.type == 'DEFECT':
-            # Move from available to defective
-            transfer_qty = min(self.qty_base, self.item.available_qty)
-            new_qty = previous_qty - transfer_qty if skip_quantity_update else self.item.quantity - transfer_qty
-            quantity_change = -transfer_qty
-            log_action = 'REMOVE'
-        elif self.type == 'ADJUST':
-            # Direct adjustment to quantity
-            new_qty = max(0, self.qty_base)
-            quantity_change = new_qty - previous_qty
-            log_action = 'UPDATE'
-        else:
-            # Unknown type, skip everything
-            return
+        log_unit = self.unit
+        log_quantity_change = self.quantity
 
         if not skip_quantity_update:
-            # Update item quantity (only if not already updated by ViewSet)
-            self.item.quantity = new_qty
-            if self.type == 'DEFECT':
-                self.item.defective_qty += min(self.qty_base, self.item.available_qty)
+            # Get conversion factor
+            vpk = self.item.verpackungen_pro_palette
+
+            # Helper function to normalize inventory (consolidate packages into palettes)
+            def normalize_inventory(palette_qty, verpackung_qty, verpackungen_pro_palette):
+                """
+                Consolidate loose packages into full palettes.
+                Returns (palette_quantity, verpackung_quantity)
+                """
+                # Calculate total packages
+                total_verpackungen = (palette_qty * verpackungen_pro_palette) + verpackung_qty
+
+                # Split into full palettes and remaining packages
+                new_palette_qty = total_verpackungen // verpackungen_pro_palette
+                new_verpackung_qty = total_verpackungen % verpackungen_pro_palette
+
+                return new_palette_qty, new_verpackung_qty
+
+            # Update item quantities based on movement type and unit
+            if self.type == 'IN':
+                log_action = 'ADD'
+                if self.unit == 'palette':
+                    # Adding palettes is straightforward
+                    self.item.palette_quantity += self.quantity
+                elif self.unit == 'verpackung':
+                    # Add packages and consolidate into palettes if possible
+                    self.item.verpackung_quantity += self.quantity
+                    self.item.palette_quantity, self.item.verpackung_quantity = normalize_inventory(
+                        self.item.palette_quantity,
+                        self.item.verpackung_quantity,
+                        vpk
+                    )
+
+            elif self.type == 'OUT':
+                log_action = 'REMOVE'
+                if self.unit == 'palette':
+                    # Remove palettes (cannot go below 0)
+                    self.item.palette_quantity = max(0, self.item.palette_quantity - self.quantity)
+                elif self.unit == 'verpackung':
+                    # Calculate total available packages
+                    total_verpackungen = (self.item.palette_quantity * vpk) + self.item.verpackung_quantity
+
+                    # Subtract requested packages
+                    remaining_verpackungen = max(0, total_verpackungen - self.quantity)
+
+                    # Recalculate palettes and packages
+                    self.item.palette_quantity = remaining_verpackungen // vpk
+                    self.item.verpackung_quantity = remaining_verpackungen % vpk
+
+            elif self.type == 'RETURN':
+                log_action = 'ADD'
+                if self.unit == 'palette':
+                    # Returning palettes is straightforward
+                    self.item.palette_quantity += self.quantity
+                elif self.unit == 'verpackung':
+                    # Return packages and consolidate into palettes if possible
+                    self.item.verpackung_quantity += self.quantity
+                    self.item.palette_quantity, self.item.verpackung_quantity = normalize_inventory(
+                        self.item.palette_quantity,
+                        self.item.verpackung_quantity,
+                        vpk
+                    )
+
+            elif self.type == 'DEFECT':
+                log_action = 'REMOVE'
+                if self.unit == 'palette':
+                    # Mark palettes as defective
+                    transfer_qty = min(self.quantity, self.item.palette_quantity)
+                    self.item.palette_quantity -= transfer_qty
+                    self.item.defective_qty += transfer_qty * vpk
+                elif self.unit == 'verpackung':
+                    # Mark packages as defective (may need to break palettes)
+                    total_verpackungen = (self.item.palette_quantity * vpk) + self.item.verpackung_quantity
+                    transfer_qty = min(self.quantity, total_verpackungen)
+
+                    remaining_verpackungen = total_verpackungen - transfer_qty
+
+                    # Recalculate inventory
+                    self.item.palette_quantity = remaining_verpackungen // vpk
+                    self.item.verpackung_quantity = remaining_verpackungen % vpk
+                    self.item.defective_qty += transfer_qty
+
+            elif self.type == 'ADJUST':
+                log_action = 'UPDATE'
+                if self.unit == 'palette':
+                    # Direct palette adjustment
+                    self.item.palette_quantity = max(0, self.quantity)
+                    # Keep existing loose packages
+                elif self.unit == 'verpackung':
+                    # Direct package adjustment
+                    self.item.verpackung_quantity = max(0, self.quantity)
+                    # Keep existing palettes
+
             self.item.save()
 
-        # Always create InventoryLog entry for backward compatibility (even if quantity was updated elsewhere)
+        # Always create InventoryLog entry for backward compatibility
+        new_palette_qty = self.item.palette_quantity
+        new_verpackung_qty = self.item.verpackung_quantity
+
         InventoryLog.objects.create(
             item=self.item,
             user=self.created_by,
             action=log_action,
-            quantity_change=abs(quantity_change),
-            previous_quantity=previous_qty,
-            new_quantity=new_qty,
-            notes=f"{self.get_type_display()}: {self.note}" if self.note else self.get_type_display()
+            quantity_change=abs(log_quantity_change),
+            previous_quantity=previous_palette_qty + previous_verpackung_qty,  # Simplified for legacy
+            new_quantity=new_palette_qty + new_verpackung_qty,  # Simplified for legacy
+            notes=f"{self.get_type_display()} ({log_quantity_change} {log_unit}): {self.note}" if self.note else f"{self.get_type_display()} ({log_quantity_change} {log_unit})"
         )
 
     def __str__(self):
-        return f"{self.type} - {self.item.name} - {self.qty_base} units"
+        return f"{self.type} - {self.item.name} - {self.quantity} {self.unit}"
 
 
 class SalesOrder(models.Model):
@@ -559,11 +657,19 @@ class SalesOrder(models.Model):
 
 class SalesOrderItem(models.Model):
     """Sales order line items with tax calculations"""
-    
+
+    UNIT_CHOICES = [
+        ('palette', 'Palette'),
+        ('verpackung', 'Verpackung'),
+    ]
+
     order = models.ForeignKey(SalesOrder, on_delete=models.CASCADE, related_name='items')
     item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='order_items')
-    qty_base = models.PositiveIntegerField(help_text="Quantity in base units")
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2, 
+    qty_base = models.PositiveIntegerField(help_text="Quantity in base units (Verpackungen)")
+    qty_display = models.PositiveIntegerField(default=1, help_text="Display quantity (in selected unit)")
+    selected_unit = models.CharField(max_length=20, choices=UNIT_CHOICES, default='verpackung',
+                                     help_text="Unit selected for display on invoice")
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2,
                                     help_text="Price per base unit")
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'),
                                   help_text="Tax rate as percentage (e.g., 7.7 for 7.7%)")
@@ -684,7 +790,7 @@ class DocumentSequence(models.Model):
 
 class CompanyProfile(models.Model):
     """Company profile for supplier firm data"""
-    
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='company_profile')
     name = models.CharField(max_length=200)
     street = models.CharField(max_length=200)
@@ -708,3 +814,22 @@ class CompanyProfile(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class InvoiceTemplate(models.Model):
+    """Custom invoice template for PDF generation"""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='invoice_template')
+    html_content = models.TextField(help_text="HTML template für Rechnung")
+    css_content = models.TextField(help_text="CSS Styles für Rechnung")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user']),
+        ]
+
+    def __str__(self):
+        return f"Invoice Template for {self.user.username}"

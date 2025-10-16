@@ -7,14 +7,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react"
 import { stockMovementAPI, inventoryAPI, supplierAPI, customerAPI } from "@/lib/api"
 import { useTranslation } from "@/lib/i18n"
 import {
-  calculateQtyBase,
-  validatePPUInput,
   parseQuantity,
   formatQuantity,
   validateMovementType,
@@ -41,10 +38,9 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
   // Form state
   const [formData, setFormData] = useState({
     item: "",
-    qty_base: "",
-    qty_pallets: "",
-    qty_packages: "",
-    qty_singles: "",
+    unit: "verpackung",
+    quantity: "",
+    purchase_price: "",
     supplier: "",
     customer: "",
     note: "",
@@ -55,7 +51,6 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
   const [useCurrentDateTime, setUseCurrentDateTime] = useState(true)
 
   // UI state
-  const [quantityInputMode, setQuantityInputMode] = useState<"total" | "uom">("total")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -120,41 +115,25 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
     return items.find(item => item.id === parseInt(formData.item))
   }, [items, formData.item])
 
-  const calculatedQtyBase = useMemo(() => {
-    if (quantityInputMode === "total") {
-      return parseQuantity(formData.qty_base)
-    }
-
-    if (!selectedItem) return 0
-
-    try {
-      return calculateQtyBase(
-        {
-          qty_pallets: parseQuantity(formData.qty_pallets),
-          qty_packages: parseQuantity(formData.qty_packages),
-          qty_singles: parseQuantity(formData.qty_singles)
-        },
-        {
-          unit_pallet_factor: selectedItem.unit_pallet_factor || 1,
-          unit_package_factor: selectedItem.unit_package_factor || 1
-        }
-      )
-    } catch (err) {
-      return 0
-    }
-  }, [quantityInputMode, formData, selectedItem])
+  const inputQuantity = useMemo(() => {
+    return parseQuantity(formData.quantity)
+  }, [formData.quantity])
 
   const availableQty = useMemo(() => {
-    return selectedItem?.available_qty || 0
-  }, [selectedItem])
+    if (formData.unit === 'palette') {
+      return selectedItem?.palette_quantity || 0
+    } else {
+      return selectedItem?.total_quantity_in_verpackungen || 0
+    }
+  }, [selectedItem, formData.unit])
 
   const previewNewQty = useMemo(() => {
     if (mode === "IN" || mode === "RETURN") {
-      return availableQty + calculatedQtyBase
+      return availableQty + inputQuantity
     } else {
-      return Math.max(0, availableQty - calculatedQtyBase)
+      return Math.max(0, availableQty - inputQuantity)
     }
-  }, [mode, availableQty, calculatedQtyBase])
+  }, [mode, availableQty, inputQuantity])
 
   // ========================================================================
   // VALIDATION
@@ -168,32 +147,14 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
     }
 
     // Quantity validation
-    if (quantityInputMode === "total") {
-      const qty = parseQuantity(formData.qty_base)
-      if (qty <= 0) {
-        errors.push({ field: 'qty_base', message: 'Menge muss größer als 0 sein' })
-      }
-    } else {
-      // Validate PPU inputs
-      if (selectedItem) {
-        const ppuErrors = validatePPUInput(
-          {
-            qty_pallets: parseQuantity(formData.qty_pallets),
-            qty_packages: parseQuantity(formData.qty_packages),
-            qty_singles: parseQuantity(formData.qty_singles)
-          },
-          {
-            unit_pallet_factor: selectedItem.unit_pallet_factor || 1,
-            unit_package_factor: selectedItem.unit_package_factor || 1
-          }
-        )
-        errors.push(...ppuErrors)
-      }
+    const qty = parseQuantity(formData.quantity)
+    if (qty <= 0) {
+      errors.push({ field: 'quantity', message: 'Menge muss größer als 0 sein' })
     }
 
     // Movement type specific validation
-    if (selectedItem && calculatedQtyBase > 0) {
-      const movementError = validateMovementType(mode, calculatedQtyBase, availableQty)
+    if (selectedItem && inputQuantity > 0) {
+      const movementError = validateMovementType(mode, inputQuantity, availableQty)
       if (movementError) {
         errors.push(movementError)
       }
@@ -210,7 +171,7 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
     }
 
     return errors
-  }, [formData, quantityInputMode, selectedItem, mode, calculatedQtyBase, availableQty])
+  }, [formData, selectedItem, mode, inputQuantity, availableQty])
 
   const isFormValid = validationErrors.length === 0 && formData.item !== ""
 
@@ -220,17 +181,15 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
   const resetForm = () => {
     setFormData({
       item: "",
-      qty_base: "",
-      qty_pallets: "",
-      qty_packages: "",
-      qty_singles: "",
+      unit: "verpackung",
+      quantity: "",
+      purchase_price: "",
       supplier: "",
       customer: "",
       note: "",
       movement_date: "",
       movement_time: ""
     })
-    setQuantityInputMode("total")
     setUseCurrentDateTime(true)
     setFieldErrors({})
     setGlobalError("")
@@ -260,18 +219,6 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
     }
   }
 
-  const handleQuantityModeChange = (newMode: "total" | "uom") => {
-    setQuantityInputMode(newMode)
-    // Reset quantity fields
-    setFormData(prev => ({
-      ...prev,
-      qty_base: "",
-      qty_pallets: "",
-      qty_packages: "",
-      qty_singles: ""
-    }))
-    setFieldErrors({})
-  }
 
   // ========================================================================
   // SUBMIT HANDLER
@@ -298,14 +245,17 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
       const payload: any = {
         item: parseInt(formData.item),
         type: mode,
-        qty_base: calculatedQtyBase,
-        qty_pallets: quantityInputMode === "uom" ? parseQuantity(formData.qty_pallets) : 0,
-        qty_packages: quantityInputMode === "uom" ? parseQuantity(formData.qty_packages) : 0,
-        qty_singles: quantityInputMode === "uom" ? parseQuantity(formData.qty_singles) : 0,
+        unit: formData.unit,
+        quantity: parseInt(formData.quantity),
         note: formData.note,
         supplier: formData.supplier ? parseInt(formData.supplier) : null,
         customer: formData.customer ? parseInt(formData.customer) : null,
         idempotency_key: idempotencyKey
+      }
+
+      // Add purchase_price for IN movements
+      if (mode === "IN" && formData.purchase_price) {
+        payload.purchase_price = parseFloat(formData.purchase_price)
       }
 
       // Add custom timestamp if not using current date/time
@@ -424,7 +374,7 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
                 <SelectContent>
                   {items.map((item) => (
                     <SelectItem key={item.id} value={String(item.id)}>
-                      {item.name} ({formatQuantity(item.available_qty || 0)} verfügbar)
+                      {item.name} (Lager: {item.palette_quantity || 0} Paletten, {item.verpackung_quantity || 0} Verpackungen)
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -432,106 +382,49 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
               {renderFieldError('item')}
             </div>
 
-            {/* Quantity Input Mode Tabs */}
-            <Tabs value={quantityInputMode} onValueChange={(v) => handleQuantityModeChange(v as "total" | "uom")}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="total" disabled={isSubmitting}>
-                  {t('movement.totalQuantity')}
-                </TabsTrigger>
-                <TabsTrigger value="uom" disabled={isSubmitting}>
-                  {t('movement.byUnit')}
-                </TabsTrigger>
-              </TabsList>
+            {/* Unit Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="unit" className="required">
+                Einheit
+              </Label>
+              <Select
+                value={formData.unit}
+                onValueChange={(value) => handleFieldChange('unit', value)}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger id="unit">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="palette">Palette</SelectItem>
+                  <SelectItem value="verpackung">Verpackung</SelectItem>
+                </SelectContent>
+              </Select>
+              {renderFieldError('unit')}
+            </div>
 
-              {/* Total Quantity Mode */}
-              <TabsContent value="total" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="qty_base" className="required">
-                    {t('movement.quantity')} (Basiseinheiten)
-                  </Label>
-                  <Input
-                    id="qty_base"
-                    type="number"
-                    min="1"
-                    value={formData.qty_base}
-                    onChange={(e) => handleFieldChange('qty_base', e.target.value)}
-                    disabled={isSubmitting}
-                    className={fieldErrors.qty_base ? "border-red-500" : ""}
-                    aria-invalid={!!fieldErrors.qty_base}
-                    aria-describedby={fieldErrors.qty_base ? "qty_base-error" : undefined}
-                    placeholder="z.B. 100"
-                  />
-                  {renderFieldError('qty_base')}
-                </div>
-              </TabsContent>
-
-              {/* UoM Mode */}
-              <TabsContent value="uom" className="space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="qty_pallets">{t('movement.pallets')}</Label>
-                    <Input
-                      id="qty_pallets"
-                      type="number"
-                      min="0"
-                      value={formData.qty_pallets}
-                      onChange={(e) => handleFieldChange('qty_pallets', e.target.value)}
-                      disabled={isSubmitting}
-                      className={fieldErrors.qty_pallets ? "border-red-500" : ""}
-                      placeholder="0"
-                    />
-                    {renderFieldError('qty_pallets')}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="qty_packages">{t('movement.packages')}</Label>
-                    <Input
-                      id="qty_packages"
-                      type="number"
-                      min="0"
-                      value={formData.qty_packages}
-                      onChange={(e) => handleFieldChange('qty_packages', e.target.value)}
-                      disabled={isSubmitting}
-                      className={fieldErrors.qty_packages ? "border-red-500" : ""}
-                      placeholder="0"
-                    />
-                    {renderFieldError('qty_packages')}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="qty_singles">{t('movement.singles')}</Label>
-                    <Input
-                      id="qty_singles"
-                      type="number"
-                      min="0"
-                      value={formData.qty_singles}
-                      onChange={(e) => handleFieldChange('qty_singles', e.target.value)}
-                      disabled={isSubmitting}
-                      className={fieldErrors.qty_singles ? "border-red-500" : ""}
-                      placeholder="0"
-                    />
-                    {renderFieldError('qty_singles')}
-                  </div>
-                </div>
-
-                {/* PPU Preview */}
-                {selectedItem && calculatedQtyBase > 0 && (
-                  <div className="p-3 bg-muted rounded-md text-sm">
-                    <p className="font-medium">
-                      Gesamtmenge: <span className="text-primary">{formatQuantity(calculatedQtyBase)}</span> Basiseinheiten
-                    </p>
-                    <p className="text-muted-foreground text-xs mt-1">
-                      {formData.qty_pallets && `${formData.qty_pallets}×${selectedItem.unit_pallet_factor}×${selectedItem.unit_package_factor}`}
-                      {formData.qty_packages && ` + ${formData.qty_packages}×${selectedItem.unit_package_factor}`}
-                      {formData.qty_singles && ` + ${formData.qty_singles}`}
-                    </p>
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
+            {/* Quantity Input */}
+            <div className="space-y-2">
+              <Label htmlFor="quantity" className="required">
+                {t('movement.quantity')}
+              </Label>
+              <Input
+                id="quantity"
+                type="number"
+                min="1"
+                value={formData.quantity}
+                onChange={(e) => handleFieldChange('quantity', e.target.value)}
+                disabled={isSubmitting}
+                className={fieldErrors.quantity ? "border-red-500" : ""}
+                aria-invalid={!!fieldErrors.quantity}
+                aria-describedby={fieldErrors.quantity ? "quantity-error" : undefined}
+                placeholder="z.B. 10"
+              />
+              {renderFieldError('quantity')}
+            </div>
 
             {/* Stock Preview */}
-            {selectedItem && calculatedQtyBase > 0 && (
+            {selectedItem && inputQuantity > 0 && (
               <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800">
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -549,7 +442,7 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
                       {mode === "OUT" ? "Abgang" : "Zugang"}
                     </p>
                     <p className="font-medium text-blue-600 dark:text-blue-400">
-                      {mode === "OUT" ? "-" : "+"}{formatQuantity(calculatedQtyBase)}
+                      {mode === "OUT" ? "-" : "+"}{formatQuantity(inputQuantity)} {formData.unit === 'palette' ? 'P' : 'V'}
                     </p>
                   </div>
                   <div>
@@ -584,6 +477,28 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
                   </SelectContent>
                 </Select>
                 {renderFieldError('supplier')}
+              </div>
+            )}
+
+            {/* Purchase Price (for IN) */}
+            {mode === "IN" && (
+              <div className="space-y-2">
+                <Label htmlFor="purchase_price">Einkaufspreis (CHF)</Label>
+                <Input
+                  id="purchase_price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.purchase_price}
+                  onChange={(e) => handleFieldChange('purchase_price', e.target.value)}
+                  disabled={isSubmitting}
+                  placeholder="0.00"
+                  className={fieldErrors.purchase_price ? "border-red-500" : ""}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Optional: Einkaufspreis für diese Warenbewegung. Wird automatisch als Ausgabe erfasst.
+                </p>
+                {renderFieldError('purchase_price')}
               </div>
             )}
 

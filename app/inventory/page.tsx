@@ -69,7 +69,8 @@ export default function InventoryPage() {
   const [newItem, setNewItem] = useState({
     name: "",
     description: "",
-    quantity: 0,
+    palette_quantity: 0,
+    verpackung_quantity: 0,
     price: "",
     category: "",
     sku: "",
@@ -88,6 +89,9 @@ export default function InventoryPage() {
     ean_unit: "",
     ean_pack: "",
     vat_rate: "8.10",
+    // Produktstruktur (Umrechnungsfaktoren)
+    verpackungen_pro_palette: 1,
+    stueck_pro_verpackung: 1,
   });
   // New: form error state
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -158,10 +162,17 @@ export default function InventoryPage() {
       }
     }
 
-    if (newItem.quantity !== undefined) {
-      const q = Number(newItem.quantity);
+    if (newItem.palette_quantity !== undefined) {
+      const q = Number(newItem.palette_quantity);
       if (Number.isNaN(q) || q < 0) {
-        errs.quantity = t('inventory.validation.quantityNonNegative');
+        errs.palette_quantity = t('inventory.validation.quantityNonNegative');
+      }
+    }
+
+    if (newItem.verpackung_quantity !== undefined) {
+      const q = Number(newItem.verpackung_quantity);
+      if (Number.isNaN(q) || q < 0) {
+        errs.verpackung_quantity = t('inventory.validation.quantityNonNegative');
       }
     }
 
@@ -222,9 +233,9 @@ export default function InventoryPage() {
               ? a.name.localeCompare(b.name)
               : b.name.localeCompare(a.name);
           } else if (sortBy === "quantity") {
-            // available_qty is optional -> coalesce to 0
-            const aQty = a.available_qty ?? 0;
-            const bQty = b.available_qty ?? 0;
+            // total_quantity_in_verpackungen is optional -> coalesce to 0
+            const aQty = a.total_quantity_in_verpackungen ?? 0;
+            const bQty = b.total_quantity_in_verpackungen ?? 0;
             return sortOrder === "asc" ? aQty - bQty : bQty - aQty;
           } else if (sortBy === "price") {
             return sortOrder === "asc"
@@ -248,7 +259,8 @@ export default function InventoryPage() {
         name: newItem.name,
         price: newItem.price.toString(),
         category: newItem.category ? Number(newItem.category) : null,
-        quantity: Number(newItem.quantity),
+        palette_quantity: Number(newItem.palette_quantity),
+        verpackung_quantity: Number(newItem.verpackung_quantity),
         // Optional/others
         description: newItem.description || null,
         sku: newItem.sku || null,
@@ -266,10 +278,13 @@ export default function InventoryPage() {
         ean_unit: newItem.ean_unit || null,
         ean_pack: newItem.ean_pack || null,
         vat_rate: newItem.vat_rate?.toString(),
+        // Produktstruktur
+        verpackungen_pro_palette: Number(newItem.verpackungen_pro_palette),
+        stueck_pro_verpackung: Number(newItem.stueck_pro_verpackung),
         // The following are left to backend defaults
         owner: undefined,
         id: undefined,
-        available_qty: undefined,
+        total_quantity_in_verpackungen: undefined,
         defective_qty: undefined,
         cost: undefined,
         category_name: undefined,
@@ -293,7 +308,8 @@ export default function InventoryPage() {
       setNewItem({
         name: "",
         description: "",
-        quantity: 0,
+        palette_quantity: 0,
+        verpackung_quantity: 0,
         price: "",
         category: "",
         sku: "",
@@ -312,6 +328,9 @@ export default function InventoryPage() {
         ean_unit: "",
         ean_pack: "",
         vat_rate: "8.10",
+        // Produktstruktur
+        verpackungen_pro_palette: 1,
+        stueck_pro_verpackung: 1,
       });
       setErrors({});
 
@@ -474,8 +493,13 @@ export default function InventoryPage() {
                       <TableCell>{item.owner_username || "-"}</TableCell>
                       <TableCell>{category?.name || "-"}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {item.available_qty ?? 0}
+                        <div className="flex flex-col items-end gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">P:</span>
+                            <span>{item.palette_quantity ?? 0}</span>
+                            <span className="text-xs text-muted-foreground">V:</span>
+                            <span>{item.verpackung_quantity ?? 0}</span>
+                          </div>
                           {item.is_low_stock && (
                             <Badge
                               variant="outline"
@@ -700,25 +724,45 @@ export default function InventoryPage() {
             {/* Gruppe: Lager & Preis */}
             <div className="space-y-4">
               <h4 className="text-sm font-medium text-gray-900">Lager & Preis</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="quantity">Menge</Label>
+                  <Label htmlFor="palette_quantity">Paletten</Label>
                   <Input
-                    id="quantity"
+                    id="palette_quantity"
                     type="number"
                     min="0"
-                    value={newItem.quantity}
+                    value={newItem.palette_quantity}
                     onChange={(e) => {
                       setNewItem({
                         ...newItem,
-                        quantity: Number.parseInt(e.target.value) || 0,
+                        palette_quantity: Number.parseInt(e.target.value) || 0,
                       });
-                      if (errors.quantity) setErrors((prev) => ({ ...prev, quantity: "" }));
+                      if (errors.palette_quantity) setErrors((prev) => ({ ...prev, palette_quantity: "" }));
                     }}
-                    className={inputClass("quantity")}
+                    className={inputClass("palette_quantity")}
                   />
-                  {errors.quantity && (
-                    <p className="text-xs text-red-600">{errors.quantity}</p>
+                  {errors.palette_quantity && (
+                    <p className="text-xs text-red-600">{errors.palette_quantity}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="verpackung_quantity">Verpackungen</Label>
+                  <Input
+                    id="verpackung_quantity"
+                    type="number"
+                    min="0"
+                    value={newItem.verpackung_quantity}
+                    onChange={(e) => {
+                      setNewItem({
+                        ...newItem,
+                        verpackung_quantity: Number.parseInt(e.target.value) || 0,
+                      });
+                      if (errors.verpackung_quantity) setErrors((prev) => ({ ...prev, verpackung_quantity: "" }));
+                    }}
+                    className={inputClass("verpackung_quantity")}
+                  />
+                  {errors.verpackung_quantity && (
+                    <p className="text-xs text-red-600">{errors.verpackung_quantity}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -740,6 +784,45 @@ export default function InventoryPage() {
                   )}
                 </div>
               </div>
+
+              {/* Produktstruktur */}
+              <div className="space-y-2">
+                <h5 className="text-sm font-medium text-gray-700">Produktstruktur (Umrechnungsfaktoren)</h5>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="verpackungen_pro_palette">Verpackungen pro Palette</Label>
+                    <Input
+                      id="verpackungen_pro_palette"
+                      type="number"
+                      min="1"
+                      value={newItem.verpackungen_pro_palette}
+                      onChange={(e) => {
+                        setNewItem({
+                          ...newItem,
+                          verpackungen_pro_palette: Number.parseInt(e.target.value) || 1,
+                        });
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="stueck_pro_verpackung">Stück pro Verpackung</Label>
+                    <Input
+                      id="stueck_pro_verpackung"
+                      type="number"
+                      min="1"
+                      value={newItem.stueck_pro_verpackung}
+                      onChange={(e) => {
+                        setNewItem({
+                          ...newItem,
+                          stueck_pro_verpackung: Number.parseInt(e.target.value) || 1,
+                        });
+                      }}
+                    />
+                    <p className="text-xs text-gray-500">Nur zur Info, wird beim Verkauf nicht aufgebrochen</p>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="category">Kategorie<span className="text-red-500"> *</span></Label>
@@ -896,6 +979,64 @@ export default function InventoryPage() {
                     <p className="text-xs text-gray-500">Alkoholgehalt in Prozent</p>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Gruppe: Produktstruktur */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-gray-900">Produktstruktur</h4>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="palette">Palette<span className="text-red-500"> *</span></Label>
+                  <Input
+                    id="palette"
+                    type="number"
+                    min="1"
+                    value={newItem.palette}
+                    onChange={(e) => {
+                      setNewItem({ ...newItem, palette: parseInt(e.target.value) || 1 });
+                      if (errors.palette) setErrors((prev) => ({ ...prev, palette: "" }));
+                    }}
+                    className={inputClass("palette")}
+                  />
+                  {errors.palette && (
+                    <p className="text-xs text-red-600">{errors.palette}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="verpackung">Verpackung<span className="text-red-500"> *</span></Label>
+                  <Input
+                    id="verpackung"
+                    type="number"
+                    min="1"
+                    value={newItem.verpackung}
+                    onChange={(e) => {
+                      setNewItem({ ...newItem, verpackung: parseInt(e.target.value) || 1 });
+                      if (errors.verpackung) setErrors((prev) => ({ ...prev, verpackung: "" }));
+                    }}
+                    className={inputClass("verpackung")}
+                  />
+                  {errors.verpackung && (
+                    <p className="text-xs text-red-600">{errors.verpackung}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="stueck">Stück<span className="text-red-500"> *</span></Label>
+                  <Input
+                    id="stueck"
+                    type="number"
+                    min="1"
+                    value={newItem.stueck}
+                    onChange={(e) => {
+                      setNewItem({ ...newItem, stueck: parseInt(e.target.value) || 1 });
+                      if (errors.stueck) setErrors((prev) => ({ ...prev, stueck: "" }));
+                    }}
+                    className={inputClass("stueck")}
+                  />
+                  {errors.stueck && (
+                    <p className="text-xs text-red-600">{errors.stueck}</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { DateRangePicker } from "@/components/date-range-picker"
 import { MovementModal } from "@/components/movement-modal"
+import { MultiItemMovementModal } from "@/components/multi-item-movement-modal"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "react-hot-toast"
 import type { DateRange } from "react-day-picker"
@@ -24,6 +25,7 @@ export default function LogsPage() {
   const [actionFilter, setActionFilter] = useState<string>("all")
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
   const [isMovementModalOpen, setIsMovementModalOpen] = useState(false)
+  const [isMultiItemModalOpen, setIsMultiItemModalOpen] = useState(false)
   const [movementMode, setMovementMode] = useState<"IN" | "OUT" | "RETURN">("IN")
   const [showClearDialog, setShowClearDialog] = useState(false)
   const [isClearing, setIsClearing] = useState(false)
@@ -154,10 +156,14 @@ export default function LogsPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="flex gap-2">
-          <Button onClick={openWareneingangModal} className="bg-green-600 hover:bg-green-700">
+        <div className="flex gap-2 flex-wrap">
+          <Button onClick={() => setIsMultiItemModalOpen(true)} className="bg-green-700 hover:bg-green-800">
+            <Box className="h-4 w-4 mr-2" />
+            + Multi-Wareneingang
+          </Button>
+          <Button onClick={openWareneingangModal} className="bg-green-600 hover:bg-green-700" variant="outline">
             <TrendingUp className="h-4 w-4 mr-2" />
-            + Wareneingang
+            + Wareneingang (Einzeln)
           </Button>
           <Button onClick={openWarenausgangModal} className="bg-red-600 hover:bg-red-700">
             <TrendingDown className="h-4 w-4 mr-2" />
@@ -283,6 +289,13 @@ export default function LogsPage() {
         isOpen={isMovementModalOpen}
         onClose={() => setIsMovementModalOpen(false)}
         mode={movementMode}
+        onSuccess={handleMovementSuccess}
+      />
+
+      {/* Multi-Item Movement Modal */}
+      <MultiItemMovementModal
+        isOpen={isMultiItemModalOpen}
+        onClose={() => setIsMultiItemModalOpen(false)}
         onSuccess={handleMovementSuccess}
       />
 

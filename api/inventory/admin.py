@@ -66,8 +66,8 @@ class CustomerAdmin(admin.ModelAdmin):
 @admin.register(InventoryItem)
 class InventoryItemAdmin(admin.ModelAdmin):
     list_display = [
-        'name', 'sku', 'brand', 'beverage_type', 'container_type', 
-        'volume_ml', 'quantity', 'defective_qty', 'available_qty', 
+        'name', 'sku', 'brand', 'beverage_type', 'container_type',
+        'volume_ml', 'palette_quantity', 'verpackung_quantity', 'defective_qty',
         'price', 'category', 'is_low_stock', 'owner', 'is_active'
     ]
     list_filter = [
@@ -77,7 +77,7 @@ class InventoryItemAdmin(admin.ModelAdmin):
     search_fields = ['name', 'sku', 'description', 'brand', 'ean_unit', 'ean_pack']
     ordering = ['name']
     readonly_fields = [
-        'date_added', 'last_updated', 'available_qty', 'is_low_stock', 
+        'date_added', 'last_updated', 'total_quantity_in_verpackungen', 'is_low_stock',
         'total_value', 'category_name', 'owner_username'
     ]
     fieldsets = (
@@ -91,7 +91,7 @@ class InventoryItemAdmin(admin.ModelAdmin):
             'fields': ('ean_unit', 'ean_pack', 'country_of_origin')
         }),
         ('Inventory Details', {
-            'fields': ('quantity', 'defective_qty', 'available_qty', 'min_stock_level', 'location')
+            'fields': ('palette_quantity', 'verpackung_quantity', 'defective_qty', 'total_quantity_in_verpackungen', 'min_stock_level', 'location')
         }),
         ('Pricing', {
             'fields': ('price', 'cost', 'total_value')
@@ -191,8 +191,8 @@ class InventoryItemSupplierAdmin(admin.ModelAdmin):
 @admin.register(StockMovement)
 class StockMovementAdmin(admin.ModelAdmin):
     list_display = [
-        'created_at', 'type', 'item', 'qty_base', 'qty_pallets', 
-        'qty_packages', 'qty_singles', 'supplier', 'customer', 'created_by'
+        'created_at', 'type', 'item', 'unit', 'quantity',
+        'supplier', 'customer', 'created_by'
     ]
     list_filter = ['type', 'created_at', 'supplier', 'customer', 'created_by']
     search_fields = ['item__name', 'item__sku', 'note', 'supplier__name', 'customer__name']
@@ -202,11 +202,7 @@ class StockMovementAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Movement Details', {
-            'fields': ('item', 'type', 'qty_base', 'note')
-        }),
-        ('UoM Input Helpers', {
-            'fields': ('qty_pallets', 'qty_packages', 'qty_singles'),
-            'classes': ('collapse',)
+            'fields': ('item', 'type', 'unit', 'quantity', 'note')
         }),
         ('Relationships', {
             'fields': ('supplier', 'customer', 'created_by')

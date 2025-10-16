@@ -2,106 +2,82 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { AlertTriangle, ArrowDown, ArrowUp, Box } from "lucide-react";
-import { inventoryAPI, logAPI, categoryAPI } from "@/lib/api";
-import { Badge } from "@/components/ui/badge";
+import { AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import {
-  InventoryTrendChart,
-  LowStockAlertsChart,
-} from "@/components/inventory-charts";
-import { DashboardMetrics } from "@/components/dashboard-metrics-cards";
-import { InventoryByCategory } from "@/components/inventory-category-card";
-import { getInventoryTrendData } from "@/lib/utils";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
-  const [logs, setLogs] = useState<InventoryLog[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [einnahmen, setEinnahmen] = useState<number>(0);
+  const [ausgaben, setAusgaben] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchFinancialData = async () => {
       try {
         setIsLoading(true);
-        const [itemsData, logsData, categoriesData] = await Promise.all([
-          inventoryAPI.getItems(),
-          logAPI.getLogs({ limit: 5 }), // Get only the 5 most recent logs
-          categoryAPI.getCategories(),
-        ]);
 
-        // Handle different response structures
-        setInventoryItems(
-          Array.isArray(itemsData) ? itemsData : itemsData.results || []
-        );
-        setLogs(
-          Array.isArray(logsData)
-            ? logsData.slice(0, 5)
-            : logsData.results || []
-        );
-        setCategories(
-          Array.isArray(categoriesData)
-            ? categoriesData
-            : categoriesData.results || []
-        );
+        // Get auth token from localStorage
+        const tokensStr = localStorage.getItem("auth_tokens");
+        const tokens = tokensStr ? JSON.parse(tokensStr) : null;
+        const token = tokens?.access;
+
+        if (!token) {
+          throw new Error('Keine Authentifizierung vorhanden');
+        }
+
+        // Fetch Invoices (Einnahmen)
+        const invoicesResponse = await fetch('/api/invoices/', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        // Fetch Expenses (Ausgaben)
+        const expensesResponse = await fetch('/api/expenses/', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!invoicesResponse.ok || !expensesResponse.ok) {
+          throw new Error('Fehler beim Laden der Finanzdaten');
+        }
+
+        const invoicesData = await invoicesResponse.json();
+        const expensesData = await expensesResponse.json();
+
+        // Berechne Gesamtsumme aller Rechnungen (Einnahmen)
+        const totalEinnahmen = Array.isArray(invoicesData)
+          ? invoicesData.reduce((sum, invoice) => sum + Number(invoice.total_gross || 0), 0)
+          : (invoicesData.results || []).reduce((sum: number, invoice: any) => sum + Number(invoice.total_gross || 0), 0);
+
+        // Berechne Gesamtsumme aller Ausgaben
+        const totalAusgaben = Array.isArray(expensesData)
+          ? expensesData.reduce((sum, expense) => sum + Number(expense.amount || 0), 0)
+          : (expensesData.results || []).reduce((sum: number, expense: any) => sum + Number(expense.amount || 0), 0);
+
+        setEinnahmen(totalEinnahmen);
+        setAusgaben(totalAusgaben);
       } catch (err) {
-        setError("Dashboard-Daten konnten nicht geladen werden");
+        setError("Finanzdaten konnten nicht geladen werden");
         console.error(err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchDashboardData();
+    fetchFinancialData();
   }, []);
 
-  // dashboard metrics calculations to handle empty arrays
-  const totalItems = Array.isArray(inventoryItems) ? inventoryItems.length : 0;
-  const lowStockItems = Array.isArray(inventoryItems)
-    ? inventoryItems.filter((item) => item.is_low_stock).length
-    : 0;
-  const totalValue = Array.isArray(inventoryItems)
-    ? inventoryItems.reduce(
-        (sum, item) => sum + Number(item.price || 0) * (item.available_qty || 0),
-        0
-      )
-    : 0;
-  const activeCategories = Array.isArray(inventoryItems)
-    ? new Set(inventoryItems.map((item) => item.category)).size
-    : 0;
-
-  const totalCategories = Array.isArray(categories) ? categories.length : 0;
-
-  const lowStockData = inventoryItems
-    .filter((item) => item.is_low_stock)
-    .slice(0, 5)
-    .map((item) => ({
-      name: item.name,
-      // ensure Quantity is always a number (fallback to 0 when undefined)
-      Quantity: item.available_qty ?? 0,
-      // prefer unified low_stock_threshold, fall back to legacy min_stock_level, then a sensible default
-      Threshold: item.low_stock_threshold ?? item.min_stock_level ?? 10,
-    }));
-
-  const { trendData, currentYearValue, currentMonthValue } =
-    getInventoryTrendData(inventoryItems);
+  const saldo = einnahmen - ausgaben;
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
-          <p className="mt-2">Dashboard-Daten werden geladen...</p>
+          <p className="mt-2">Dashboard wird geladen...</p>
         </div>
       </div>
     );
@@ -129,105 +105,60 @@ export default function Dashboard() {
         </h1>
       </div>
 
-      <DashboardMetrics
-        totalItems={totalItems}
-        inventoryItems={inventoryItems}
-        lowStockItems={lowStockItems}
-        totalValue={totalValue}
-        totalCategories={totalCategories}
-        activeCategories={activeCategories}
-        lowStockData={lowStockData}
-      />
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Einnahmen Card */}
+        <Card className="border-green-200 bg-green-50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-medium text-green-900">
+              Einnahmen
+            </CardTitle>
+            <TrendingUp className="h-6 w-6 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-green-900">
+              CHF {einnahmen.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <p className="text-sm text-green-700 mt-2">
+              Gesamteinnahmen aus allen Rechnungen
+            </p>
+          </CardContent>
+        </Card>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <InventoryTrendChart
-          trendData={trendData}
-          currentYearValue={currentYearValue}
-          currentMonthValue={currentMonthValue}
-        />
-
-        <LowStockAlertsChart lowStockData={lowStockData} />
+        {/* Ausgaben Card */}
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-medium text-red-900">
+              Ausgaben
+            </CardTitle>
+            <TrendingDown className="h-6 w-6 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-red-900">
+              CHF {ausgaben.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <p className="text-sm text-red-700 mt-2">
+              Gesamtausgaben aus allen Belegen
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      <Card>
+      {/* Saldo Card */}
+      <Card className={saldo >= 0 ? "border-blue-200 bg-blue-50" : "border-orange-200 bg-orange-50"}>
         <CardHeader>
-          <CardTitle>Letzte Aktivitäten</CardTitle>
+          <CardTitle className={saldo >= 0 ? "text-blue-900" : "text-orange-900"}>
+            Saldo
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Artikel</TableHead>
-                <TableHead>Aktion</TableHead>
-                <TableHead>Vorherige Menge</TableHead>
-                <TableHead>Mengenänderung</TableHead>
-                <TableHead>Aktuelle Menge</TableHead>
-                <TableHead>Datum</TableHead>
-                <TableHead>Benutzer</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {logs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell className="font-medium">
-                    {log.item_name || `Artikel #${log.item}`}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={
-                        log.action === "ADD"
-                          ? "bg-green-50 text-green-700 border-green-200"
-                          : log.action === "REMOVE"
-                          ? "bg-red-50 text-red-700 border-red-200"
-                          : "bg-blue-50 text-blue-700 border-blue-200"
-                      }
-                    >
-                      {log.action === "ADD" ? (
-                        <ArrowUp className="h-3 w-3 mr-1" />
-                      ) : log.action === "REMOVE" ? (
-                        <ArrowDown className="h-3 w-3 mr-1" />
-                      ) : (
-                        <Box className="h-3 w-3 mr-1" />
-                      )}
-                      {log.action}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{log.previous_quantity}</TableCell>
-                  <TableCell>
-                    {log.action === "ADD"
-                      ? "+"
-                      : log.action === "REMOVE"
-                      ? "-"
-                      : "±"}
-                    {log.quantity_change}
-                  </TableCell>
-                  <TableCell>{log.new_quantity}</TableCell>
-                  <TableCell>
-                    {new Date(log.timestamp).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>{log.username}</TableCell>
-                </TableRow>
-              ))}
-              {logs.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center py-4 text-gray-500"
-                  >
-                    Keine letzten Aktivitäten
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <div className={`text-4xl font-bold ${saldo >= 0 ? "text-blue-900" : "text-orange-900"}`}>
+            CHF {saldo.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <p className={`text-sm mt-2 ${saldo >= 0 ? "text-blue-700" : "text-orange-700"}`}>
+            {saldo >= 0 ? "Positiver Saldo" : "Negativer Saldo"} (Einnahmen - Ausgaben)
+          </p>
         </CardContent>
       </Card>
-
-      <InventoryByCategory
-        categories={categories}
-        inventoryItems={inventoryItems}
-      />
     </div>
   );
 }

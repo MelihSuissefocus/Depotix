@@ -73,7 +73,14 @@
       "Bash(sudo systemctl restart:*)",
       "Bash(systemctl:*)",
       "Bash(systemctl restart:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(while ! docker images)",
+      "Bash(timeout 300 docker compose build web)",
+      "Bash(timeout 30 docker logs server-api-1 -f)",
+      "Bash(PGPASSWORD='4Y__dBU85RFg1EnsPPJCjFSY-8D0zQv4UY9qDUcHYY0' psql:*)",
+      "Bash(depotix-backend)",
+      "Bash(while docker inspect server-api-1)",
+      "Bash(do echo:*)"
     ],
     "deny": [],
     "ask": []

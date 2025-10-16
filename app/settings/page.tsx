@@ -13,7 +13,7 @@ import { AlertCircle, CheckCircle, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/lib/auth"
 import { toast } from 'react-hot-toast';
-import { companyProfileAPI, patchCompanyProfileWithFile } from "@/lib/api"
+import { companyProfileAPI, patchCompanyProfileWithFile, invoiceTemplateAPI } from "@/lib/api"
 
 // Debug: Check if the API is properly imported
 console.log('companyProfileAPI imported:', companyProfileAPI)
@@ -48,6 +48,15 @@ export default function SettingsPage() {
   })
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
+
+  // Invoice template state
+  const [invoiceTemplate, setInvoiceTemplate] = useState<InvoiceTemplate | null>(null)
+  const [isLoadingTemplate, setIsLoadingTemplate] = useState(false)
+  const [templateForm, setTemplateForm] = useState({
+    html_content: "",
+    css_content: "",
+    is_active: true,
+  })
 
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [lowStockAlerts, setLowStockAlerts] = useState(true)
@@ -102,9 +111,28 @@ export default function SettingsPage() {
     }
   }
 
+  // Load invoice template
+  const loadInvoiceTemplate = async () => {
+    try {
+      setIsLoadingTemplate(true)
+      const template = await invoiceTemplateAPI.get()
+      setInvoiceTemplate(template)
+      setTemplateForm({
+        html_content: template.html_content || "",
+        css_content: template.css_content || "",
+        is_active: template.is_active !== undefined ? template.is_active : true,
+      })
+    } catch (err) {
+      console.log("No invoice template found, starting fresh")
+    } finally {
+      setIsLoadingTemplate(false)
+    }
+  }
+
   // Load profile on component mount
   useEffect(() => {
     loadCompanyProfile()
+    loadInvoiceTemplate()
   }, [])
 
   const validateProfileForm = () => {
@@ -288,6 +316,23 @@ export default function SettingsPage() {
     }, 3000)
   }
 
+  const handleSaveInvoiceTemplate = async () => {
+    try {
+      setIsSaving(true)
+
+      await invoiceTemplateAPI.patch(templateForm)
+      toast.success("Rechnungslayout gespeichert")
+
+      // Reload to get the updated template
+      await loadInvoiceTemplate()
+    } catch (err) {
+      console.error("Failed to save invoice template:", err)
+      toast.error("Fehler beim Speichern des Rechnungslayouts")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const getUserInitials = () => {
     if (!user) return "U"
     if (user.first_name && user.last_name) {
@@ -324,9 +369,10 @@ export default function SettingsPage() {
       )}
 
       <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="profile">Firmenprofil</TabsTrigger>
+          <TabsTrigger value="invoice-layout">Rechnungslayout</TabsTrigger>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
@@ -679,6 +725,92 @@ export default function SettingsPage() {
                   currency: companyProfile?.currency || "CHF",
                 })}
                 disabled={isLoadingProfile}
+              >
+                Abbrechen
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="invoice-layout" className="space-y-4 pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Rechnungslayout bearbeiten</CardTitle>
+              <CardDescription>
+                Passen Sie das HTML und CSS Template für Ihre PDF-Rechnungen an
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {isLoadingTemplate ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-center">
+                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+                    <p className="mt-2">Lade Template...</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* HTML Template Editor */}
+                  <div className="space-y-2">
+                    <Label htmlFor="html-template">HTML Template</Label>
+                    <textarea
+                      id="html-template"
+                      value={templateForm.html_content}
+                      onChange={(e) => setTemplateForm({ ...templateForm, html_content: e.target.value })}
+                      className="w-full min-h-[400px] font-mono text-sm p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="HTML Template hier eingeben..."
+                    />
+                    <p className="text-sm text-gray-500">
+                      Django Template Syntax wird unterstützt (z.B. {'{{ invoice.invoice_number }}'})
+                    </p>
+                  </div>
+
+                  {/* CSS Template Editor */}
+                  <div className="space-y-2">
+                    <Label htmlFor="css-template">CSS Styles</Label>
+                    <textarea
+                      id="css-template"
+                      value={templateForm.css_content}
+                      onChange={(e) => setTemplateForm({ ...templateForm, css_content: e.target.value })}
+                      className="w-full min-h-[300px] font-mono text-sm p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="CSS Styles hier eingeben..."
+                    />
+                    <p className="text-sm text-gray-500">
+                      WeasyPrint CSS unterstützt (für PDF-Generierung)
+                    </p>
+                  </div>
+
+                  {/* Template Active Toggle */}
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="template-active">Template aktivieren</Label>
+                      <p className="text-sm text-gray-500">Aktiviertes Template wird für PDF-Generierung verwendet</p>
+                    </div>
+                    <Switch
+                      id="template-active"
+                      checked={templateForm.is_active}
+                      onCheckedChange={(checked) => setTemplateForm({ ...templateForm, is_active: checked })}
+                    />
+                  </div>
+                </>
+              )}
+            </CardContent>
+            <CardFooter className="flex gap-2">
+              <Button
+                onClick={handleSaveInvoiceTemplate}
+                disabled={isSaving || isLoadingTemplate}
+              >
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {isSaving ? "Speichere..." : "Speichern"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setTemplateForm({
+                  html_content: invoiceTemplate?.html_content || "",
+                  css_content: invoiceTemplate?.css_content || "",
+                  is_active: invoiceTemplate?.is_active !== undefined ? invoiceTemplate.is_active : true,
+                })}
+                disabled={isLoadingTemplate}
               >
                 Abbrechen
               </Button>

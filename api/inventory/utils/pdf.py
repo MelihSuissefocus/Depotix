@@ -62,12 +62,53 @@ def render_invoice_pdf(context):
     Returns:
         bytes: PDF content
     """
+    from django.template import Context, Template
+    from inventory.models import InvoiceTemplate
+
     # Convert logo to data URI if present
     if 'supplier' in context and hasattr(context['supplier'], 'logo'):
         logo_data_uri = _get_logo_data_uri(context['supplier'].logo)
         context['logo_data_uri'] = logo_data_uri
 
-    html_string = render_to_string('pdf/invoice.html', context)
+    # Try to get user-specific template
+    html_string = None
+    invoice = context.get('invoice')
+
+    if invoice and hasattr(invoice, 'customer') and invoice.customer and hasattr(invoice.customer, 'owner'):
+        try:
+            user_template = InvoiceTemplate.objects.get(user=invoice.customer.owner, is_active=True)
+
+            # Build complete HTML with CSS inline
+            html_template = user_template.html_content
+
+            # Inject CSS into template
+            if user_template.css_content:
+                # Check if template already has a <style> tag
+                if '{% include "pdf/_styles.css" %}' in html_template:
+                    # Replace the include with actual CSS
+                    html_template = html_template.replace(
+                        '{% include "pdf/_styles.css" %}',
+                        user_template.css_content
+                    )
+                elif '<style>' not in html_template:
+                    # Add CSS to head
+                    html_template = html_template.replace(
+                        '</head>',
+                        f'<style>{user_template.css_content}</style></head>'
+                    )
+
+            # Render the template with context
+            template = Template(html_template)
+            django_context = Context(context)
+            html_string = template.render(django_context)
+
+        except InvoiceTemplate.DoesNotExist:
+            pass
+
+    # Fallback to default template
+    if not html_string:
+        html_string = render_to_string('pdf/invoice.html', context)
+
     html = HTML(string=html_string)
     pdf_bytes = html.write_pdf()
     return pdf_bytes

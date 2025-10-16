@@ -125,8 +125,8 @@
             {% for line in lines %}
             <tr>
                 <td class="col-bezeichnung">{{ line.name }}</td>
-                <td class="col-menge">{{ line.qty_base|floatformat:2 }}</td>
-                <td class="col-einheit">Verpackung</td>
+                <td class="col-menge">{{ line.qty_display|floatformat:2 }}</td>
+                <td class="col-einheit">{{ line.selected_unit|default:"Verpackung" }}</td>
                 <td class="col-mwst">{{ line.tax_rate|floatformat:2 }}%</td>
                 <td class="col-preis">{{ line.unit_price|swiss_currency }}</td>
                 <td class="col-rabatt">0.00%</td>

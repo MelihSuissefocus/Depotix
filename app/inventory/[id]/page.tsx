@@ -163,10 +163,13 @@ export default function InventoryItemPage() {
           sku: formData.sku || "",
           description: formData.description || "",
           location: formData.location || "",
-          quantity: Number(formData.quantity),
+          palette_quantity: Number(formData.palette_quantity) || 0,
+          verpackung_quantity: Number(formData.verpackung_quantity) || 0,
           price: formData.price?.toString() ?? "",
           category: formData.category ? Number(formData.category) : null,
           low_stock_threshold: Number(formData.low_stock_threshold),
+          verpackungen_pro_palette: Number(formData.verpackungen_pro_palette) || 1,
+          stueck_pro_verpackung: Number(formData.stueck_pro_verpackung) || 1,
         });
       } else {
         throw new Error("Item ID is undefined");
@@ -391,26 +394,51 @@ export default function InventoryItemPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="quantity">Menge</Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    value={formData.quantity || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        quantity: Number.parseInt(e.target.value) || 0,
-                      })
-                    }
-                  />
+              {/* Lagerbestände */}
+              <div className="space-y-4">
+                <h5 className="text-sm font-medium text-gray-700">Lagerbestände</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="palette_quantity">Paletten</Label>
+                    <Input
+                      id="palette_quantity"
+                      type="number"
+                      min="0"
+                      value={formData.palette_quantity || 0}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          palette_quantity: Number.parseInt(e.target.value) || 0,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="verpackung_quantity">Verpackungen</Label>
+                    <Input
+                      id="verpackung_quantity"
+                      type="number"
+                      min="0"
+                      value={formData.verpackung_quantity || 0}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          verpackung_quantity: Number.parseInt(e.target.value) || 0,
+                        })
+                      }
+                    />
+                  </div>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="price">Preis (CHF)</Label>
                   <Input
                     id="price"
                     type="number"
+                    step="0.01"
+                    min="0"
                     value={formData.price || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, price: e.target.value })
@@ -470,6 +498,45 @@ export default function InventoryItemPage() {
                       })
                     }
                   />
+                </div>
+              </div>
+
+              {/* Produktstruktur (Umrechnungsfaktoren) */}
+              <div className="space-y-4">
+                <h5 className="text-sm font-medium text-gray-700">Produktstruktur (Umrechnungsfaktoren)</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="verpackungen_pro_palette">Verpackungen pro Palette</Label>
+                    <Input
+                      id="verpackungen_pro_palette"
+                      type="number"
+                      min="1"
+                      value={formData.verpackungen_pro_palette || 1}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          verpackungen_pro_palette: Number.parseInt(e.target.value) || 1,
+                        })
+                      }
+                    />
+                    <p className="text-xs text-gray-500">Wie viele Verpackungen hat eine Palette</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="stueck_pro_verpackung">Stück pro Verpackung</Label>
+                    <Input
+                      id="stueck_pro_verpackung"
+                      type="number"
+                      min="1"
+                      value={formData.stueck_pro_verpackung || 1}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          stueck_pro_verpackung: Number.parseInt(e.target.value) || 1,
+                        })
+                      }
+                    />
+                    <p className="text-xs text-gray-500">Nur zur Info, wird beim Verkauf nicht aufgebrochen</p>
+                  </div>
                 </div>
               </div>
             </CardContent>

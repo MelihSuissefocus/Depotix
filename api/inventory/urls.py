@@ -7,7 +7,7 @@ from rest_framework_simplejwt.views import (
 from .views import (
     UserViewSet, CategoryViewSet, InventoryItemViewSet, InventoryLogViewSet,
     SupplierViewSet, CustomerViewSet, StockMovementViewSet, ExpenseViewSet,
-    CompanyProfileView, SalesOrderViewSet, SalesOrderItemViewSet, InvoiceViewSet
+    CompanyProfileView, SalesOrderViewSet, SalesOrderItemViewSet, InvoiceViewSet, InvoiceTemplateView
 )
 
 # Create router and register viewsets
@@ -38,4 +38,7 @@ urlpatterns = [
     
     # Company profile endpoint
     path('company-profile/', CompanyProfileView.as_view(), name='company-profile'),
+
+    # Invoice template endpoint
+    path('invoice-template/', InvoiceTemplateView.as_view(), name='invoice-template'),
 ]
