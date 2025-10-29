@@ -1,13 +1,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+from rest_framework_simplejwt.views import TokenRefreshView
+from .authentication import CustomTokenObtainPairView
 from .views import (
     UserViewSet, CategoryViewSet, InventoryItemViewSet, InventoryLogViewSet,
     SupplierViewSet, CustomerViewSet, StockMovementViewSet, ExpenseViewSet,
-    CompanyProfileView, SalesOrderViewSet, SalesOrderItemViewSet, InvoiceViewSet, InvoiceTemplateView
+    CompanyProfileView, SalesOrderViewSet, SalesOrderItemViewSet, InvoiceViewSet, InvoiceTemplateView,
+    OCRViewSet
 )
 
 # Create router and register viewsets
@@ -23,13 +22,14 @@ router.register(r'expenses', ExpenseViewSet, basename='expenses')
 router.register(r'orders', SalesOrderViewSet, basename='orders')
 router.register(r'order-items', SalesOrderItemViewSet, basename='order-items')
 router.register(r'invoices', InvoiceViewSet, basename='invoices')
+router.register(r'ocr', OCRViewSet, basename='ocr')
 
 urlpatterns = [
     # API routes
     path('', include(router.urls)),
     
-    # JWT token endpoints  
-    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    # JWT token endpoints with session management
+    path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     
     # Convenient stock movement endpoints

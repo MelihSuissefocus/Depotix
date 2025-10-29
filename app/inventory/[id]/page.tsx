@@ -166,6 +166,8 @@ export default function InventoryItemPage() {
           palette_quantity: Number(formData.palette_quantity) || 0,
           verpackung_quantity: Number(formData.verpackung_quantity) || 0,
           price: formData.price?.toString() ?? "",
+          price_per_palette: formData.price_per_palette?.toString() || null,
+          price_per_verpackung: formData.price_per_verpackung?.toString() || null,
           category: formData.category ? Number(formData.category) : null,
           low_stock_threshold: Number(formData.low_stock_threshold),
           verpackungen_pro_palette: Number(formData.verpackungen_pro_palette) || 1,
@@ -431,9 +433,9 @@ export default function InventoryItemPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">Preis (CHF)</Label>
+                  <Label htmlFor="price">Verkaufspreis/Verpackung (CHF)</Label>
                   <Input
                     id="price"
                     type="number"
@@ -446,9 +448,40 @@ export default function InventoryItemPage() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="price_per_palette">Einkaufspreis/Palette (CHF)</Label>
+                  <Input
+                    id="price_per_palette"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.price_per_palette || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price_per_palette: e.target.value })
+                    }
+                    placeholder="Optional"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="price_per_verpackung">Einkaufspreis/Verpackung (CHF)</Label>
+                  <Input
+                    id="price_per_verpackung"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.price_per_verpackung || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price_per_verpackung: e.target.value })
+                    }
+                    placeholder="Optional"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label htmlFor="category">Kategorie</Label>
                   <Select
-                    value={formData.category?.toString() || ""}
+                    value={formData.category ? formData.category.toString() : undefined}
                     onValueChange={(value) =>
                       setFormData({ ...formData, category: Number(value) })
                     }

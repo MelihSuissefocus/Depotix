@@ -13,7 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, DateFilter, CharFilter
 from rest_framework.filters import OrderingFilter, SearchFilter
 from .exceptions import InsufficientStockError
-from .models import Category, InventoryItem, InventoryLog, StockMovement, Supplier, Customer, Expense, CompanyProfile, SalesOrder, SalesOrderItem, Invoice, InvoiceTemplate
+from .models import Category, InventoryItem, InventoryLog, StockMovement, Supplier, Customer, Expense, CompanyProfile, SalesOrder, SalesOrderItem, Invoice, InvoiceTemplate, UserSession
 from .serializers import (
     UserRegistrationSerializer, UserSerializer,
     CategorySerializer, InventoryItemSerializer, InventoryLogSerializer,
@@ -22,6 +22,8 @@ from .serializers import (
 )
 from .services import book_stock_change, validate_stock_movement_data, StockOperationError
 from .utils.pdf import render_invoice_pdf, _qr_svg_data_uri
+from .ocr_service import ocr_service
+import base64
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -74,14 +76,26 @@ class UserViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'])
     def logout(self, request):
-        """Logout user (blacklist refresh token)"""
+        """Logout user (blacklist refresh token and clear session)"""
         try:
+            # Delete user session
+            if request.user and request.user.is_authenticated:
+                UserSession.objects.filter(user=request.user).delete()
+
+            # Blacklist refresh token
             refresh_token = request.data.get("refresh_token")
             if refresh_token:
                 token = RefreshToken(refresh_token)
                 token.blacklist()
+
             return Response({"message": "Logout successful"}, status=status.HTTP_200_OK)
-        except Exception:
+        except Exception as e:
+            # Still try to clean up session even if token blacklist fails
+            try:
+                if request.user and request.user.is_authenticated:
+                    UserSession.objects.filter(user=request.user).delete()
+            except:
+                pass
             return Response({"message": "Logout successful"}, status=status.HTTP_200_OK)
 
 
@@ -222,7 +236,8 @@ class StockMovementViewSet(viewsets.ModelViewSet):
 
                 # ============================================================
                 # STEP 5: Validate stock availability for OUT/DEFECT movements
-                # Mit paralleler Verfolgung: verpackung_quantity ist bereits die totale Anzahl!
+                # verpackung_quantity = LOSE Verpackungen (nicht in Paletten)
+                # total_quantity_in_verpackungen = GESAMTMENGE (inkl. Paletten)
                 # ============================================================
                 if movement_type in ['OUT', 'DEFECT']:
                     if unit == 'palette':
@@ -232,110 +247,116 @@ class StockMovementViewSet(viewsets.ModelViewSet):
                                 f"Verfügbar: {item.palette_quantity}, Angefordert: {quantity}"
                             )
                     elif unit == 'verpackung':
-                        # Mit paralleler Verfolgung ist verpackung_quantity bereits die TOTALE Anzahl
-                        if quantity > item.verpackung_quantity:
+                        # Prüfe gegen GESAMTMENGE (Paletten + lose Verpackungen)
+                        total_available = item.total_quantity_in_verpackungen
+                        if quantity > total_available:
                             raise InsufficientStockError(
                                 f"Nicht genügend Verpackungen für {item.name}. "
-                                f"Verfügbar: {item.verpackung_quantity}, Angefordert: {quantity}"
+                                f"Verfügbar: {total_available} ({item.palette_quantity}P + {item.verpackung_quantity}V), Angefordert: {quantity}"
                             )
 
                 # ============================================================
                 # STEP 6: Update item quantities based on movement type and unit
-                # KRITISCHE LOGISTIK-LOGIK: PARALLELE VERFOLGUNG
+                # KRITISCHE LOGISTIK-LOGIK: SYNCHRONISIERTE VERFOLGUNG
                 #
-                # WICHTIG: palette_quantity und verpackung_quantity sind PARALLEL!
-                # - palette_quantity = Anzahl Paletten
-                # - verpackung_quantity = TOTALE Anzahl Verpackungen (inkl. die in Paletten!)
+                # WICHTIG: palette_quantity und verpackung_quantity sind SYNCHRONISIERT!
+                # - palette_quantity = Anzahl KOMPLETTER Paletten
+                # - verpackung_quantity = Anzahl LOSER Verpackungen (NICHT in Paletten!)
+                # - total_quantity_in_verpackungen = palette_quantity * verpackungen_pro_palette + verpackung_quantity
                 #
-                # Beispiel: 2 Paletten à 50 Verpackungen
+                # Beispiel: 2 Paletten à 50 Verpackungen + 3 lose Verpackungen
                 #   → palette_quantity = 2
-                #   → verpackung_quantity = 100
+                #   → verpackung_quantity = 3
+                #   → total = 103 Verpackungen
                 # ============================================================
                 if movement_type == 'IN':
                     if unit == 'palette':
                         # Wareneingang: Paletten hinzufügen
-                        # BEIDE Werte müssen erhöht werden!
                         item.palette_quantity += quantity
-                        item.verpackung_quantity += (quantity * item.verpackungen_pro_palette)
+                        # verpackung_quantity bleibt unverändert (nur lose Verpackungen)
 
                     elif unit == 'verpackung':
                         # Wareneingang: Verpackungen hinzufügen
-                        # Verpackungen direkt erhöhen
+                        # Füge zu losen Verpackungen hinzu
                         item.verpackung_quantity += quantity
 
-                        # Paletten neu berechnen (wie viele KOMPLETTE Paletten haben wir jetzt?)
-                        item.palette_quantity = item.verpackung_quantity // item.verpackungen_pro_palette
+                        # Konvertiere komplette Paletten: wenn >= verpackungen_pro_palette
+                        neue_paletten = item.verpackung_quantity // item.verpackungen_pro_palette
+                        if neue_paletten > 0:
+                            item.palette_quantity += neue_paletten
+                            item.verpackung_quantity = item.verpackung_quantity % item.verpackungen_pro_palette
 
                 elif movement_type == 'OUT':
                     if unit == 'palette':
                         # Warenausgang: Paletten abziehen
-                        # BEIDE Werte müssen reduziert werden!
                         item.palette_quantity -= quantity
-                        item.verpackung_quantity -= (quantity * item.verpackungen_pro_palette)
+                        # verpackung_quantity bleibt unverändert (nur lose Verpackungen)
 
                     elif unit == 'verpackung':
                         # Warenausgang: Verpackungen abziehen
-                        # Verpackungen direkt reduzieren
-                        item.verpackung_quantity -= quantity
+                        # Berechne Gesamtmenge in Verpackungen
+                        total_verpackungen = (item.palette_quantity * item.verpackungen_pro_palette) + item.verpackung_quantity
 
-                        # Paletten neu berechnen (wie viele KOMPLETTE Paletten haben wir noch?)
-                        item.palette_quantity = item.verpackung_quantity // item.verpackungen_pro_palette
+                        # Ziehe angeforderte Menge ab
+                        total_verpackungen -= quantity
+
+                        # Neu verteilen: Komplette Paletten + Rest
+                        item.palette_quantity = total_verpackungen // item.verpackungen_pro_palette
+                        item.verpackung_quantity = total_verpackungen % item.verpackungen_pro_palette
 
                 elif movement_type == 'RETURN':
                     if unit == 'palette':
                         # Retoure: Paletten zurück ins Lager
-                        # BEIDE Werte müssen erhöht werden!
                         item.palette_quantity += quantity
-                        item.verpackung_quantity += (quantity * item.verpackungen_pro_palette)
 
                     elif unit == 'verpackung':
                         # Retoure: Verpackungen zurück ins Lager
-                        # Verpackungen direkt erhöhen
                         item.verpackung_quantity += quantity
 
-                        # Paletten neu berechnen
-                        item.palette_quantity = item.verpackung_quantity // item.verpackungen_pro_palette
+                        # Konvertiere komplette Paletten
+                        neue_paletten = item.verpackung_quantity // item.verpackungen_pro_palette
+                        if neue_paletten > 0:
+                            item.palette_quantity += neue_paletten
+                            item.verpackung_quantity = item.verpackung_quantity % item.verpackungen_pro_palette
 
                 elif movement_type == 'DEFECT':
                     if unit == 'palette':
                         # Defekt: Paletten als defekt markieren
-                        # Maximale Anzahl ist begrenzt auf verfügbare Paletten
                         transfer_qty = min(quantity, item.palette_quantity)
-
-                        # BEIDE Werte reduzieren
                         item.palette_quantity -= transfer_qty
-                        item.verpackung_quantity -= (transfer_qty * item.verpackungen_pro_palette)
 
-                        # Defekte werden in Verpackungen gezählt (für Statistik)
+                        # Defekte in Verpackungen zählen
                         item.defective_qty += transfer_qty * item.verpackungen_pro_palette
 
                     elif unit == 'verpackung':
                         # Defekt: Verpackungen als defekt markieren
-                        # Maximale defekte Menge ist begrenzt auf Verfügbarkeit
-                        transfer_qty = min(quantity, item.verpackung_quantity)
+                        # Berechne Gesamtmenge
+                        total_verpackungen = (item.palette_quantity * item.verpackungen_pro_palette) + item.verpackung_quantity
+                        transfer_qty = min(quantity, total_verpackungen)
 
-                        # Verpackungen reduzieren
-                        item.verpackung_quantity -= transfer_qty
+                        # Ziehe von Gesamtmenge ab
+                        total_verpackungen -= transfer_qty
 
-                        # Paletten neu berechnen
-                        item.palette_quantity = item.verpackung_quantity // item.verpackungen_pro_palette
+                        # Neu verteilen
+                        item.palette_quantity = total_verpackungen // item.verpackungen_pro_palette
+                        item.verpackung_quantity = total_verpackungen % item.verpackungen_pro_palette
 
-                        # Defekte Menge aktualisieren
+                        # Defekte aktualisieren
                         item.defective_qty += transfer_qty
 
                 elif movement_type == 'ADJUST':
                     if unit == 'palette':
                         # Korrektur: Paletten auf exakten Wert setzen
-                        # BEIDE Werte müssen angepasst werden!
                         item.palette_quantity = max(0, quantity)
-                        item.verpackung_quantity = item.palette_quantity * item.verpackungen_pro_palette
+                        # verpackung_quantity bleibt unverändert
 
                     elif unit == 'verpackung':
-                        # Korrektur: Verpackungen auf exakten Wert setzen
-                        item.verpackung_quantity = max(0, quantity)
+                        # Korrektur: GESAMTMENGE auf exakten Wert setzen
+                        total_verpackungen = max(0, quantity)
 
-                        # Paletten neu berechnen
-                        item.palette_quantity = item.verpackung_quantity // item.verpackungen_pro_palette
+                        # Neu verteilen
+                        item.palette_quantity = total_verpackungen // item.verpackungen_pro_palette
+                        item.verpackung_quantity = total_verpackungen % item.verpackungen_pro_palette
 
                 item.save(update_fields=['palette_quantity', 'verpackung_quantity', 'defective_qty', 'last_updated'])
 
@@ -703,12 +724,13 @@ class SalesOrderViewSet(viewsets.ModelViewSet):
                     # Use pessimistic locking on inventory item
                     inventory_item = InventoryItem.objects.select_for_update().get(id=order_item.item.id)
 
-                    # Check stock availability (in Verpackungen)
-                    if inventory_item.verpackung_quantity < order_item.qty_base:
+                    # Check stock availability (in Verpackungen) - GESAMTMENGE prüfen!
+                    total_available = inventory_item.total_quantity_in_verpackungen
+                    if total_available < order_item.qty_base:
                         return Response(
                             {'error': {
                                 'code': 'INSUFFICIENT_STOCK',
-                                'message': f'Nicht genügend Verpackungen für {inventory_item.name}. Verfügbar: {inventory_item.verpackung_quantity}, Benötigt: {order_item.qty_base}'
+                                'message': f'Nicht genügend Verpackungen für {inventory_item.name}. Verfügbar: {total_available} ({inventory_item.palette_quantity}P + {inventory_item.verpackung_quantity}V), Benötigt: {order_item.qty_base}'
                             }},
                             status=status.HTTP_422_UNPROCESSABLE_ENTITY
                         )
@@ -1100,5 +1122,135 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response(
                 {'error': {'code': 'DELETE_FAILED', 'message': f'Fehler beim Löschen: {str(e)}'}},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class OCRViewSet(viewsets.ViewSet):
+    """OCR processing for receipt scanning"""
+    permission_classes = [IsAuthenticated]
+    
+    @action(detail=False, methods=['post'], url_path='process-receipt')
+    def process_receipt(self, request):
+        """Process uploaded receipt image/PDF and extract data"""
+        try:
+            # Get file data from request
+            file_data = request.FILES.get('file')
+            if not file_data:
+                return Response(
+                    {'error': 'No file provided'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Determine file type
+            file_name = file_data.name.lower()
+            if file_name.endswith('.pdf'):
+                file_type = 'pdf'
+            elif file_name.endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
+                file_type = 'image'
+            else:
+                return Response(
+                    {'error': 'Unsupported file type. Please upload PDF or image files.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Read file data
+            file_bytes = file_data.read()
+            
+            # Process with OCR service
+            result = ocr_service.process_receipt(file_bytes, file_type)
+            
+            # Return extracted data
+            return Response({
+                'success': True,
+                'data': result,
+                'message': 'Receipt processed successfully'
+            })
+            
+        except Exception as e:
+            return Response(
+                {
+                    'success': False,
+                    'error': f'OCR processing failed: {str(e)}',
+                    'data': {}
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=False, methods=['post'], url_path='suggest-matches')
+    def suggest_matches(self, request):
+        """Suggest matching suppliers and items based on OCR data"""
+        try:
+            ocr_data = request.data.get('ocr_data', {})
+            supplier_name = ocr_data.get('supplier', '').strip()
+            article_name = ocr_data.get('article_name', '').strip()
+            
+            suggestions = {
+                'suppliers': [],
+                'items': []
+            }
+            
+            # Find matching suppliers
+            if supplier_name:
+                suppliers = Supplier.objects.filter(
+                    name__icontains=supplier_name
+                )[:5]
+                suggestions['suppliers'] = [
+                    {'id': s.id, 'name': s.name}
+                    for s in suppliers
+                ]
+            
+            # Find matching items
+            if article_name:
+                # Try different search patterns
+                search_terms = [
+                    article_name,
+                    article_name.split()[0] if article_name.split() else '',
+                    ' '.join(article_name.split()[:2]) if len(article_name.split()) > 1 else ''
+                ]
+                
+                items = []
+                for term in search_terms:
+                    if term:
+                        matches = InventoryItem.objects.filter(
+                            name__icontains=term
+                        )[:5]
+                        items.extend(matches)
+                
+                # Remove duplicates and limit results
+                seen_ids = set()
+                unique_items = []
+                for item in items:
+                    if item.id not in seen_ids:
+                        unique_items.append(item)
+                        seen_ids.add(item.id)
+                        if len(unique_items) >= 5:
+                            break
+                
+                suggestions['items'] = [
+                    {
+                        'id': item.id, 
+                        'name': item.name,
+                        'sku': item.sku,
+                        'current_stock': {
+                            'palettes': item.palette_quantity,
+                            'verpackungen': item.verpackung_quantity
+                        }
+                    }
+                    for item in unique_items
+                ]
+            
+            return Response({
+                'success': True,
+                'suggestions': suggestions
+            })
+            
+        except Exception as e:
+            return Response(
+                {
+                    'success': False,
+                    'error': f'Match suggestion failed: {str(e)}',
+                    'suggestions': {'suppliers': [], 'items': []}
+                },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

@@ -47,6 +47,19 @@ async function fetchAPI(endpoint: string, options: RequestInit = {}) {
   if (!response.ok) {
     // Handle 401 Unauthorized by redirecting to login
     if (response.status === 401 && typeof window !== "undefined") {
+      // Check for session termination (concurrent login)
+      try {
+        const errorData = await response.json()
+        if (errorData.code === 'session_terminated') {
+          localStorage.removeItem("auth_tokens")
+          localStorage.removeItem("auth_user")
+          window.location.href = "/login"
+          throw new Error(errorData.detail || "Your session was terminated because another user logged in with your credentials.")
+        }
+      } catch (parseError) {
+        // If we can't parse the error, continue with normal flow
+      }
+
       // Try to refresh the token if we have a refresh token
       if (tokens?.refresh) {
         try {
@@ -92,6 +105,7 @@ async function fetchAPI(endpoint: string, options: RequestInit = {}) {
 
       // If refresh failed or we don't have a refresh token, redirect to login
       localStorage.removeItem("auth_tokens")
+      localStorage.removeItem("auth_user")
       window.location.href = "/login"
       throw new Error("Session expired. Please login again.")
     }
@@ -350,9 +364,33 @@ export const stockMovementAPI = {
       body: JSON.stringify(data),
     }),
 
+  // Update a stock movement
+  updateMovement: (id: number, data: Partial<{
+    type: "IN" | "OUT" | "RETURN"
+    item: number
+    unit: "palette" | "verpackung"
+    quantity: number
+    supplier?: number | null
+    customer?: number | null
+    note?: string
+    purchase_price?: string
+    total_purchase_price?: string
+    currency?: string
+  }>) =>
+    fetchAPI(`/inventory/stock-movements/${id}/`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
   // Delete all stock movements
   clearAll: () =>
     fetchAPI("/inventory/stock-movements/clear-all/", {
+      method: "DELETE",
+    }),
+
+  // Delete a single stock movement
+  deleteMovement: (id: number) =>
+    fetchAPI(`/inventory/stock-movements/${id}/`, {
       method: "DELETE",
     }),
 }
@@ -674,6 +712,73 @@ export const invoicesAPI = {
       }
       throw error;
     }
+  },
+}
+
+// OCR API functions
+export const ocrAPI = {
+  async processReceipt(file: File): Promise<{
+    success: boolean
+    data: {
+      supplier: string
+      article_name: string
+      quantity: number
+      unit_price: number
+      total_price: number
+      currency: string
+      confidence: number
+      raw_text: string
+      processing_success: boolean
+    }
+    message?: string
+    error?: string
+  }> {
+    const url = `${API_BASE}/inventory/ocr/process-receipt/`
+    const tokensStr = typeof window !== "undefined" ? localStorage.getItem("auth_tokens") : null
+    const tokens = tokensStr ? JSON.parse(tokensStr) : null
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        ...(tokens?.access ? { Authorization: `Bearer ${tokens.access}` } : {}),
+      },
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.error || 'OCR processing failed')
+    }
+
+    return response.json()
+  },
+
+  async suggestMatches(ocrData: {
+    supplier?: string
+    article_name?: string
+  }): Promise<{
+    success: boolean
+    suggestions: {
+      suppliers: Array<{ id: number; name: string }>
+      items: Array<{
+        id: number
+        name: string
+        sku: string | null
+        current_stock: {
+          palettes: number
+          verpackungen: number
+        }
+      }>
+    }
+    error?: string
+  }> {
+    return fetchAPI('/inventory/ocr/suggest-matches/', {
+      method: 'POST',
+      body: JSON.stringify({ ocr_data: ocrData }),
+    })
   },
 }
 

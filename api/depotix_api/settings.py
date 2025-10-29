@@ -50,9 +50,10 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'django_filters',
-    
+
     # Local apps
     'inventory',
+    'ops',
 ]
 
 ROOT_URLCONF = 'depotix_api.urls'
@@ -268,6 +269,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'inventory.middleware.SessionValidationMiddleware',  # Custom session validation
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]

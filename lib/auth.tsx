@@ -117,7 +117,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!response.ok) {
       if (response.status === 401) {
-        // Handle unauthorized - clear auth and redirect to login
+        const errorData = await response.json().catch(() => ({}))
+
+        // Handle session termination (concurrent login detected)
+        if (errorData.code === 'session_terminated') {
+          localStorage.removeItem("auth_tokens")
+          localStorage.removeItem("auth_user")
+          setTokens(null)
+          setUser(null)
+          router.push("/login")
+          throw new Error("Your session was terminated because another user logged in with your credentials.")
+        }
+
+        // Handle regular session expiration
         localStorage.removeItem("auth_tokens")
         localStorage.removeItem("auth_user")
         setTokens(null)

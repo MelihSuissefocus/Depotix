@@ -154,9 +154,23 @@ class InventoryItem(models.Model):
         validators=[MinValueValidator(Decimal('0.01'))]
     )
     cost = models.DecimalField(
-        max_digits=10, decimal_places=2, 
+        max_digits=10, decimal_places=2,
         blank=True, null=True,
         validators=[MinValueValidator(Decimal('0.00'))]
+    )
+
+    # Einkaufspreise pro Einheit
+    price_per_palette = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        blank=True, null=True,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        help_text="Einkaufspreis pro Palette in CHF"
+    )
+    price_per_verpackung = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        blank=True, null=True,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        help_text="Einkaufspreis pro Verpackung in CHF"
     )
     min_stock_level = models.IntegerField(
         default=0, 
@@ -389,6 +403,12 @@ class StockMovement(models.Model):
         verbose_name="Einkaufspreis",
         help_text="Einkaufspreis für diesen Wareneingang (nur bei type=IN)",
         validators=[MinValueValidator(Decimal('0.00'))]
+    )
+    currency = models.CharField(
+        max_length=3,
+        default='CHF',
+        choices=[('CHF', 'CHF'), ('EUR', 'EUR')],
+        help_text="Währung des Einkaufspreises"
     )
 
     # Idempotency for safe retries
@@ -833,3 +853,24 @@ class InvoiceTemplate(models.Model):
 
     def __str__(self):
         return f"Invoice Template for {self.user.username}"
+
+
+class UserSession(models.Model):
+    """Track active user sessions for concurrent login prevention"""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='active_session')
+    session_key = models.CharField(max_length=255, unique=True, db_index=True,
+                                   help_text="Unique identifier for this session (JWT jti claim)")
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_activity = models.DateTimeField(auto_now=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=500, blank=True, null=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', 'session_key']),
+            models.Index(fields=['session_key']),
+        ]
+
+    def __str__(self):
+        return f"Session for {self.user.username} - {self.session_key[:8]}..."

@@ -330,6 +330,7 @@ class StockMovementSerializer(serializers.ModelSerializer):
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
     customer_name = serializers.CharField(source='customer.name', read_only=True)
     created_by_username = serializers.CharField(source='created_by.username', read_only=True)
+    qty_base = serializers.SerializerMethodField(read_only=True)
 
     # Idempotency key for safe retries
     idempotency_key = serializers.CharField(
@@ -350,15 +351,21 @@ class StockMovementSerializer(serializers.ModelSerializer):
     class Meta:
         model = StockMovement
         fields = [
-            'id', 'item', 'item_name', 'type', 'unit', 'quantity',
-            'purchase_price', 'created_at', 'movement_timestamp', 'note', 'supplier',
+            'id', 'item', 'item_name', 'type', 'unit', 'quantity', 'qty_base',
+            'purchase_price', 'currency', 'created_at', 'movement_timestamp', 'note', 'supplier',
             'supplier_name', 'customer', 'customer_name', 'created_by',
             'created_by_username', 'idempotency_key'
         ]
         read_only_fields = [
             'id', 'created_at', 'item_name', 'supplier_name',
-            'customer_name', 'created_by_username'
+            'customer_name', 'created_by_username', 'qty_base'
         ]
+    
+    def get_qty_base(self, obj):
+        """Calculate base quantity in Verpackungen"""
+        if obj.unit == 'palette':
+            return obj.quantity * (obj.item.verpackungen_pro_palette if obj.item else 1)
+        return obj.quantity
 
     def create(self, validated_data):
         # Auto-assign created_by from request user

@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react"
-import { stockMovementAPI, inventoryAPI, supplierAPI, customerAPI } from "@/lib/api"
+import { Loader2, AlertCircle, CheckCircle2, Upload, FileText } from "lucide-react"
+import { stockMovementAPI, inventoryAPI, supplierAPI, customerAPI, ocrAPI } from "@/lib/api"
 import { useTranslation } from "@/lib/i18n"
+import { OCRUpload } from "@/components/ocr-upload"
 import {
   parseQuantity,
   formatQuantity,
@@ -56,6 +57,10 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [globalError, setGlobalError] = useState<string>("")
   const [idempotencyKey, setIdempotencyKey] = useState<string>("")
+  
+  // OCR state
+  const [showOCRUpload, setShowOCRUpload] = useState(false)
+  const [isProcessingOCR, setIsProcessingOCR] = useState(false)
 
   // ========================================================================
   // LOAD DATA ON MODAL OPEN
@@ -174,6 +179,60 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
   }, [formData, selectedItem, mode, inputQuantity, availableQty])
 
   const isFormValid = validationErrors.length === 0 && formData.item !== ""
+
+  // ========================================================================
+  // OCR HANDLERS
+  // ========================================================================
+  const handleOCRDataExtracted = async (ocrData: any) => {
+    try {
+      setIsProcessingOCR(true)
+      
+      // Update form with OCR data
+      const updates: Partial<typeof formData> = {}
+      
+      if (ocrData.quantity) {
+        updates.quantity = String(ocrData.quantity)
+      }
+      
+      if (ocrData.unit_price) {
+        updates.purchase_price = String(ocrData.unit_price)
+      }
+      
+      if (ocrData.supplier) {
+        // Try to find matching supplier
+        const suggestions = await ocrAPI.suggestMatches({ supplier: ocrData.supplier })
+        if (suggestions.suggestions.suppliers.length > 0) {
+          updates.supplier = String(suggestions.suggestions.suppliers[0].id)
+        } else {
+          // Add supplier name to note if no match found
+          updates.note = `Lieferant: ${ocrData.supplier}${ocrData.note ? `\n${ocrData.note}` : ''}`
+        }
+      }
+      
+      if (ocrData.article_name) {
+        // Try to find matching item
+        const suggestions = await ocrAPI.suggestMatches({ article_name: ocrData.article_name })
+        if (suggestions.suggestions.items.length > 0) {
+          updates.item = String(suggestions.suggestions.items[0].id)
+        } else {
+          // Add article name to note if no match found
+          updates.note = `Artikel: ${ocrData.article_name}${ocrData.note ? `\n${ocrData.note}` : ''}`
+        }
+      }
+      
+      // Apply updates
+      setFormData(prev => ({ ...prev, ...updates }))
+      
+      // Close OCR upload
+      setShowOCRUpload(false)
+      
+    } catch (err) {
+      console.error('OCR data processing failed:', err)
+      setGlobalError('Fehler beim Verarbeiten der OCR-Daten')
+    } finally {
+      setIsProcessingOCR(false)
+    }
+  }
 
   // ========================================================================
   // FORM HANDLERS
@@ -326,16 +385,33 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
         aria-describedby="movement-modal-description"
       >
         <DialogHeader>
-          <DialogTitle>
-            {mode === "IN" && t('movement.stockIn')}
-            {mode === "OUT" && t('movement.stockOut')}
-            {mode === "RETURN" && t('movement.return')}
-          </DialogTitle>
-          <p id="movement-modal-description" className="text-sm text-muted-foreground">
-            {mode === "IN" && "Waren einbuchen und Lagerbestand erhöhen"}
-            {mode === "OUT" && "Waren ausbuchen und Lagerbestand verringern"}
-            {mode === "RETURN" && "Retoure von Kunde zurückbuchen"}
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle>
+                {mode === "IN" && t('movement.stockIn')}
+                {mode === "OUT" && t('movement.stockOut')}
+                {mode === "RETURN" && t('movement.return')}
+              </DialogTitle>
+              <p id="movement-modal-description" className="text-sm text-muted-foreground">
+                {mode === "IN" && "Waren einbuchen und Lagerbestand erhöhen"}
+                {mode === "OUT" && "Waren ausbuchen und Lagerbestand verringern"}
+                {mode === "RETURN" && "Retoure von Kunde zurückbuchen"}
+              </p>
+            </div>
+            {mode === "IN" && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowOCRUpload(true)}
+                disabled={isSubmitting || isProcessingOCR}
+                className="flex items-center gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                Lieferschein scannen
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
         {/* Global Error Alert */}
@@ -350,6 +426,24 @@ export function MovementModal({ isOpen, onClose, mode, onSuccess }: MovementModa
         {isLoadingData ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : showOCRUpload ? (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowOCRUpload(false)}
+                disabled={isProcessingOCR}
+              >
+                ← Zurück zur manuellen Eingabe
+              </Button>
+            </div>
+            <OCRUpload
+              onDataExtracted={handleOCRDataExtracted}
+              onClose={() => setShowOCRUpload(false)}
+            />
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">

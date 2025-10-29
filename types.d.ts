@@ -109,11 +109,15 @@ interface StockMovement {
     type: "IN" | "OUT" | "RETURN" | "DEFECT" | "ADJUST";
     unit: "palette" | "verpackung";
     quantity: number;
+    qty_base?: number;
     supplier?: number | null;
     supplier_name?: string;
     customer?: number | null;
     customer_name?: string;
     note?: string | null;
+    purchase_price?: string | null;
+    total_purchase_price?: string | null;
+    currency?: string;
     created_by?: number;
     created_by_username?: string;
     created_at: string;

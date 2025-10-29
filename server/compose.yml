@@ -5,19 +5,37 @@ services:
       dockerfile: ui/Dockerfile
       args:
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+    image: server-web:latest
     env_file: .env
     environment:
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
     depends_on:
       api:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
     networks:
-    - appnet
+      - appnet
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://web:3000/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          memory: 512M
+
   api:
     build:
       context: ../api
       dockerfile: Dockerfile
+    image: server-api:latest
     env_file: .env
     environment:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
@@ -31,7 +49,23 @@ services:
         condition: service_healthy
     restart: unless-stopped
     networks:
-    - appnet
+      - appnet
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f -H 'Host: depotix.ch' http://localhost:8000/healthz || curl -f http://localhost:8000/api/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          memory: 512M
+
   postgres:
     image: postgres:16
     environment:
@@ -40,36 +74,57 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       TZ: ${TZ}
     volumes:
-    - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
     healthcheck:
-      test:
-      - CMD-SHELL
-      - pg_isready -U depotix -d depotix
+      test: ["CMD-SHELL", "pg_isready -U depotix -d depotix"]
       interval: 10s
       timeout: 5s
       retries: 10
+      start_period: 30s
     restart: unless-stopped
     networks:
-    - appnet
+      - appnet
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          memory: 256M
+
   caddy:
     image: caddy:2
     depends_on:
       web:
-        condition: service_started
+        condition: service_healthy
       api:
-        condition: service_started
+        condition: service_healthy
     ports:
-    - 80:80
-    - 443:443
+      - "80:80"
+      - "443:443"
     volumes:
-    - ./Caddyfile:/etc/caddy/Caddyfile:ro
-    - caddy_data:/data
-    - caddy_config:/config
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     restart: unless-stopped
     networks:
-    - appnet
+      - appnet
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
 networks:
   appnet: {}
+
 volumes:
   caddy_data: {}
   caddy_config: {}
